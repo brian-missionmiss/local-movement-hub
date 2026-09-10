@@ -214,6 +214,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 </style>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -357,6 +358,10 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div id="section-coordinators" style="display:none">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div><h1 class="page-title">Staff &amp; Coordinators</h1><p class="page-sub">Invite Mission Mississippi staff as admins or local coordinators tied to a specific movement.</p></div>
+          <div style="display:flex;gap:0.45rem;align-items:center;">
+            <button class="btn btn-sm btn-outline" onclick="exportStaffXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportStaffPDF()">Export PDF</button>
+          </div>
           <button class="btn btn-primary" onclick="openModal('modal-invite')">+ Invite Staff or Coordinator</button>
         </div>
         <div class="table-wrap">
@@ -369,7 +374,13 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
       <!-- EVENT REPORTS -->
       <div id="section-reports" style="display:none">
-        <div class="page-header"><h1 class="page-title">Event Reports</h1><p class="page-sub">All activity reports submitted by local movements.</p></div>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div><h1 class="page-title">Event Reports</h1><p class="page-sub">All activity reports submitted by local movements.</p></div>
+          <div style="display:flex;gap:0.45rem;align-items:center;">
+            <button class="btn btn-sm btn-outline" onclick="exportAllReportsXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportAllReportsPDF()">Export PDF</button>
+          </div>
+        </div>
         <div id="reports-filter" style="display:flex;gap:0.65rem;margin-bottom:1rem;flex-wrap:wrap;">
           <select class="form-select" id="filter-movement" style="width:auto;" onchange="loadAllReports()">
             <option value="">All movements</option>
@@ -1395,6 +1406,103 @@ async function saveAdminProfile() {
   closeModal('modal-profile-edit');
   toast('Profile saved.');
   loadCommunityProfiles();
+}
+
+
+// ── ADMIN EXPORT FUNCTIONS
+let _allReportsCache = [];
+let _staffCache = [];
+
+function openAdminPrintWindow(title, bodyHtml) {
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${escHtml(title)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; margin: 1.5cm; }
+      h1 { color: #1a2744; font-size: 14pt; margin-bottom: 4pt; }
+      .sub { color: #888; font-size: 9pt; margin-bottom: 18pt; }
+      table { width: 100%; border-collapse: collapse; }
+      th { background: #1a2744; color: #fff; padding: 5pt 7pt; text-align: left; font-size: 9pt; }
+      td { padding: 5pt 7pt; border-bottom: 1px solid #e0e0e0; font-size: 9pt; vertical-align: top; }
+      tr:nth-child(even) td { background: #f7f7f7; }
+      @media print { button { display:none; } }
+    </style>
+  </head><body>
+    <h1>${escHtml(title)}</h1>
+    <div class="sub">Mission Mississippi Local Movement Hub &nbsp;&middot;&nbsp; Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+    ${bodyHtml}
+    <script>window.onload = () => setTimeout(() => { window.print(); }, 400);<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+async function exportAllReportsXLSX() {
+  const movFilter = document.getElementById('filter-movement')?.value;
+  const typeFilter = document.getElementById('filter-type')?.value;
+  let params = { select:'*', order:'event_date.desc' };
+  if (movFilter) params.movement_id = `eq.${movFilter}`;
+  if (typeFilter) params.event_type  = `eq.${typeFilter}`;
+  const rpts = await dbGet('lm_event_reports', params, session.access_token);
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
+  const data = rpts.map(r => ({
+    'Movement':    movMap[r.movement_id] || '—',
+    'Event Type':  r.event_type,
+    'Date':        r.event_date,
+    'Attendance':  r.attendance ?? '',
+    'Description': r.description || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Event Reports');
+  XLSX.writeFile(wb, `MM_EventReports_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function exportAllReportsPDF() {
+  const movFilter = document.getElementById('filter-movement')?.value;
+  const typeFilter = document.getElementById('filter-type')?.value;
+  let params = { select:'*', order:'event_date.desc' };
+  if (movFilter) params.movement_id = `eq.${movFilter}`;
+  if (typeFilter) params.event_type  = `eq.${typeFilter}`;
+  const rpts = await dbGet('lm_event_reports', params, session.access_token);
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
+  const rows = rpts.map(r=>`<tr>
+    <td>${escHtml(movMap[r.movement_id]||'—')}</td>
+    <td>${escHtml(r.event_type)}</td>
+    <td>${r.event_date}</td>
+    <td>${r.attendance??'—'}</td>
+    <td>${escHtml((r.description||'').slice(0,100))}</td>
+  </tr>`).join('');
+  openAdminPrintWindow('Mission Mississippi — Event Reports',
+    `<table><thead><tr><th>Movement</th><th>Event</th><th>Date</th><th>Attendance</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+async function exportStaffXLSX() {
+  const profiles = await dbGet('lm_profiles', { select:'*', order:'created_at.asc' }, session.access_token);
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
+  const data = profiles.map(p => ({
+    'Email':    p.email || '—',
+    'Name':     p.full_name || '—',
+    'Role':     p.role,
+    'Movement': p.role==='admin' ? 'All Movements' : (movMap[p.movement_id]||'—'),
+    'Added':    p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Staff & Coordinators');
+  XLSX.writeFile(wb, `MM_Staff_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function exportStaffPDF() {
+  const profiles = await dbGet('lm_profiles', { select:'*', order:'created_at.asc' }, session.access_token);
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
+  const rows = profiles.map(p=>`<tr>
+    <td>${escHtml(p.email||'—')}</td>
+    <td>${escHtml(p.full_name||'—')}</td>
+    <td>${escHtml(p.role)}</td>
+    <td>${p.role==='admin'?'All Movements':escHtml(movMap[p.movement_id]||'—')}</td>
+    <td>${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td>
+  </tr>`).join('');
+  openAdminPrintWindow('Mission Mississippi — Staff &amp; Coordinators',
+    `<table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Movement</th><th>Added</th></tr></thead><tbody>${rows}</tbody></table>`);
 }
 
 // ── INVITE ROLE TOGGLE

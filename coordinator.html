@@ -207,6 +207,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 }
 
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -375,22 +376,28 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <button class="btn btn-primary" onclick="openAddMember()">+ Add Member</button>
         </div>
 
-        <h3 style="font-family:'Merriweather',serif;font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:0.75rem;">Steering Committee</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+          <h3 style="font-family:'Merriweather',serif;font-weight:700;font-size:1rem;color:var(--navy);">Steering Committee</h3>
+          <div style="display:flex;gap:0.45rem;">
+            <button class="btn btn-sm btn-outline" onclick="exportRosterXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportRosterPDF()">Export PDF</button>
+          </div>
+        </div>
         <div class="table-wrap" style="margin-bottom:1.5rem;">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Role</th><th>Ethnicity</th><th>Phone</th><th>Email</th><th>Since</th><th></th></tr></thead>
             <tbody id="roster-committee">
-              <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h3 style="font-family:'Merriweather',serif;font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:0.75rem;">Advocates</h3>
+        <h3 style="font-family:'Merriweather',serif;font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:0.75rem;">Advocates &amp; Associates</h3>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Organization</th><th>Phone</th><th>Email</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Role</th><th>Ethnicity</th><th>Organization</th><th>Phone</th><th>Email</th><th>Since</th><th></th></tr></thead>
             <tbody id="roster-advocates">
-              <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr>
+              <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -435,7 +442,13 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
 
         <div style="margin-top:2rem;">
-          <h2 style="font-family:'Merriweather',serif;font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem;">Past Reports</h2>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+          <h2 style="font-family:'Merriweather',serif;font-size:1.1rem;font-weight:700;color:var(--navy);">Past Reports</h2>
+          <div style="display:flex;gap:0.45rem;">
+            <button class="btn btn-sm btn-outline" onclick="exportReportsXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportReportsPDF()">Export PDF</button>
+          </div>
+        </div>
           <div class="table-wrap">
             <table class="data-table">
               <thead><tr><th>Event</th><th>Date</th><th>Attendance</th><th>Notes</th></tr></thead>
@@ -860,33 +873,55 @@ async function loadRoster() {
   const token = session.access_token;
   const mid = profile.movement_id;
   const members = await dbGet('lm_roster', { movement_id:`eq.${mid}`, active:'eq.true', select:'*', order:'roster_type.asc,full_name.asc' }, token);
+  _rosterCache = members;
   const committee = members.filter(m => m.roster_type==='committee');
   const advocates = members.filter(m => m.roster_type==='advocate');
 
-  const renderRows = (list, cols) => list.length
+  const renderCommittee = list => list.length
     ? list.map(m => `<tr>
-        <td>${escHtml(m.full_name)}</td>
-        <td style="color:var(--muted);">${escHtml(cols==='role'?m.role_title||'—':m.organization||'—')}</td>
+        <td style="font-weight:600;">${escHtml(m.full_name)}</td>
+        <td>${escHtml(m.role_title||'—')}</td>
+        <td style="font-size:0.8rem;color:var(--muted);">${escHtml(m.ethnicity||'—')}</td>
         <td><a href="tel:${m.phone}" style="color:var(--blue);text-decoration:none;">${escHtml(m.phone||'—')}</a></td>
-        <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;">${escHtml(m.email||'—')}</a></td>
+        <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;font-size:0.82rem;">${escHtml(m.email||'—')}</a></td>
+        <td style="color:var(--muted);font-size:0.8rem;">${m.start_date ? new Date(m.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}</td>
         <td><button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
       </tr>`).join('')
-    : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.25rem;">No ${cols==='role'?'committee members':'advocates'} yet.</td></tr>`;
+    : `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.25rem;">No committee members yet.</td></tr>`;
 
-  document.getElementById('roster-committee').innerHTML = renderRows(committee, 'role');
-  document.getElementById('roster-advocates').innerHTML = renderRows(advocates, 'org');
+  const renderAdvocates = list => list.length
+    ? list.map(m => `<tr>
+        <td style="font-weight:600;">${escHtml(m.full_name)}</td>
+        <td>${escHtml(m.role_title||'—')}</td>
+        <td style="font-size:0.8rem;color:var(--muted);">${escHtml(m.ethnicity||'—')}</td>
+        <td style="color:var(--muted);">${escHtml(m.organization||'—')}</td>
+        <td><a href="tel:${m.phone}" style="color:var(--blue);text-decoration:none;">${escHtml(m.phone||'—')}</a></td>
+        <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;font-size:0.82rem;">${escHtml(m.email||'—')}</a></td>
+        <td style="color:var(--muted);font-size:0.8rem;">${m.start_date ? new Date(m.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.25rem;">No advocates or associates yet.</td></tr>`;
+
+  document.getElementById('roster-committee').innerHTML = renderCommittee(committee);
+  document.getElementById('roster-advocates').innerHTML = renderAdvocates(advocates);
 }
 
 function openAddMember() { openModal('modal-member'); }
 async function saveMember() {
   const name = document.getElementById('m-name').value.trim();
+  const role = document.getElementById('m-role-select').value;
   const errEl = document.getElementById('m-error'); errEl.style.display='none';
   if (!name) { errEl.textContent='Name is required.'; errEl.style.display='block'; return; }
+  if (!role) { errEl.textContent='Please select a role.'; errEl.style.display='block'; return; }
+  const committeeRoles = ['Chair','Secretary','Treasurer','Team Lead','Member'];
+  const roster_type = committeeRoles.includes(role) ? 'committee' : 'advocate';
   await dbPost('lm_roster', {
     movement_id: profile.movement_id,
     full_name: name,
-    roster_type: document.getElementById('m-type').value,
-    role_title: document.getElementById('m-role').value.trim() || null,
+    roster_type,
+    role_title: role,
+    ethnicity: document.getElementById('m-ethnicity').value || null,
+    start_date: document.getElementById('m-start').value || null,
     phone: document.getElementById('m-phone').value.trim() || null,
     email: document.getElementById('m-email').value.trim() || null,
     organization: document.getElementById('m-org').value.trim() || null,
@@ -906,6 +941,7 @@ async function removeMember(id) {
 // ── REPORTS
 async function loadReports() {
   const recs = await dbGet('lm_event_reports', { movement_id:`eq.${profile.movement_id}`, select:'*', order:'event_date.desc' }, session.access_token);
+  _reportsCache = recs;
   const el = document.getElementById('reports-history');
   if (!recs.length) { el.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem;">No reports submitted yet.</td></tr>'; return; }
   el.innerHTML = recs.map(r => `<tr>
@@ -1195,6 +1231,99 @@ async function saveCoordProfile() {
     await dbPost('lm_community_profiles', { movement_id: movement.id, ...data }, session.access_token);
   }
   toast('Profile saved successfully.');
+}
+
+
+// ── EXPORT FUNCTIONS
+let _rosterCache = [];
+
+function exportRosterXLSX() {
+  if (!_rosterCache.length) { toast('No roster data to export.', 'error'); return; }
+  const data = _rosterCache.map(m => ({
+    'Name':         m.full_name,
+    'Role':         m.role_title || '',
+    'Ethnicity':    m.ethnicity  || 'Not reported',
+    'Phone':        m.phone      || '',
+    'Email':        m.email      || '',
+    'Organization': m.organization || '',
+    'Start Date':   m.start_date   || '',
+    'Active':       m.active ? 'Yes' : 'No'
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Roster');
+  XLSX.writeFile(wb, `${(movement?.county_name||movement?.city||'Movement')}_Roster_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportRosterPDF() {
+  if (!_rosterCache.length) { toast('No roster data to export.', 'error'); return; }
+  const movName = movement?.county_name || movement?.city || 'Movement';
+  const rows = _rosterCache.map(m => `<tr>
+    <td>${escHtml(m.full_name)}</td>
+    <td>${escHtml(m.role_title||'—')}</td>
+    <td>${escHtml(m.ethnicity||'Not reported')}</td>
+    <td>${escHtml(m.phone||'—')}</td>
+    <td>${escHtml(m.email||'—')}</td>
+    <td>${escHtml(m.organization||'—')}</td>
+    <td>${m.start_date ? new Date(m.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}</td>
+  </tr>`).join('');
+  openPrintWindow(
+    `${movName} — Roster`,
+    `<table><thead><tr><th>Name</th><th>Role</th><th>Ethnicity</th><th>Phone</th><th>Email</th><th>Organization</th><th>Since</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
+}
+
+let _reportsCache = [];
+
+function exportReportsXLSX() {
+  if (!_reportsCache.length) { toast('No report data to export.', 'error'); return; }
+  const data = _reportsCache.map(r => ({
+    'Event Type':  r.event_type,
+    'Date':        r.event_date,
+    'Attendance':  r.attendance ?? '',
+    'Description': r.description || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Event Reports');
+  XLSX.writeFile(wb, `${(movement?.county_name||movement?.city||'Movement')}_Reports_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportReportsPDF() {
+  if (!_reportsCache.length) { toast('No report data to export.', 'error'); return; }
+  const movName = movement?.county_name || movement?.city || 'Movement';
+  const rows = _reportsCache.map(r => `<tr>
+    <td>${escHtml(r.event_type)}</td>
+    <td>${r.event_date}</td>
+    <td>${r.attendance ?? '—'}</td>
+    <td>${escHtml((r.description||'').slice(0,120))}</td>
+  </tr>`).join('');
+  openPrintWindow(
+    `${movName} — Event Reports`,
+    `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
+}
+
+function openPrintWindow(title, bodyHtml) {
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${escHtml(title)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; margin: 1.5cm; }
+      h1 { color: #1a2744; font-size: 14pt; margin-bottom: 4pt; }
+      .sub { color: #888; font-size: 9pt; margin-bottom: 18pt; }
+      table { width: 100%; border-collapse: collapse; }
+      th { background: #1a2744; color: #fff; padding: 5pt 7pt; text-align: left; font-size: 9pt; }
+      td { padding: 5pt 7pt; border-bottom: 1px solid #e0e0e0; font-size: 9pt; vertical-align: top; }
+      tr:nth-child(even) td { background: #f7f7f7; }
+      @media print { button { display:none; } }
+    </style>
+  </head><body>
+    <h1>${escHtml(title)}</h1>
+    <div class="sub">Mission Mississippi Local Movement Hub &nbsp;&middot;&nbsp; Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+    ${bodyHtml}
+    <script>window.onload = () => setTimeout(() => { window.print(); }, 400);<\/script>
+  </body></html>`);
+  win.document.close();
 }
 
 init();
