@@ -343,6 +343,8 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   .cta-block { text-align: center; }
 }
 </style>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 </head>
 <body>
 
@@ -356,7 +358,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     </div>
   </a>
   <div class="nav-links">
-    <a class="nav-link active" href="#movements">Movements</a>
+    <a class="nav-link active" href="#movements">Movement Map</a>
     <a class="nav-link" href="#events">Events</a>
     <a class="nav-link" href="#resources">Resources</a>
     <a class="nav-link" href="#start">Start a Movement</a>
@@ -386,14 +388,64 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       </div>
     </div>
     <div>
-      <div id="movement-grid" class="movement-grid">
-        <div class="movement-card phase-execution">
-          <div class="movement-city">Loading...</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" id="hero-stats">
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:1.1rem 1.25rem;">
+          <div style="font-family:'Merriweather',serif;font-size:2rem;font-weight:700;color:#fff;line-height:1;" id="hs-movements">7</div>
+          <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);margin-top:0.3rem;">Active Cities</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:1.1rem 1.25rem;">
+          <div style="font-family:'Merriweather',serif;font-size:2rem;font-weight:700;color:#29a8e0;line-height:1;" id="hs-execution">—</div>
+          <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);margin-top:0.3rem;">In Execution Phase</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:1.1rem 1.25rem;">
+          <div style="font-family:'Merriweather',serif;font-size:2rem;font-weight:700;color:#f0b429;line-height:1;" id="hs-planning">—</div>
+          <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);margin-top:0.3rem;">In Planning Phase</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:1.1rem 1.25rem;">
+          <div style="font-family:'Merriweather',serif;font-size:2rem;font-weight:700;color:#e8674a;line-height:1;" id="hs-formation">—</div>
+          <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);margin-top:0.3rem;">In Formation Phase</div>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- MISSISSIPPI MOVEMENT MAP -->
+<section class="public-section" style="background:var(--navy);padding:3rem 0;" id="movements">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem;margin-bottom:2rem;">
+      <div>
+        <h2 class="section-title" style="color:#fff;">The Movement Map</h2>
+        <p class="section-sub" style="color:rgba(255,255,255,0.6);max-width:480px;">Seven cities across Mississippi where reconciliation is taking root. Color reflects movement phase and recent activity. Click any highlighted county to learn more.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;flex-shrink:0;">
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">Movement Health</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:#2d8a5e;flex-shrink:0;"></span>Execution — Highly Active</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:#4caf7d;flex-shrink:0;"></span>Execution — Active</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:#7dd4a8;flex-shrink:0;"></span>Execution — Less Active</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:#f0b429;flex-shrink:0;"></span>Planning</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:#e8674a;flex-shrink:0;"></span>Formation</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:rgba(255,255,255,0.75);"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);flex-shrink:0;"></span>No movement yet</div>
+      </div>
+    </div>
+    <div id="public-map" style="max-width:480px;margin:0 auto;"></div>
+  </div>
+</section>
+
+<!-- COMMUNITY PROFILE MODAL -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header" id="profile-hdr">
+      <div class="modal-title" id="profile-city">Movement Profile</div>
+      <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+    </div>
+    <div class="modal-body" id="profile-body">Loading...</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-profile')">Close</button>
+      <a class="btn btn-primary" href="mailto:grace@missionmississippi.org">Contact HQ</a>
+    </div>
+  </div>
+</div>
 
 <!-- ANNOUNCEMENTS -->
 <section class="public-section" id="announcements">
@@ -575,27 +627,227 @@ function toast(msg, type='success') {
 }
 
 
+// ── MISSISSIPPI COUNTY MAP — shared between index.html and admin.html
+let _topoCache = null;
+
+async function loadTopo() {
+  if (_topoCache) return _topoCache;
+  const r = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+  _topoCache = await r.json();
+  return _topoCache;
+}
+
+function movementColor(mov, lastReportDate) {
+  if (!mov) return '#ddd8d0';
+  const days = lastReportDate
+    ? (Date.now() - new Date(lastReportDate)) / 86400000
+    : 999;
+  const phase = { Formation: 1, Planning: 2, Execution: 3 }[mov.phase] || 0;
+  const recency = days < 30 ? 2 : days < 90 ? 1 : 0;
+  const score = phase + recency;
+  if (score >= 5) return '#2d8a5e';
+  if (score >= 4) return '#4caf7d';
+  if (score >= 3) return '#7dd4a8';
+  if (score >= 2) return '#f0b429';
+  return '#e8674a';
+}
+
+async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:0.85rem;">Loading map\u2026</div>';
+  try {
+    const us = await loadTopo();
+    el.innerHTML = '';
+    const all = topojson.feature(us, us.objects.counties).features;
+    const ms  = all.filter(d => String(d.id).padStart(5,'0').startsWith('28'));
+    const msState = topojson.merge(us,
+      us.objects.counties.geometries.filter(d => String(d.id).padStart(5,'0').startsWith('28')));
+
+    const w = el.offsetWidth || 380;
+    const h = Math.round(w * 1.22);
+
+    const proj = d3.geoMercator()
+      .fitExtent([[8,8],[w-8,h-8]], { type:'FeatureCollection', features: ms });
+    const path = d3.geoPath().projection(proj);
+
+    const byFips = {};
+    movements.filter(m => m.county_fips && m.active).forEach(m => { byFips[m.county_fips] = m; });
+
+    const svg = d3.select('#'+containerId).append('svg')
+      .attr('viewBox', `0 0 ${w} ${h}`).attr('width','100%').style('display','block');
+
+    svg.selectAll('.c').data(ms).join('path')
+      .attr('class','c').attr('d', path)
+      .attr('fill', d => {
+        const fips = String(d.id).padStart(5,'0');
+        const mov = byFips[fips];
+        return movementColor(mov, mov ? lastReports[mov.id] : null);
+      })
+      .attr('stroke','#fff').attr('stroke-width', 0.6)
+      .attr('cursor', d => byFips[String(d.id).padStart(5,'0')] ? 'pointer' : 'default')
+      .on('mouseover', function(event, d) {
+        const fips = String(d.id).padStart(5,'0');
+        const mov = byFips[fips]; if (!mov) return;
+        d3.select(this).attr('stroke','#1a2744').attr('stroke-width',2);
+        showMapTip(event, mov, lastReports[mov.id]);
+      })
+      .on('mousemove', e => moveMapTip(e))
+      .on('mouseout', function() {
+        d3.select(this).attr('stroke','#fff').attr('stroke-width',0.6);
+        hideMapTip();
+      })
+      .on('click', (e, d) => {
+        const fips = String(d.id).padStart(5,'0');
+        if (byFips[fips] && onCountyClick) onCountyClick(byFips[fips]);
+      });
+
+    svg.append('path').datum(msState).attr('d',path)
+      .attr('fill','none').attr('stroke','#1a2744').attr('stroke-width',1.5);
+
+    movements.filter(m => m.county_fips && m.active).forEach(m => {
+      const county = ms.find(c => String(c.id).padStart(5,'0') === m.county_fips);
+      if (!county) return;
+      const [cx,cy] = path.centroid(county);
+      if (isNaN(cx)) return;
+      svg.append('text')
+        .attr('x',cx).attr('y',cy)
+        .attr('text-anchor','middle').attr('dominant-baseline','middle')
+        .attr('font-size', w < 320 ? '7px' : '9px')
+        .attr('font-weight','700').attr('fill','#1a2744')
+        .attr('pointer-events','none').text(m.city);
+    });
+
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);">Map unavailable.</div>';
+    console.error('Map render error:', e);
+  }
+}
+
+function showMapTip(event, mov, lastReport) {
+  let tip = document.getElementById('_map_tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = '_map_tip';
+    tip.style.cssText = 'position:fixed;background:#1a2744;color:#fff;padding:0.5rem 0.8rem;border-radius:4px;font-size:0.78rem;line-height:1.65;pointer-events:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+    document.body.appendChild(tip);
+  }
+  const days = lastReport ? Math.round((Date.now()-new Date(lastReport))/86400000) : null;
+  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.city)}</strong><br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
+  tip.style.display = 'block';
+  moveMapTip(event);
+}
+function moveMapTip(e) {
+  const tip = document.getElementById('_map_tip');
+  if (tip) { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; }
+}
+function hideMapTip() {
+  const tip = document.getElementById('_map_tip');
+  if (tip) tip.style.display = 'none';
+}
+
+// ── CENSUS REPORTER
+async function fetchCensusData(geoId) {
+  const url = `https://api.censusreporter.org/1.0/data/show/latest?table_ids=B01003,B02001,B19013,B17001&geo_ids=${geoId}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Census API error');
+  const json = await r.json();
+  const d = json.data[geoId];
+  const raceTot = d.B02001?.estimate?.B02001001 || 1;
+  const povTot  = d.B17001?.estimate?.B17001001 || 1;
+  return {
+    population:              d.B01003?.estimate?.B01003001 || null,
+    pct_white:               Math.round((d.B02001?.estimate?.B02001002||0) / raceTot * 1000) / 10,
+    pct_black:               Math.round((d.B02001?.estimate?.B02001003||0) / raceTot * 1000) / 10,
+    median_household_income: d.B19013?.estimate?.B19013001 || null,
+    poverty_rate:            Math.round((d.B17001?.estimate?.B17001002||0) / povTot * 1000) / 10,
+    census_year:             new Date().getFullYear(),
+    last_census_update:      new Date().toISOString()
+  };
+}
+
+function fmtCurrency(n) {
+  return n ? '$' + n.toLocaleString() : '—';
+}
+function fmtPct(n) {
+  return n != null ? n + '%' : '—';
+}
+function fmtNum(n) {
+  return n ? n.toLocaleString() : '—';
+}
+
+
 // ── Load all public data on page load
 async function loadPublic() {
-  loadMovements();
+  loadHeroStats();
+  loadPublicMap();
   loadAnnouncements();
   loadEvents();
   loadDocuments();
   loadAssets();
 }
 
-async function loadMovements() {
-  const movements = await dbGet('lm_movements', { select: '*', active: 'eq.true', order: 'city.asc' });
-  const grid = document.getElementById('movement-grid');
-  if (!movements.length) { grid.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-size:0.85rem;">No movements found.</p>'; return; }
-  grid.innerHTML = movements.map(m => {
-    const phaseClass = 'phase-' + m.phase.toLowerCase();
-    return `<div class="movement-card ${phaseClass}">
-      <div class="movement-city">${escHtml(m.city)}</div>
-      <div class="movement-region">${escHtml(m.region||'')}</div>
-      <span class="movement-phase">${escHtml(m.phase)}</span>
-    </div>`;
-  }).join('');
+async function loadHeroStats() {
+  const movements = await dbGet('lm_movements', { select: '*', active: 'eq.true' });
+  const ex = movements.filter(m => m.phase === 'Execution').length;
+  const pl = movements.filter(m => m.phase === 'Planning').length;
+  const fo = movements.filter(m => m.phase === 'Formation').length;
+  document.getElementById('hs-movements').textContent = movements.length;
+  document.getElementById('hs-execution').textContent = ex;
+  document.getElementById('hs-planning').textContent  = pl;
+  document.getElementById('hs-formation').textContent = fo;
+}
+
+async function loadPublicMap() {
+  const movements = await dbGet('lm_movements', { select: '*', active: 'eq.true' });
+  const reports   = await dbGet('lm_event_reports', { select: 'movement_id,event_date', order: 'event_date.desc' });
+  const lastReports = {};
+  reports.forEach(r => { if (!lastReports[r.movement_id]) lastReports[r.movement_id] = r.event_date; });
+  await renderMSMap('public-map', movements, lastReports, showProfileModal);
+}
+
+async function showProfileModal(mov) {
+  document.getElementById('profile-city').textContent = mov.city + ' — ' + mov.phase;
+  document.getElementById('profile-body').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Loading profile...</div>';
+  openModal('modal-profile');
+  const profiles = await dbGet('lm_community_profiles', { movement_id: `eq.${mov.id}`, select: '*' });
+  const p = profiles[0] || {};
+  const hasCensus = !!p.population;
+  document.getElementById('profile-body').innerHTML = `
+    ${hasCensus ? `
+    <div style="margin-bottom:1.25rem;">
+      <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);margin-bottom:0.75rem;">Demographics (ACS ${p.census_year||''})</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
+        <div style="background:var(--cream);border-radius:4px;padding:0.75rem;text-align:center;">
+          <div style="font-family:'Merriweather',serif;font-size:1.05rem;font-weight:700;color:var(--navy);">${fmtNum(p.population)}</div>
+          <div style="font-size:0.67rem;color:var(--muted);margin-top:0.15rem;">Population</div>
+        </div>
+        <div style="background:var(--cream);border-radius:4px;padding:0.75rem;text-align:center;">
+          <div style="font-family:'Merriweather',serif;font-size:1.05rem;font-weight:700;color:var(--navy);">${fmtCurrency(p.median_household_income)}</div>
+          <div style="font-size:0.67rem;color:var(--muted);margin-top:0.15rem;">Median Income</div>
+        </div>
+        <div style="background:var(--cream);border-radius:4px;padding:0.75rem;text-align:center;">
+          <div style="font-family:'Merriweather',serif;font-size:1.05rem;font-weight:700;color:var(--navy);">${fmtPct(p.poverty_rate)}</div>
+          <div style="font-size:0.67rem;color:var(--muted);margin-top:0.15rem;">Poverty Rate</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;font-size:0.76rem;color:var(--muted);">
+        <span style="background:var(--cream);padding:0.28rem 0.6rem;border-radius:3px;">${fmtPct(p.pct_black)} Black</span>
+        <span style="background:var(--cream);padding:0.28rem 0.6rem;border-radius:3px;">${fmtPct(p.pct_white)} White</span>
+      </div>
+    </div>` : ''}
+    ${p.church_landscape ? `
+    <div style="margin-bottom:1rem;padding-top:${hasCensus?'1rem':'0'};${hasCensus?'border-top:1px solid var(--border);':''}">
+      <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Church Landscape</div>
+      <p style="font-size:0.86rem;color:var(--text);line-height:1.7;">${escHtml(p.church_landscape)}</p>
+    </div>` : ''}
+    ${p.local_context ? `
+    <div style="margin-bottom:0.5rem;">
+      <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Local Context</div>
+      <p style="font-size:0.86rem;color:var(--text);line-height:1.7;">${escHtml(p.local_context)}</p>
+    </div>` : ''}
+    ${!hasCensus && !p.church_landscape && !p.local_context ? '<p style="color:var(--muted);font-size:0.88rem;font-style:italic;text-align:center;padding:1rem 0;">Community profile coming soon.</p>' : ''}
+  `;
 }
 
 async function loadAnnouncements() {
@@ -657,6 +909,16 @@ async function loadAssets() {
     </a>`).join('');
 }
 
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); });
+});
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); });
+});
 loadPublic();
 </script>
 </body>

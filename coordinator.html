@@ -303,6 +303,10 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
             Submit Story
           </a>
+          <a class="sidebar-link" href="#" onclick="showSection('profile')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
+            Community Profile
+          </a>
         </nav>
       </div>
       <div class="sidebar-section" style="margin-top:1rem;">
@@ -467,6 +471,47 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <button class="btn btn-primary" onclick="submitStory()">Submit Story</button>
         </div>
       </div>
+
+      <!-- COMMUNITY PROFILE SECTION -->
+      <div id="section-profile" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Community Profile</h1>
+          <p class="page-sub">Your movement's demographic data and local context. Demographics are pulled from the U.S. Census Bureau's American Community Survey.</p>
+        </div>
+
+        <!-- Demographics -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.5rem;">
+            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);">Demographics</div>
+            <button class="btn btn-sm btn-outline" onclick="coordFetchCensus()">Fetch from Census Reporter</button>
+          </div>
+          <div id="coord-census-display" style="font-size:0.85rem;color:var(--muted);font-style:italic;">No census data yet. Click Fetch to load current ACS data for your city.</div>
+        </div>
+
+        <!-- Narrative -->
+        <div class="card">
+          <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);margin-bottom:1rem;">Your Community's Story</div>
+          <div class="form-group">
+            <label class="form-label">Church Landscape</label>
+            <textarea class="form-textarea" id="cp-church" placeholder="Describe the church ecosystem in your community..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Key Relationships</label>
+            <textarea class="form-textarea" id="cp-relationships" placeholder="People, organizations, and partnerships that matter to this work..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Local Context</label>
+            <textarea class="form-textarea" id="cp-context" placeholder="What makes your community distinctive? Key challenges, opportunities, and dynamics..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reconciliation History</label>
+            <textarea class="form-textarea" id="cp-history" placeholder="Past reconciliation work, significant moments, how this movement started..."></textarea>
+          </div>
+          <div class="form-error" id="cp-error"></div>
+          <button class="btn btn-primary" onclick="saveCoordProfile()">Save Profile</button>
+        </div>
+      </div>
+
 
     </main>
   </div>
@@ -756,13 +801,14 @@ async function loadUserData() {
 
 // ── SECTIONS
 function showSection(name) {
-  ['dashboard','roster','reports','stories'].forEach(s => {
+  ['dashboard','roster','reports','stories','profile'].forEach(s => {
     document.getElementById('section-'+s).style.display = s===name?'block':'none';
   });
   document.querySelectorAll('.sidebar-link, .nav-link').forEach(l => l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l => l.classList.add('active'));
   if (name==='roster')  loadRoster();
   if (name==='reports') loadReports();
+  if (name==='profile')  loadCoordProfile();
 }
 
 // ── DASHBOARD
@@ -915,6 +961,241 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); });
 });
+
+// ── MISSISSIPPI COUNTY MAP — shared between index.html and admin.html
+let _topoCache = null;
+
+async function loadTopo() {
+  if (_topoCache) return _topoCache;
+  const r = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+  _topoCache = await r.json();
+  return _topoCache;
+}
+
+function movementColor(mov, lastReportDate) {
+  if (!mov) return '#ddd8d0';
+  const days = lastReportDate
+    ? (Date.now() - new Date(lastReportDate)) / 86400000
+    : 999;
+  const phase = { Formation: 1, Planning: 2, Execution: 3 }[mov.phase] || 0;
+  const recency = days < 30 ? 2 : days < 90 ? 1 : 0;
+  const score = phase + recency;
+  if (score >= 5) return '#2d8a5e';
+  if (score >= 4) return '#4caf7d';
+  if (score >= 3) return '#7dd4a8';
+  if (score >= 2) return '#f0b429';
+  return '#e8674a';
+}
+
+async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:0.85rem;">Loading map\u2026</div>';
+  try {
+    const us = await loadTopo();
+    el.innerHTML = '';
+    const all = topojson.feature(us, us.objects.counties).features;
+    const ms  = all.filter(d => String(d.id).padStart(5,'0').startsWith('28'));
+    const msState = topojson.merge(us,
+      us.objects.counties.geometries.filter(d => String(d.id).padStart(5,'0').startsWith('28')));
+
+    const w = el.offsetWidth || 380;
+    const h = Math.round(w * 1.22);
+
+    const proj = d3.geoMercator()
+      .fitExtent([[8,8],[w-8,h-8]], { type:'FeatureCollection', features: ms });
+    const path = d3.geoPath().projection(proj);
+
+    const byFips = {};
+    movements.filter(m => m.county_fips && m.active).forEach(m => { byFips[m.county_fips] = m; });
+
+    const svg = d3.select('#'+containerId).append('svg')
+      .attr('viewBox', `0 0 ${w} ${h}`).attr('width','100%').style('display','block');
+
+    svg.selectAll('.c').data(ms).join('path')
+      .attr('class','c').attr('d', path)
+      .attr('fill', d => {
+        const fips = String(d.id).padStart(5,'0');
+        const mov = byFips[fips];
+        return movementColor(mov, mov ? lastReports[mov.id] : null);
+      })
+      .attr('stroke','#fff').attr('stroke-width', 0.6)
+      .attr('cursor', d => byFips[String(d.id).padStart(5,'0')] ? 'pointer' : 'default')
+      .on('mouseover', function(event, d) {
+        const fips = String(d.id).padStart(5,'0');
+        const mov = byFips[fips]; if (!mov) return;
+        d3.select(this).attr('stroke','#1a2744').attr('stroke-width',2);
+        showMapTip(event, mov, lastReports[mov.id]);
+      })
+      .on('mousemove', e => moveMapTip(e))
+      .on('mouseout', function() {
+        d3.select(this).attr('stroke','#fff').attr('stroke-width',0.6);
+        hideMapTip();
+      })
+      .on('click', (e, d) => {
+        const fips = String(d.id).padStart(5,'0');
+        if (byFips[fips] && onCountyClick) onCountyClick(byFips[fips]);
+      });
+
+    svg.append('path').datum(msState).attr('d',path)
+      .attr('fill','none').attr('stroke','#1a2744').attr('stroke-width',1.5);
+
+    movements.filter(m => m.county_fips && m.active).forEach(m => {
+      const county = ms.find(c => String(c.id).padStart(5,'0') === m.county_fips);
+      if (!county) return;
+      const [cx,cy] = path.centroid(county);
+      if (isNaN(cx)) return;
+      svg.append('text')
+        .attr('x',cx).attr('y',cy)
+        .attr('text-anchor','middle').attr('dominant-baseline','middle')
+        .attr('font-size', w < 320 ? '7px' : '9px')
+        .attr('font-weight','700').attr('fill','#1a2744')
+        .attr('pointer-events','none').text(m.city);
+    });
+
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);">Map unavailable.</div>';
+    console.error('Map render error:', e);
+  }
+}
+
+function showMapTip(event, mov, lastReport) {
+  let tip = document.getElementById('_map_tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = '_map_tip';
+    tip.style.cssText = 'position:fixed;background:#1a2744;color:#fff;padding:0.5rem 0.8rem;border-radius:4px;font-size:0.78rem;line-height:1.65;pointer-events:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+    document.body.appendChild(tip);
+  }
+  const days = lastReport ? Math.round((Date.now()-new Date(lastReport))/86400000) : null;
+  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.city)}</strong><br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
+  tip.style.display = 'block';
+  moveMapTip(event);
+}
+function moveMapTip(e) {
+  const tip = document.getElementById('_map_tip');
+  if (tip) { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; }
+}
+function hideMapTip() {
+  const tip = document.getElementById('_map_tip');
+  if (tip) tip.style.display = 'none';
+}
+
+// ── CENSUS REPORTER
+async function fetchCensusData(geoId) {
+  const url = `https://api.censusreporter.org/1.0/data/show/latest?table_ids=B01003,B02001,B19013,B17001&geo_ids=${geoId}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Census API error');
+  const json = await r.json();
+  const d = json.data[geoId];
+  const raceTot = d.B02001?.estimate?.B02001001 || 1;
+  const povTot  = d.B17001?.estimate?.B17001001 || 1;
+  return {
+    population:              d.B01003?.estimate?.B01003001 || null,
+    pct_white:               Math.round((d.B02001?.estimate?.B02001002||0) / raceTot * 1000) / 10,
+    pct_black:               Math.round((d.B02001?.estimate?.B02001003||0) / raceTot * 1000) / 10,
+    median_household_income: d.B19013?.estimate?.B19013001 || null,
+    poverty_rate:            Math.round((d.B17001?.estimate?.B17001002||0) / povTot * 1000) / 10,
+    census_year:             new Date().getFullYear(),
+    last_census_update:      new Date().toISOString()
+  };
+}
+
+function fmtCurrency(n) {
+  return n ? '$' + n.toLocaleString() : '—';
+}
+function fmtPct(n) {
+  return n != null ? n + '%' : '—';
+}
+function fmtNum(n) {
+  return n ? n.toLocaleString() : '—';
+}
+
+
+// ── COMMUNITY PROFILE (COORDINATOR)
+async function loadCoordProfile() {
+  if (!movement) return;
+  const profiles = await dbGet('lm_community_profiles', { movement_id:`eq.${movement.id}`, select:'*' }, session.access_token);
+  const p = profiles[0] || {};
+  renderCoordCensus(p);
+  document.getElementById('cp-church').value        = p.church_landscape || '';
+  document.getElementById('cp-relationships').value = p.key_relationships || '';
+  document.getElementById('cp-context').value       = p.local_context || '';
+  document.getElementById('cp-history').value       = p.reconciliation_history || '';
+}
+
+function renderCoordCensus(p) {
+  const el = document.getElementById('coord-census-display');
+  if (!p || !p.population) {
+    el.innerHTML = 'No census data yet. Click <strong>Fetch from Census Reporter</strong> to load current ACS data for your city.';
+    el.style.fontStyle = 'italic';
+    return;
+  }
+  el.style.fontStyle = 'normal';
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;font-size:0.82rem;">
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">${fmtNum(p.population)}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">Population</div>
+      </div>
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">${fmtCurrency(p.median_household_income)}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">Median Income</div>
+      </div>
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">${fmtPct(p.poverty_rate)}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">Poverty Rate</div>
+      </div>
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">${fmtPct(p.pct_black)}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">Black</div>
+      </div>
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">${fmtPct(p.pct_white)}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">White</div>
+      </div>
+      <div style="background:var(--cream);border-radius:4px;padding:0.65rem 0.8rem;">
+        <div style="font-weight:700;color:var(--navy);font-family:'Merriweather',serif;">ACS ${p.census_year||''}</div>
+        <div style="color:var(--muted);font-size:0.72rem;margin-top:0.1rem;">Source Year</div>
+      </div>
+    </div>`;
+}
+
+async function coordFetchCensus() {
+  if (!movement?.census_geo_id) { toast('No Census ID configured for your city. Contact HQ.', 'error'); return; }
+  toast('Fetching Census data...', 'info');
+  try {
+    const data = await fetchCensusData(movement.census_geo_id);
+    const existing = await dbGet('lm_community_profiles', { movement_id:`eq.${movement.id}`, select:'id' }, session.access_token);
+    if (existing.length) {
+      await dbPatch('lm_community_profiles', existing[0].id, data, session.access_token);
+    } else {
+      await dbPost('lm_community_profiles', { movement_id: movement.id, ...data }, session.access_token);
+    }
+    renderCoordCensus(data);
+    toast('Census data loaded successfully.');
+  } catch(e) {
+    toast('Could not fetch Census data. Try again later.', 'error');
+  }
+}
+
+async function saveCoordProfile() {
+  const errEl = document.getElementById('cp-error'); errEl.style.display='none';
+  const data = {
+    church_landscape:       document.getElementById('cp-church').value.trim() || null,
+    key_relationships:      document.getElementById('cp-relationships').value.trim() || null,
+    local_context:          document.getElementById('cp-context').value.trim() || null,
+    reconciliation_history: document.getElementById('cp-history').value.trim() || null,
+    last_updated:           new Date().toISOString()
+  };
+  const existing = await dbGet('lm_community_profiles', { movement_id:`eq.${movement.id}`, select:'id' }, session.access_token);
+  if (existing.length) {
+    await dbPatch('lm_community_profiles', existing[0].id, data, session.access_token);
+  } else {
+    await dbPost('lm_community_profiles', { movement_id: movement.id, ...data }, session.access_token);
+  }
+  toast('Profile saved successfully.');
+}
 
 init();
 </script>
