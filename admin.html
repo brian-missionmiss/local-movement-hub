@@ -481,6 +481,9 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <option value="coordinator">Coordinator</option>
           <option value="admin">Admin (Mission Mississippi Staff)</option>
         </select>
+        <div id="inv-role-hint" style="font-size:0.78rem;color:var(--muted);margin-top:0.35rem;font-style:italic;">
+          Access limited to their assigned movement dashboard.
+        </div>
       </div>
       <div class="form-group" id="inv-movement-group">
         <label class="form-label">Movement</label>
@@ -867,7 +870,9 @@ async function loadCoordinators() {
   if (!invites.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff invited yet.</td></tr>'; return; }
   tbody.innerHTML = invites.map(i=>`<tr>
     <td>${escHtml(i.email)}</td>
-    <td>${escHtml(movMap[i.movement_id]||'—')}</td>
+    <td>${i.role==='admin'
+      ? '<span class="badge badge-muted">All Movements</span>'
+      : escHtml(movMap[i.movement_id]||'—')}</td>
     <td><span class="badge ${i.role==='admin'?'badge-coral':'badge-navy'}">${escHtml(i.role||'coordinator')}</span></td>
     <td>${i.accepted?'<span class="badge badge-green">Accepted</span>':'<span class="badge badge-muted">Pending</span>'}</td>
     <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(i.created_at)}</td>
@@ -1070,6 +1075,9 @@ async function deleteAsset(id) { if(!confirm('Delete this asset?')) return; awai
 function toggleInviteMovement() {
   const role = document.getElementById('inv-role').value;
   document.getElementById('inv-movement-group').style.display = role==='admin' ? 'none' : '';
+  document.getElementById('inv-role-hint').textContent = role==='admin'
+    ? 'Full panel access — not tied to any movement.'
+    : 'Access limited to their assigned movement dashboard.';
 }
 
 // ── ADMIN REPORT SUBMISSION
