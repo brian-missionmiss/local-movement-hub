@@ -339,7 +339,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Email</th><th>Movement</th><th>Role</th><th>Status</th><th>Invited</th></tr></thead>
+            <thead><tr><th>Email</th><th>Movement</th><th>Role</th><th>Name</th><th>Added</th></tr></thead>
             <tbody id="coord-table"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -864,18 +864,18 @@ async function toggleMovement(id, active) {
 
 // ── COORDINATORS / INVITATIONS
 async function loadCoordinators() {
-  const invites = await dbGet('lm_invitations', { select:'*', order:'created_at.desc' }, session.access_token);
+  const profiles = await dbGet('lm_profiles', { select:'*', order:'created_at.desc' }, session.access_token);
   const movMap = Object.fromEntries(movements.map(m=>[m.id,m.city]));
   const tbody = document.getElementById('coord-table');
-  if (!invites.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff invited yet.</td></tr>'; return; }
-  tbody.innerHTML = invites.map(i=>`<tr>
-    <td>${escHtml(i.email)}</td>
-    <td>${i.role==='admin'
+  if (!profiles.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff or coordinators yet.</td></tr>'; return; }
+  tbody.innerHTML = profiles.map(p=>`<tr>
+    <td>${escHtml(p.email||'—')}</td>
+    <td>${p.role==='admin'
       ? '<span class="badge badge-muted">All Movements</span>'
-      : escHtml(movMap[i.movement_id]||'—')}</td>
-    <td><span class="badge ${i.role==='admin'?'badge-coral':'badge-navy'}">${escHtml(i.role||'coordinator')}</span></td>
-    <td>${i.accepted?'<span class="badge badge-green">Accepted</span>':'<span class="badge badge-muted">Pending</span>'}</td>
-    <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(i.created_at)}</td>
+      : escHtml(movMap[p.movement_id]||'—')}</td>
+    <td><span class="badge ${p.role==='admin'?'badge-coral':'badge-navy'}">${escHtml(p.role||'coordinator')}</span></td>
+    <td>${escHtml(p.full_name||'—')}</td>
+    <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(p.created_at)}</td>
   </tr>`).join('');
 }
 
@@ -897,7 +897,7 @@ async function sendInvite() {
 
   if (userData.id) {
     // 2. Create profile row
-    const profileData = { id:userData.id, role };
+    const profileData = { id:userData.id, role, email };
     if (role==='coordinator' && movId) profileData.movement_id = movId;
     await dbPost('lm_profiles', profileData, session.access_token);
     // 3. Record invitation
