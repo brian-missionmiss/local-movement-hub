@@ -317,7 +317,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <h2 style="font-family:'Merriweather',serif;font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem;">Movement Status</h2>
         <div class="table-wrap" style="margin-bottom:1.75rem;">
           <table class="data-table">
-            <thead><tr><th>City</th><th>Region</th><th>Phase</th><th>Reports</th><th></th></tr></thead>
+            <thead><tr><th>County</th><th>Primary City</th><th>Phase</th><th>Reports</th><th></th></tr></thead>
             <tbody id="ov-movement-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -347,7 +347,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>City</th><th>Region</th><th>Phase</th><th>Active</th><th></th></tr></thead>
+            <thead><tr><th>County</th><th>Primary City</th><th>Phase</th><th>Active</th><th></th></tr></thead>
             <tbody id="movements-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -562,9 +562,10 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <div class="modal-header"><div class="modal-title">Add Movement</div><button class="modal-close" onclick="closeModal('modal-movement')">&times;</button></div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group"><label class="form-label">City</label><input class="form-input" id="mv-city" type="text" placeholder="City name"></div>
-        <div class="form-group"><label class="form-label">Region</label><input class="form-input" id="mv-region" type="text" placeholder="e.g. Delta"></div>
+        <div class="form-group"><label class="form-label">County Name</label><input class="form-input" id="mv-county" type="text" placeholder="e.g. Hinds County"></div>
+        <div class="form-group"><label class="form-label">Primary City</label><input class="form-input" id="mv-city" type="text" placeholder="e.g. Jackson"></div>
       </div>
+      <div class="form-group"><label class="form-label">Region</label><input class="form-input" id="mv-region" type="text" placeholder="e.g. Delta, Central MS"></div>
       <div class="form-group">
         <label class="form-label">Phase</label>
         <select class="form-select" id="mv-phase"><option>Formation</option><option>Planning</option><option>Execution</option></select>
@@ -875,8 +876,8 @@ async function loadOverview() {
   const rows = await Promise.all(movements.map(async m => {
     const rpts = await dbGet('lm_event_reports', { movement_id:`eq.${m.id}`, select:'id' }, token);
     return `<tr>
-      <td style="font-weight:600;">${escHtml(m.city)}</td>
-      <td style="color:var(--muted);">${escHtml(m.region||'—')}</td>
+      <td style="font-weight:600;">${escHtml(m.county_name||m.city)}</td>
+      <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
       <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
       <td>${rpts.length}</td>
       <td><button class="btn btn-sm btn-outline" onclick="editPhase('${m.id}','${m.phase}','${escHtml(m.city)}')">Edit Phase</button></td>
@@ -904,8 +905,8 @@ async function editPhase(id, current, city) {
 async function loadMovementsTable() {
   const tbody = document.getElementById('movements-table');
   tbody.innerHTML = movements.map(m => `<tr>
-    <td style="font-weight:600;">${escHtml(m.city)}</td>
-    <td style="color:var(--muted);">${escHtml(m.region||'—')}</td>
+    <td style="font-weight:600;">${escHtml(m.county_name||m.city)}</td>
+    <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
     <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
     <td>${m.active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
     <td><button class="btn btn-sm btn-danger" onclick="toggleMovement('${m.id}',${m.active})">${m.active?'Deactivate':'Activate'}</button></td>
@@ -916,7 +917,8 @@ async function saveMovement() {
   const city=document.getElementById('mv-city').value.trim();
   const errEl=document.getElementById('mv-error'); errEl.style.display='none';
   if (!city) { errEl.textContent='City is required.'; errEl.style.display='block'; return; }
-  await dbPost('lm_movements', { city, region:document.getElementById('mv-region').value.trim()||null, phase:document.getElementById('mv-phase').value });
+  const countyVal = document.getElementById('mv-county')?.value.trim()||null;
+  await dbPost('lm_movements', { city, county_name:countyVal, region:document.getElementById('mv-region').value.trim()||null, phase:document.getElementById('mv-phase').value });
   closeModal('modal-movement'); toast('Movement added.');
   await loadMovementsData(); loadMovementsTable();
 }
@@ -929,7 +931,7 @@ async function toggleMovement(id, active) {
 // ── COORDINATORS / INVITATIONS
 async function loadCoordinators() {
   const profiles = await dbGet('lm_profiles', { select:'*', order:'created_at.desc' }, session.access_token);
-  const movMap = Object.fromEntries(movements.map(m=>[m.id,m.city]));
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const tbody = document.getElementById('coord-table');
   if (!profiles.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff or coordinators yet.</td></tr>'; return; }
   tbody.innerHTML = profiles.map(p=>`<tr>
@@ -994,7 +996,7 @@ async function loadAllReports() {
   if (movFilter) params.movement_id = `eq.${movFilter}`;
   if (typeFilter) params.event_type = `eq.${typeFilter}`;
   const rpts = await dbGet('lm_event_reports', params, session.access_token);
-  const movMap = Object.fromEntries(movements.map(m=>[m.id,m.city]));
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const tbody = document.getElementById('all-reports-table');
   if (!rpts.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No reports found.</td></tr>'; return; }
   tbody.innerHTML = rpts.map(r=>`<tr>
@@ -1009,7 +1011,7 @@ async function loadAllReports() {
 // ── STORIES
 async function loadStories() {
   const stories = await dbGet('lm_stories', { select:'*', order:'created_at.desc' }, session.access_token);
-  const movMap = Object.fromEntries(movements.map(m=>[m.id,m.city]));
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const el = document.getElementById('stories-list');
   if (!stories.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128195;</div><div class="empty-state-text">No stories submitted yet.</div></div>'; return; }
   el.innerHTML = stories.map(s=>`
@@ -1223,7 +1225,7 @@ async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
         .attr('text-anchor','middle').attr('dominant-baseline','middle')
         .attr('font-size', w < 320 ? '7px' : '9px')
         .attr('font-weight','700').attr('fill','#1a2744')
-        .attr('pointer-events','none').text(m.city);
+        .attr('pointer-events','none').text(m.primary_city || m.city);
     });
 
   } catch(e) {
@@ -1241,7 +1243,7 @@ function showMapTip(event, mov, lastReport) {
     document.body.appendChild(tip);
   }
   const days = lastReport ? Math.round((Date.now()-new Date(lastReport))/86400000) : null;
-  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.city)}</strong><br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
+  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.county_name||mov.city)}</strong>${mov.primary_city?`<br><span style='opacity:0.6;font-size:0.72rem'>${escHtml(mov.primary_city)}</span>`:''}<br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
   tip.style.display = 'block';
   moveMapTip(event);
 }
@@ -1298,10 +1300,10 @@ async function loadCommunityProfiles() {
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.65rem;flex-wrap:wrap;gap:0.5rem;">
         <div>
-          <div class="card-title">${escHtml(m.city)}</div>
+          <div class="card-title">${escHtml(m.county_name||m.city)}</div><div style="font-size:0.78rem;color:var(--muted);">${escHtml(m.primary_city||'')}</div>
           <div class="card-meta"><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></div>
         </div>
-        <button class="btn btn-sm btn-outline" onclick="openProfileEdit('${m.id}','${escHtml(m.city)}','${m.census_geo_id||''}')">Edit Profile</button>
+        <button class="btn btn-sm btn-outline" onclick="openProfileEdit('${m.id}','${escHtml(m.county_name||m.city)}','${m.census_geo_id||''}')">Edit Profile</button>
       </div>
       ${hasCensus ? `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:0.65rem;font-size:0.78rem;">

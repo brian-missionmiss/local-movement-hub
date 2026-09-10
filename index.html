@@ -715,7 +715,7 @@ async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
         .attr('text-anchor','middle').attr('dominant-baseline','middle')
         .attr('font-size', w < 320 ? '7px' : '9px')
         .attr('font-weight','700').attr('fill','#1a2744')
-        .attr('pointer-events','none').text(m.city);
+        .attr('pointer-events','none').text(m.primary_city || m.city);
     });
 
   } catch(e) {
@@ -733,7 +733,7 @@ function showMapTip(event, mov, lastReport) {
     document.body.appendChild(tip);
   }
   const days = lastReport ? Math.round((Date.now()-new Date(lastReport))/86400000) : null;
-  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.city)}</strong><br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
+  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.county_name||mov.city)}</strong>${mov.primary_city?`<br><span style='opacity:0.6;font-size:0.72rem'>${escHtml(mov.primary_city)}</span>`:''}<br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
   tip.style.display = 'block';
   moveMapTip(event);
 }
@@ -807,12 +807,14 @@ async function loadPublicMap() {
 }
 
 async function showProfileModal(mov) {
-  document.getElementById('profile-city').textContent = mov.city + ' — ' + mov.phase;
+  document.getElementById('profile-city').textContent = (mov.county_name||mov.city) + ' — ' + mov.phase;
   document.getElementById('profile-body').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Loading profile...</div>';
   openModal('modal-profile');
   const profiles = await dbGet('lm_community_profiles', { movement_id: `eq.${mov.id}`, select: '*' });
   const p = profiles[0] || {};
   const hasCensus = !!p.population;
+  const countyName = mov.county_name || mov.city;
+  const cityName = mov.primary_city || mov.city;
   document.getElementById('profile-body').innerHTML = `
     ${hasCensus ? `
     <div style="margin-bottom:1.25rem;">

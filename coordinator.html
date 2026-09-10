@@ -792,8 +792,8 @@ async function loadUserData() {
   document.getElementById('nav-user').textContent = userEmail;
 
   if (movement) {
-    document.getElementById('sb-movement-name').textContent = movement.city + ' Movement';
-    document.getElementById('dash-title').textContent = movement.city + ' Movement Dashboard';
+    document.getElementById('sb-movement-name').textContent = (movement.county_name||movement.city) + ' Movement';
+    document.getElementById('dash-title').textContent = (movement.county_name||movement.city) + ' Movement Dashboard';
   }
 
   loadDashboard();
@@ -1050,7 +1050,7 @@ async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
         .attr('text-anchor','middle').attr('dominant-baseline','middle')
         .attr('font-size', w < 320 ? '7px' : '9px')
         .attr('font-weight','700').attr('fill','#1a2744')
-        .attr('pointer-events','none').text(m.city);
+        .attr('pointer-events','none').text(m.primary_city || m.city);
     });
 
   } catch(e) {
@@ -1068,7 +1068,7 @@ function showMapTip(event, mov, lastReport) {
     document.body.appendChild(tip);
   }
   const days = lastReport ? Math.round((Date.now()-new Date(lastReport))/86400000) : null;
-  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.city)}</strong><br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
+  tip.innerHTML = `<strong style="color:#29a8e0">${escHtml(mov.county_name||mov.city)}</strong>${mov.primary_city?`<br><span style='opacity:0.6;font-size:0.72rem'>${escHtml(mov.primary_city)}</span>`:''}<br>Phase: ${escHtml(mov.phase)}<br>${days!==null?`Last report: ${days}d ago`:'<span style="opacity:0.5">No reports yet</span>'}`;
   tip.style.display = 'block';
   moveMapTip(event);
 }
