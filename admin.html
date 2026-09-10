@@ -884,9 +884,9 @@ async function loadOverview() {
   }));
   tbody.innerHTML = rows.join('');
   // Render map
-  const allReports = await dbGet('lm_event_reports', { select:'movement_id,event_date', order:'event_date.desc' }, token);
+  const mapReports = await dbGet('lm_event_reports', { select:'movement_id,event_date', order:'event_date.desc' }, token);
   const lastReports = {};
-  allReports.forEach(r => { if (!lastReports[r.movement_id]) lastReports[r.movement_id] = r.event_date; });
+  mapReports.forEach(r => { if (!lastReports[r.movement_id]) lastReports[r.movement_id] = r.event_date; });
   await renderMSMap('admin-map', movements, lastReports, m => editPhase(m.id, m.phase, m.city));
 }
 
