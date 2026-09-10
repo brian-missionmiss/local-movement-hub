@@ -714,9 +714,14 @@ async function doLogout() {
 
 async function loadUserData() {
   const token = session.access_token;
-  // Supabase password signin returns user at top level; also check nested
-  const userId = session.user?.id || session.id || '';
-  const userEmail = session.user?.email || session.email || '';
+  // Get user identity directly from Auth API — reliable regardless of session shape
+  const userResp = await fetch(`${SB_URL}/auth/v1/user`, {
+    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${token}` }
+  });
+  if (!userResp.ok) { toast('Session invalid. Please sign in again.', 'error'); doLogout(); return; }
+  const userData = await userResp.json();
+  const userId = userData.id;
+  const userEmail = userData.email;
   // Get profile
   const profiles = await dbGet('lm_profiles', { id: `eq.${userId}`, select: '*' }, token);
   // If no profile row yet (first login after invite), we can't proceed

@@ -677,9 +677,19 @@ document.getElementById('login-password').addEventListener('keydown', e=>{ if(e.
 
 async function verifyAndLoad() {
   const token = session.access_token;
-  // Supabase password signin returns user at top level; also check nested
-  const userId = session.user?.id || session.id || '';
-  const userEmail = session.user?.email || session.email || '';
+  // Get user identity directly from Auth API — reliable regardless of session shape
+  const userResp = await fetch(`${SB_URL}/auth/v1/user`, {
+    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${token}` }
+  });
+  if (!userResp.ok) {
+    auth.clearSession();
+    document.getElementById('login-error').textContent = 'Session invalid. Please sign in again.';
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  const userData = await userResp.json();
+  const userId = userData.id;
+  const userEmail = userData.email;
   const profiles = await dbGet('lm_profiles', { id:`eq.${userId}`, select:'*' }, token);
   if (!profiles.length || profiles[0].role !== 'admin') {
     auth.clearSession();
