@@ -714,8 +714,11 @@ async function doLogout() {
 
 async function loadUserData() {
   const token = session.access_token;
+  // Supabase password signin returns user at top level; also check nested
+  const userId = session.user?.id || session.id || '';
+  const userEmail = session.user?.email || session.email || '';
   // Get profile
-  const profiles = await dbGet('lm_profiles', { id: `eq.${session.user?.id || ''}`, select: '*' }, token);
+  const profiles = await dbGet('lm_profiles', { id: `eq.${userId}`, select: '*' }, token);
   // If no profile row yet (first login after invite), we can't proceed
   if (!profiles.length) {
     toast('Account setup needed. Contact HQ.', 'error');
@@ -736,7 +739,7 @@ async function loadUserData() {
   document.getElementById('view-dashboard').style.display = 'block';
   document.getElementById('nav-links').style.display = 'flex';
   document.getElementById('logout-btn').style.display = '';
-  document.getElementById('nav-user').textContent = session.user?.email || '';
+  document.getElementById('nav-user').textContent = userEmail;
 
   if (movement) {
     document.getElementById('sb-movement-name').textContent = movement.city + ' Movement';
