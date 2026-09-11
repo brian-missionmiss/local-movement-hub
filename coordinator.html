@@ -296,6 +296,36 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
             Roster
           </a>
+          <a class="sidebar-link" href="#" onclick="showSection('training')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>
+            CHRADL Training
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('milestones')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            Milestones
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('profile')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
+            Community Profile
+          </a>
+        </nav>
+      </div>
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Network</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('prayer')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+            Prayer Wall
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('directory')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z"/></svg>
+            Coordinator Directory
+          </a>
+        </nav>
+      </div>
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Activity</div>
+        <nav class="sidebar-nav">
           <a class="sidebar-link" href="#" onclick="showSection('reports')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
             Report Event
@@ -303,10 +333,6 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <a class="sidebar-link" href="#" onclick="showSection('stories')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
             Submit Story
-          </a>
-          <a class="sidebar-link" href="#" onclick="showSection('profile')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
-            Community Profile
           </a>
         </nav>
       </div>
@@ -330,9 +356,12 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
       <!-- DASHBOARD SECTION -->
       <div id="section-dashboard">
-        <div class="page-header">
-          <h1 class="page-title" id="dash-title">Movement Dashboard</h1>
-          <p class="page-sub">An overview of your local movement's activity and status.</p>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="page-title" id="dash-title">Movement Dashboard</h1>
+            <p class="page-sub">An overview of your local movement's activity and status.</p>
+          </div>
+          <button class="btn btn-outline" onclick="generateMovementReport()">&#128196; Generate Report</button>
         </div>
 
         <div class="grid-3" id="dash-stats" style="margin-bottom:1.75rem;">
@@ -485,6 +514,27 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
       </div>
 
+      <!-- CHRADL TRAINING SECTION -->
+      <div id="section-training" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="page-title">CHRADL Training</h1>
+            <p class="page-sub">Track module completion for your roster members. Check each module as it is completed — saves automatically.</p>
+          </div>
+          <div style="display:flex;gap:0.45rem;">
+            <button class="btn btn-sm btn-outline" onclick="exportTrainingXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportTrainingPDF()">Export PDF</button>
+          </div>
+        </div>
+        <!-- Summary stats -->
+        <div id="training-stats" class="grid-3" style="margin-bottom:1.75rem;"></div>
+        <!-- Member cards -->
+        <div id="training-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div class="empty-state"><div class="empty-state-text">Loading training records...</div></div>
+        </div>
+      </div>
+
+
       <!-- COMMUNITY PROFILE SECTION -->
       <div id="section-profile" style="display:none">
         <div class="page-header">
@@ -527,6 +577,25 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
 
     </main>
+  </div>
+</div>
+
+
+<!-- PRAYER POST MODAL -->
+<div class="modal-overlay" id="modal-prayer">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Post Prayer Request</div><button class="modal-close" onclick="closeModal('modal-prayer')">&times;</button></div>
+    <div class="modal-body">
+      <p style="font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.65;">This will be visible to coordinators across all movements. You may post on behalf of your community without sharing identifying details.</p>
+      <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="prayer-title" type="text" placeholder="Brief subject of the prayer request"></div>
+      <div class="form-group"><label class="form-label">Request *</label><textarea class="form-textarea" id="prayer-body" placeholder="Share the prayer request..."></textarea></div>
+      <div class="form-group"><label class="form-label">Posted by (optional)</label><input class="form-input" id="prayer-poster" type="text" placeholder="Name or leave blank for anonymous"></div>
+      <div class="form-error" id="prayer-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-prayer')">Cancel</button>
+      <button class="btn btn-primary" onclick="postPrayer()">Post Request</button>
+    </div>
   </div>
 </div>
 
@@ -688,6 +757,7 @@ function toast(msg, type='success') {
 
 
 let session = null;
+let userId_global = null;
 let profile = null;
 let movement = null;
 
@@ -779,6 +849,7 @@ async function loadUserData() {
   if (!userResp.ok) { toast('Session invalid. Please sign in again.', 'error'); doLogout(); return; }
   const userData = await userResp.json();
   const userId = userData.id;
+  userId_global = userId;
   const userEmail = userData.email;
   // Get profile
   const profiles = await dbGet('lm_profiles', { id: `eq.${userId}`, select: '*' }, token);
@@ -814,7 +885,7 @@ async function loadUserData() {
 
 // ── SECTIONS
 function showSection(name) {
-  ['dashboard','roster','reports','stories','profile'].forEach(s => {
+  ['dashboard','roster','reports','stories','profile','training','milestones','prayer','directory'].forEach(s => {
     document.getElementById('section-'+s).style.display = s===name?'block':'none';
   });
   document.querySelectorAll('.sidebar-link, .nav-link').forEach(l => l.classList.remove('active'));
@@ -822,6 +893,10 @@ function showSection(name) {
   if (name==='roster')  loadRoster();
   if (name==='reports') loadReports();
   if (name==='profile')  loadCoordProfile();
+  if (name==='training') loadTraining();
+  if (name==='milestones') loadMilestones();
+  if (name==='prayer')     loadPrayerWall();
+  if (name==='directory')  loadDirectory();
 }
 
 // ── DASHBOARD
@@ -1324,6 +1399,458 @@ function openPrintWindow(title, bodyHtml) {
     <script>window.onload = () => setTimeout(() => { window.print(); }, 400);<\/script>
   </body></html>`);
   win.document.close();
+}
+
+
+// ── CHRADL TRAINING TRACKER
+const CHRADL_MODULES = [
+  { key: 'mod1', name: 'Hearing to Listening',           short: 'H to L' },
+  { key: 'mod2', name: 'Arrogance to Humility',          short: 'A to H' },
+  { key: 'mod3', name: 'Apathy to Empathy',              short: 'A to E' },
+  { key: 'mod4', name: 'Moral Force to Moral Persuasion',short: 'MF to MP' },
+];
+
+let _trainingCache = {};   // roster_id -> training record
+let _trainingMembers = []; // full roster list
+
+async function loadTraining() {
+  if (!movement) return;
+  const [members, records] = await Promise.all([
+    dbGet('lm_roster', { movement_id:`eq.${movement.id}`, active:'eq.true', select:'*', order:'full_name.asc' }, session.access_token),
+    dbGet('lm_training_records', { movement_id:`eq.${movement.id}`, select:'*' }, session.access_token)
+  ]);
+  _trainingMembers = members;
+  _trainingCache = {};
+  records.forEach(r => { _trainingCache[r.roster_id] = r; });
+  renderTrainingSummary(members);
+  renderTrainingCards(members);
+}
+
+function renderTrainingSummary(members) {
+  const certified = members.filter(m => {
+    const r = _trainingCache[m.id] || {};
+    return r.mod1_done && r.mod2_done && r.mod3_done && r.mod4_done;
+  }).length;
+  const el = document.getElementById('training-stats');
+  el.innerHTML = `
+    <div class="stat-card stat-accent">
+      <div class="stat-num">${certified} / ${members.length}</div>
+      <div class="stat-label">CHRADL Certified</div>
+    </div>
+    ${CHRADL_MODULES.map(mod => {
+      const count = members.filter(m => (_trainingCache[m.id]||{})[mod.key+'_done']).length;
+      const pct = members.length ? Math.round(count/members.length*100) : 0;
+      return `<div class="stat-card">
+        <div class="stat-num">${count}</div>
+        <div class="stat-label">${mod.short}</div>
+        <div style="margin-top:0.5rem;height:4px;background:var(--border);border-radius:2px;">
+          <div style="height:4px;background:var(--blue);border-radius:2px;width:${pct}%;transition:width 0.3s;"></div>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+function renderTrainingCards(members) {
+  const el = document.getElementById('training-body');
+  if (!members.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#127891;</div><div class="empty-state-text">No roster members yet. Add members under Roster first.</div></div>';
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const r = _trainingCache[m.id] || {};
+    const doneCount = CHRADL_MODULES.filter(mod => r[mod.key+'_done']).length;
+    const certified = doneCount === 4;
+    return `<div class="card" id="tc-${m.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+          <strong style="color:var(--navy);font-size:0.98rem;">${escHtml(m.full_name)}</strong>
+          ${m.role_title ? `<span style="font-size:0.76rem;color:var(--muted);margin-left:0.5rem;">${escHtml(m.role_title)}</span>` : ''}
+        </div>
+        ${certified
+          ? '<span class="badge badge-green" style="font-size:0.7rem;">CHRADL Certified &#10003;</span>'
+          : `<span style="font-size:0.78rem;color:var(--muted);">${doneCount}/4 modules</span>`}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.45rem;">
+        ${CHRADL_MODULES.map(mod => {
+          const done = !!r[mod.key+'_done'];
+          const date = r[mod.key+'_date'] || '';
+          return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0.85rem;background:${done?'rgba(76,175,125,0.07)':'var(--cream)'};border-radius:4px;border:1px solid ${done?'rgba(76,175,125,0.25)':'var(--border)'};transition:all 0.18s;">
+            <input type="checkbox" id="chk-${m.id}-${mod.key}" ${done?'checked':''}
+              onchange="onModuleCheck('${m.id}','${movement.id}','${mod.key}',this.checked)"
+              style="width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--success);">
+            <label for="chk-${m.id}-${mod.key}" style="font-size:0.85rem;color:var(--navy);cursor:pointer;flex:1;${done?'font-weight:600;':''}">${escHtml(mod.name)}</label>
+            <input type="date" id="date-${m.id}-${mod.key}" value="${date}" ${done?'':'disabled'}
+              onchange="onModuleDate('${m.id}','${movement.id}','${mod.key}',this.value)"
+              style="font-size:0.76rem;border:1px solid var(--border);border-radius:3px;padding:0.18rem 0.4rem;color:var(--navy);background:${done?'#fff':'var(--cream)'};cursor:${done?'pointer':'default'};opacity:${done?1:0.4};">
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function onModuleCheck(rosterId, movId, modKey, checked) {
+  const dateEl = document.getElementById(`date-${rosterId}-${modKey}`);
+  const today = new Date().toISOString().slice(0,10);
+  if (checked && !dateEl.value) dateEl.value = today;
+  if (!checked) dateEl.value = '';
+  dateEl.disabled = !checked;
+
+  const updates = {
+    [modKey+'_done']: checked,
+    [modKey+'_date']: checked ? (dateEl.value || today) : null,
+    updated_at: new Date().toISOString()
+  };
+  await upsertTrainingRecord(rosterId, movId, updates);
+  if (!_trainingCache[rosterId]) _trainingCache[rosterId] = {};
+  Object.assign(_trainingCache[rosterId], updates);
+  renderTrainingSummary(_trainingMembers);
+  // Refresh just this card's certified badge
+  const r = _trainingCache[rosterId];
+  const certified = CHRADL_MODULES.every(m => r[m.key+'_done']);
+  const card = document.getElementById(`tc-${rosterId}`);
+  if (card) {
+    const badge = card.querySelector('.badge-green, [style*="0.78rem"]');
+    if (badge) badge.outerHTML = certified
+      ? '<span class="badge badge-green" style="font-size:0.7rem;">CHRADL Certified &#10003;</span>'
+      : `<span style="font-size:0.78rem;color:var(--muted);">${CHRADL_MODULES.filter(m=>r[m.key+'_done']).length}/4 modules</span>`;
+  }
+  toast(checked ? 'Module marked complete.' : 'Module cleared.');
+}
+
+async function onModuleDate(rosterId, movId, modKey, date) {
+  const updates = { [modKey+'_date']: date || null, updated_at: new Date().toISOString() };
+  await upsertTrainingRecord(rosterId, movId, updates);
+  if (!_trainingCache[rosterId]) _trainingCache[rosterId] = {};
+  Object.assign(_trainingCache[rosterId], updates);
+}
+
+async function upsertTrainingRecord(rosterId, movId, updates) {
+  const existing = _trainingCache[rosterId];
+  if (existing?.id) {
+    await dbPatch('lm_training_records', existing.id, updates, session.access_token);
+  } else {
+    const result = await dbPost('lm_training_records',
+      { roster_id: rosterId, movement_id: movId, ...updates }, session.access_token);
+    if (Array.isArray(result) && result[0]?.id) {
+      _trainingCache[rosterId] = { ...(_trainingCache[rosterId]||{}), ...result[0] };
+    }
+  }
+}
+
+function exportTrainingXLSX() {
+  if (!_trainingMembers.length) { toast('No members to export.', 'error'); return; }
+  const movName = movement?.county_name || movement?.city || 'Movement';
+  const data = _trainingMembers.map(m => {
+    const r = _trainingCache[m.id] || {};
+    return {
+      'Name':             m.full_name,
+      'Role':             m.role_title || '',
+      'H to L':           r.mod1_done ? (r.mod1_date||'Complete') : '',
+      'A to H':           r.mod2_done ? (r.mod2_date||'Complete') : '',
+      'A to E':           r.mod3_done ? (r.mod3_date||'Complete') : '',
+      'MF to MP':         r.mod4_done ? (r.mod4_date||'Complete') : '',
+      'CHRADL Certified': (r.mod1_done&&r.mod2_done&&r.mod3_done&&r.mod4_done) ? 'Yes' : 'No'
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'CHRADL Training');
+  XLSX.writeFile(wb, `${movName}_CHRADL_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportTrainingPDF() {
+  if (!_trainingMembers.length) { toast('No members to export.', 'error'); return; }
+  const movName = movement?.county_name || movement?.city || 'Movement';
+  const rows = _trainingMembers.map(m => {
+    const r = _trainingCache[m.id] || {};
+    const cert = r.mod1_done&&r.mod2_done&&r.mod3_done&&r.mod4_done;
+    const fmt = (done, date) => done ? `<span style="color:#2d8a5e">&#10003; ${date||''}</span>` : '<span style="color:#ccc">&#9675;</span>';
+    return `<tr>
+      <td>${escHtml(m.full_name)}</td>
+      <td>${escHtml(m.role_title||'')}</td>
+      <td style="text-align:center">${fmt(r.mod1_done,r.mod1_date)}</td>
+      <td style="text-align:center">${fmt(r.mod2_done,r.mod2_date)}</td>
+      <td style="text-align:center">${fmt(r.mod3_done,r.mod3_date)}</td>
+      <td style="text-align:center">${fmt(r.mod4_done,r.mod4_date)}</td>
+      <td style="text-align:center;font-weight:700;color:${cert?'#2d8a5e':'#ccc'}">${cert?'&#10003;':''}</td>
+    </tr>`;
+  }).join('');
+  openPrintWindow(`${movName} — CHRADL Training`,
+    `<table><thead><tr><th>Name</th><th>Role</th><th>H to L</th><th>A to H</th><th>A to E</th><th>MF to MP</th><th>Certified</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+
+// ── MILESTONES
+const MILESTONES = [
+  { key: 'steering_committee_formed',  label: 'Steering Committee Formed',         icon: '&#128101;' },
+  { key: 'first_prayer_gathering',     label: 'First Prayer Gathering Hosted',      icon: '&#128591;' },
+  { key: 'first_table_talk_cohort',    label: 'First Table Talk Cohort Launched',   icon: '&#127860;' },
+  { key: 'first_chradl_training',      label: 'First CHRADL Training Hosted',       icon: '&#127891;' },
+  { key: 'first_chradl_certified',     label: 'First CHRADL Participant Certified', icon: '&#127941;' },
+  { key: 'entered_planning_phase',     label: 'Entered Planning Phase',             icon: '&#128220;' },
+  { key: 'entered_execution_phase',    label: 'Entered Execution Phase',            icon: '&#9654;' },
+  { key: 'first_story_submitted',      label: 'First Community Story Submitted',    icon: '&#128196;' },
+  { key: 'first_year_celebration',     label: 'First Year-End Celebration',         icon: '&#127881;' },
+  { key: 'community_profile_complete', label: 'Community Profile Completed',        icon: '&#127759;' },
+];
+
+let _milestoneCache = {};
+
+async function loadMilestones() {
+  if (!movement) return;
+  const records = await dbGet('lm_milestones', { movement_id:`eq.${movement.id}`, select:'*' }, session.access_token);
+  _milestoneCache = Object.fromEntries(records.map(r=>[r.milestone_key, r]));
+  renderMilestones();
+}
+
+function renderMilestones() {
+  const el = document.getElementById('milestones-body');
+  const done = MILESTONES.filter(m => _milestoneCache[m.key]?.completed).length;
+  el.innerHTML = `
+    <div class="card" style="grid-column:1/-1;background:var(--navy);margin-bottom:0.25rem;">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="font-family:'Merriweather',serif;font-size:1.5rem;font-weight:700;color:#fff;">${done}/${MILESTONES.length}</div>
+        <div>
+          <div style="color:#fff;font-weight:600;font-size:0.9rem;">Milestones Achieved</div>
+          <div style="margin-top:0.35rem;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;width:200px;">
+            <div style="height:6px;background:var(--blue);border-radius:3px;width:${Math.round(done/MILESTONES.length*100)}%;transition:width 0.4s;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${MILESTONES.map(m => {
+      const rec = _milestoneCache[m.key] || {};
+      const done = !!rec.completed;
+      return `<div class="card" style="border-left:4px solid ${done?'var(--success)':'var(--border)'};padding:0.85rem 1rem;">
+        <div style="display:flex;align-items:flex-start;gap:0.65rem;">
+          <input type="checkbox" ${done?'checked':''} id="ms-${m.key}"
+            onchange="onMilestoneCheck('${m.key}',this.checked)"
+            style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:var(--success);">
+          <div style="flex:1;">
+            <label for="ms-${m.key}" style="font-weight:600;font-size:0.88rem;color:var(--navy);cursor:pointer;${done?'text-decoration:line-through;opacity:0.6;':''}">${m.icon} ${m.label}</label>
+            ${done && rec.completed_date ? `<div style="font-size:0.72rem;color:var(--success);margin-top:0.18rem;">Achieved ${new Date(rec.completed_date+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>` : ''}
+            ${done ? '' : `<input type="date" id="ms-date-${m.key}" placeholder="Date achieved" style="font-size:0.76rem;border:1px solid var(--border);border-radius:3px;padding:0.15rem 0.4rem;margin-top:0.28rem;color:var(--navy);" onchange="onMilestoneDate('${m.key}',this.value)">`}
+          </div>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+async function onMilestoneCheck(key, checked) {
+  const dateEl = document.getElementById(`ms-date-${key}`);
+  const date = dateEl?.value || new Date().toISOString().slice(0,10);
+  const data = { milestone_key:key, movement_id:movement.id, completed:checked, completed_date: checked ? date : null, updated_at: new Date().toISOString() };
+  const existing = _milestoneCache[key];
+  if (existing?.id) {
+    await dbPatch('lm_milestones', existing.id, { completed:checked, completed_date: checked?date:null, updated_at:data.updated_at }, session.access_token);
+  } else {
+    const res = await dbPost('lm_milestones', data, session.access_token);
+    if (Array.isArray(res) && res[0]) _milestoneCache[key] = res[0];
+  }
+  if (existing) Object.assign(_milestoneCache[key], { completed:checked, completed_date:checked?date:null });
+  renderMilestones();
+  toast(checked ? 'Milestone achieved!' : 'Milestone cleared.');
+}
+
+async function onMilestoneDate(key, date) {
+  const existing = _milestoneCache[key];
+  if (existing?.id) await dbPatch('lm_milestones', existing.id, { completed_date:date||null }, session.access_token);
+}
+
+// ── PRAYER WALL
+async function loadPrayerWall() {
+  const items = await dbGet('lm_prayer_wall', { select:'*', order:'created_at.desc', limit:'30' }, session.access_token);
+  const movMap = {};
+  (await dbGet('lm_movements', { select:'id,county_name,city' })).forEach(m => { movMap[m.id] = m.county_name||m.city; });
+  const el = document.getElementById('prayer-wall-list');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128591;</div><div class="empty-state-text">No prayer requests yet. Be the first to post one.</div></div>';
+    return;
+  }
+  el.innerHTML = items.map(p => {
+    const isOwn = p.posted_by === userId_global;
+    const movName = movMap[p.movement_id] || '';
+    const age = Math.round((Date.now()-new Date(p.created_at))/86400000);
+    const ageStr = age===0?'Today':age===1?'Yesterday':`${age}d ago`;
+    return `<div class="card" style="border-left:4px solid ${p.answered?'var(--success)':'var(--blue)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
+        <div>
+          <strong style="color:var(--navy);">${escHtml(p.title)}</strong>
+          ${p.answered?'<span class="badge badge-green" style="margin-left:0.5rem;font-size:0.67rem;">Answered &#10003;</span>':''}
+        </div>
+        <div style="display:flex;gap:0.4rem;align-items:center;">
+          ${isOwn&&!p.answered?`<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.6rem;border:1px solid var(--success);color:var(--success);background:transparent;" onclick="markPrayerAnswered('${p.id}')">Mark Answered</button>`:''}
+          ${isOwn?`<button class="btn btn-sm btn-danger" onclick="deletePrayer('${p.id}')">&#10005;</button>`:''}
+        </div>
+      </div>
+      <p style="font-size:0.86rem;color:var(--text);line-height:1.7;margin-bottom:0.5rem;">${escHtml(p.body)}</p>
+      <div style="font-size:0.72rem;color:var(--muted);">${escHtml(movName)}${p.poster_name?' &middot; '+escHtml(p.poster_name):''} &middot; ${ageStr}</div>
+    </div>`;
+  }).join('');
+}
+
+let userId = null;
+
+async function postPrayer() {
+  const title = document.getElementById('prayer-title').value.trim();
+  const body  = document.getElementById('prayer-body').value.trim();
+  const errEl = document.getElementById('prayer-error'); errEl.style.display='none';
+  if (!title||!body) { errEl.textContent='Title and request are required.'; errEl.style.display='block'; return; }
+  await dbPost('lm_prayer_wall', {
+    movement_id: movement.id,
+    posted_by:   userId_global,
+    poster_name: document.getElementById('prayer-poster').value.trim()||null,
+    title, body
+  }, session.access_token);
+  document.getElementById('prayer-title').value='';
+  document.getElementById('prayer-body').value='';
+  document.getElementById('prayer-poster').value='';
+  closeModal('modal-prayer');
+  toast('Prayer request posted.');
+  loadPrayerWall();
+}
+
+async function markPrayerAnswered(id) {
+  await dbPatch('lm_prayer_wall', id, { answered:true }, session.access_token);
+  toast('Marked as answered. Praise God!');
+  loadPrayerWall();
+}
+
+async function deletePrayer(id) {
+  if (!confirm('Remove this prayer request?')) return;
+  await fetch(`${SB_URL}/rest/v1/lm_prayer_wall?id=eq.${id}`, { method:'DELETE', headers:sbHeaders(session.access_token) });
+  toast('Request removed.');
+  loadPrayerWall();
+}
+
+// ── COORDINATOR DIRECTORY
+async function loadDirectory() {
+  // Load my own profile
+  const myProfiles = await dbGet('lm_profiles', { id:`eq.${userId_global}`, select:'*' }, session.access_token);
+  const me = myProfiles[0]||{};
+  document.getElementById('dir-opt-toggle').checked = !!me.directory_opt_in;
+  document.getElementById('dir-my-fields').style.display = me.directory_opt_in ? 'block' : 'none';
+  document.getElementById('dir-name').value  = me.display_name||'';
+  document.getElementById('dir-phone').value = me.directory_phone||'';
+  document.getElementById('dir-bio').value   = me.directory_bio||'';
+
+  // Load opted-in coordinators from OTHER movements
+  const others = await dbGet('lm_profiles', {
+    directory_opt_in: 'eq.true',
+    select: '*',
+    order: 'display_name.asc'
+  }, session.access_token);
+
+  const movs = await dbGet('lm_movements', { select:'id,county_name,city' });
+  const movMap = Object.fromEntries(movs.map(m=>[m.id, m.county_name||m.city]));
+
+  const list = others.filter(p => p.id !== userId_global && p.movement_id !== movement.id);
+  const el = document.getElementById('directory-list');
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">&#128101;</div><div class="empty-state-text">No other coordinators are listed yet. Once others opt in, they&#39;ll appear here.</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(p=>`<div class="card">
+    <div style="font-weight:700;color:var(--navy);font-size:0.95rem;">${escHtml(p.display_name||p.email||'Coordinator')}</div>
+    <div style="font-size:0.78rem;color:var(--blue);margin:0.2rem 0 0.55rem;">${escHtml(movMap[p.movement_id]||'—')}</div>
+    ${p.directory_bio?`<p style="font-size:0.82rem;color:var(--muted);line-height:1.65;margin-bottom:0.55rem;">${escHtml(p.directory_bio)}</p>`:''}
+    <div style="display:flex;gap:0.65rem;flex-wrap:wrap;font-size:0.8rem;">
+      ${p.email?`<a href="mailto:${p.email}" style="color:var(--blue);text-decoration:none;">&#9993; ${escHtml(p.email)}</a>`:''}
+      ${p.directory_phone?`<a href="tel:${p.directory_phone}" style="color:var(--blue);text-decoration:none;">&#9742; ${escHtml(p.directory_phone)}</a>`:''}
+    </div>
+  </div>`).join('');
+}
+
+async function toggleDirectoryOptIn(checked) {
+  document.getElementById('dir-my-fields').style.display = checked ? 'block' : 'none';
+  await dbPatch('lm_profiles', userId_global, { directory_opt_in:checked }, session.access_token);
+  toast(checked ? 'You are now listed in the directory.' : 'Removed from directory.');
+}
+
+async function saveDirectoryProfile() {
+  await dbPatch('lm_profiles', userId_global, {
+    display_name:    document.getElementById('dir-name').value.trim()||null,
+    directory_phone: document.getElementById('dir-phone').value.trim()||null,
+    directory_bio:   document.getElementById('dir-bio').value.trim()||null,
+  }, session.access_token);
+  toast('Directory profile saved.');
+}
+
+// ── AUTO-GENERATED MOVEMENT REPORT
+async function generateMovementReport() {
+  if (!movement) return;
+  toast('Building report...', 'info');
+  const token = session.access_token;
+  const movName = movement.county_name || movement.city;
+
+  const [profile, rosterAll, reports, training, milestones] = await Promise.all([
+    dbGet('lm_community_profiles', { movement_id:`eq.${movement.id}`, select:'*' }),
+    dbGet('lm_roster', { movement_id:`eq.${movement.id}`, active:'eq.true', select:'*', order:'roster_type.asc,full_name.asc' }, token),
+    dbGet('lm_event_reports', { movement_id:`eq.${movement.id}`, select:'*', order:'event_date.desc' }, token),
+    dbGet('lm_training_records', { movement_id:`eq.${movement.id}`, select:'*' }, token),
+    dbGet('lm_milestones', { movement_id:`eq.${movement.id}`, select:'*' }, token),
+  ]);
+
+  const p = profile[0]||{};
+  const committee = rosterAll.filter(r=>r.roster_type==='committee');
+  const advocates = rosterAll.filter(r=>r.roster_type!=='committee');
+  const certified = training.filter(t=>t.mod1_done&&t.mod2_done&&t.mod3_done&&t.mod4_done).length;
+  const recentReports = reports.slice(0,10);
+  const msAchieved = milestones.filter(m=>m.completed).length;
+
+  const html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8pt;margin-bottom:20pt;">
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${committee.length}</div><div style="font-size:8pt;color:#6b6b6b;">Committee Members</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${reports.length}</div><div style="font-size:8pt;color:#6b6b6b;">Events Reported</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${certified}</div><div style="font-size:8pt;color:#6b6b6b;">CHRADL Certified</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${msAchieved}/10</div><div style="font-size:8pt;color:#6b6b6b;">Milestones</div>
+      </div>
+    </div>
+
+    ${p.population ? `
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Community Demographics</h2>
+    <table><tr>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtNum(p.population)}</strong><br><span style="color:#888;font-size:8pt">Population</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtCurrency(p.median_household_income)}</strong><br><span style="color:#888;font-size:8pt">Median Income</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtPct(p.poverty_rate)}</strong><br><span style="color:#888;font-size:8pt">Poverty Rate</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtPct(p.pct_black)}</strong><br><span style="color:#888;font-size:8pt">Black</span></td>
+      <td style="padding:4pt 0"><strong>${fmtPct(p.pct_white)}</strong><br><span style="color:#888;font-size:8pt">White</span></td>
+    </tr></table>` : ''}
+
+    ${p.church_landscape ? `<h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Church Landscape</h2><p>${escHtml(p.church_landscape)}</p>` : ''}
+
+    ${committee.length ? `
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Steering Committee</h2>
+    <table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th></tr></thead><tbody>
+      ${committee.map(m=>`<tr><td>${escHtml(m.full_name)}</td><td>${escHtml(m.role_title||'')}</td><td>${escHtml(m.phone||'')}</td><td>${escHtml(m.email||'')}</td></tr>`).join('')}
+    </tbody></table>` : ''}
+
+    ${recentReports.length ? `
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Recent Events</h2>
+    <table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>
+      ${recentReports.map(r=>`<tr><td>${escHtml(r.event_type)}</td><td>${r.event_date}</td><td>${r.attendance??'—'}</td></tr>`).join('')}
+    </tbody></table>` : ''}
+
+    ${msAchieved ? `
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Milestones Achieved</h2>
+    <ul>
+      ${milestones.filter(m=>m.completed).map(m=>{
+        const ms = MILESTONES.find(x=>x.key===m.milestone_key);
+        return `<li>${ms?ms.label:m.milestone_key}${m.completed_date?' — '+m.completed_date:''}</li>`;
+      }).join('')}
+    </ul>` : ''}
+  `;
+
+  openPrintWindow(`${movName} — Movement Report`, html);
 }
 
 init();

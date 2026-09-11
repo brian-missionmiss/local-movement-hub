@@ -281,6 +281,18 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
             All Reports
           </a>
+          <a class="sidebar-link" href="#" onclick="showSection('prayer')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+            Prayer Wall
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('timeline')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            Movement Timeline
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('milestone-overview')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            Milestone Overview
+          </a>
           <a class="sidebar-link" href="#" onclick="showSection('stories')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
             Stories
@@ -291,6 +303,16 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           </a>
         </nav>
       </div>
+      <div class="sidebar-section" style="margin-top:0.5rem;">
+        <div class="sidebar-label">Training</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('training')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>
+            CHRADL Training
+          </a>
+        </nav>
+      </div>
+
       <div class="sidebar-section" style="margin-top:1rem;">
         <div class="sidebar-label">Content</div>
         <nav class="sidebar-nav">
@@ -497,12 +519,91 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
       </div>
 
+      <!-- PRAYER WALL (ADMIN) -->
+      <div id="section-prayer" style="display:none">
+        <div class="page-header"><h1 class="page-title">Prayer Wall</h1><p class="page-sub">All prayer requests across movements. Admins can delete any post.</p></div>
+        <div id="admin-prayer-list" style="display:flex;flex-direction:column;gap:0.65rem;">
+          <div class="empty-state"><div class="empty-state-text">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- MOVEMENT TIMELINE (ADMIN) -->
+      <div id="section-timeline" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div><h1 class="page-title">Movement Timeline</h1><p class="page-sub">All reported events across movements, newest first.</p></div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <select class="form-select" id="tl-filter-mov" style="width:auto;" onchange="loadTimeline()">
+              <option value="">All movements</option>
+            </select>
+            <select class="form-select" id="tl-filter-type" style="width:auto;" onchange="loadTimeline()">
+              <option value="">All event types</option>
+              <option>Prayer Gathering</option><option>Table Talk</option><option>CHRADL Training</option>
+              <option>4 The City Service Day</option><option>One Picnic</option><option>One Community Conversation</option><option>Other</option>
+            </select>
+            <button class="btn btn-sm btn-outline" onclick="exportTimelineXLSX()">Export XLSX</button>
+          </div>
+        </div>
+        <div id="timeline-body" style="display:flex;flex-direction:column;gap:0.25rem;"></div>
+      </div>
+
+      <!-- MILESTONE OVERVIEW (ADMIN) -->
+      <div id="section-milestone-overview" style="display:none">
+        <div class="page-header"><h1 class="page-title">Milestone Overview</h1><p class="page-sub">Milestone completion across all local movements.</p></div>
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table class="data-table" id="milestone-matrix" style="min-width:900px;"></table>
+        </div>
+      </div>
+
       <!-- COMMUNITY PROFILES -->
       <div id="section-profiles" style="display:none">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div><h1 class="page-title">Community Profiles</h1><p class="page-sub">Demographic data and local context for each movement city. Click "Fetch Census" to pull current ACS data.</p></div>
         </div>
         <div id="profiles-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;"></div>
+      </div>
+
+      <!-- ADMIN TRAINING SECTION -->
+      <div id="section-training" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="page-title">CHRADL Training</h1>
+            <p class="page-sub">Module completion across all local movements. Click any county row to view member detail.</p>
+          </div>
+          <div style="display:flex;gap:0.45rem;">
+            <button class="btn btn-sm btn-outline" onclick="exportAdminTrainingXLSX()">Export XLSX</button>
+            <button class="btn btn-sm btn-outline" onclick="exportAdminTrainingPDF()">Export PDF</button>
+          </div>
+        </div>
+        <!-- Matrix table -->
+        <div class="table-wrap" style="margin-bottom:1.75rem;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>County</th>
+                <th style="text-align:center">Hearing to Listening</th>
+                <th style="text-align:center">Arrogance to Humility</th>
+                <th style="text-align:center">Apathy to Empathy</th>
+                <th style="text-align:center">Moral Force to Persuasion</th>
+                <th style="text-align:center">Certified</th>
+                <th style="text-align:center">Total Members</th>
+              </tr>
+            </thead>
+            <tbody id="training-matrix"></tbody>
+          </table>
+        </div>
+        <!-- Detail panel -->
+        <div id="training-detail" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h2 id="training-detail-title" style="font-family:'Merriweather',serif;font-size:1.1rem;font-weight:700;color:var(--navy);"></h2>
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('training-detail').style.display='none'">Close Detail</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Role</th><th style="text-align:center">H to L</th><th style="text-align:center">A to H</th><th style="text-align:center">A to E</th><th style="text-align:center">MF to MP</th><th style="text-align:center">Certified</th></tr></thead>
+              <tbody id="training-detail-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -859,14 +960,14 @@ async function loadMovementsData() {
 }
 
 function showSection(name) {
-  ['overview','movements','coordinators','submit-report','reports','stories','profiles','announcements','events','documents','assets']
+  ['overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
   document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l=>l.classList.add('active'));
   const loaders = {
     overview:loadOverview, movements:loadMovementsTable,
     coordinators:loadCoordinators, 'submit-report':loadSubmitReport, reports:loadAllReports,
-    stories:loadStories, profiles:loadCommunityProfiles, announcements:loadAnnouncements,
+    stories:loadStories, profiles:loadCommunityProfiles, training:loadAdminTraining, prayer:loadAdminPrayer, timeline:loadTimeline, 'milestone-overview':loadMilestoneOverview, announcements:loadAnnouncements,
     events:loadEvents, documents:loadDocuments, assets:loadAssets
   };
   if (loaders[name]) loaders[name]();
@@ -891,7 +992,7 @@ async function loadOverview() {
       <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
       <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
       <td>${rpts.length}</td>
-      <td><button class="btn btn-sm btn-outline" onclick="editPhase('${m.id}','${m.phase}','${escHtml(m.city)}')">Edit Phase</button></td>
+      <td><button class="btn btn-sm btn-outline" onclick="editPhase('${m.id}','${m.phase}','${escHtml(m.city)}')">Edit Phase</button> <button class="btn btn-sm btn-outline" onclick="adminGenerateReport('${m.id}')">Report</button></td>
     </tr>`;
   }));
   tbody.innerHTML = rows.join('');
@@ -1503,6 +1604,367 @@ async function exportStaffPDF() {
   </tr>`).join('');
   openAdminPrintWindow('Mission Mississippi — Staff &amp; Coordinators',
     `<table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Movement</th><th>Added</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+
+// ── ADMIN CHRADL TRAINING
+const CHRADL_MODS = [
+  { key:'mod1', name:'Hearing to Listening',            short:'H to L' },
+  { key:'mod2', name:'Arrogance to Humility',           short:'A to H' },
+  { key:'mod3', name:'Apathy to Empathy',               short:'A to E' },
+  { key:'mod4', name:'Moral Force to Moral Persuasion', short:'MF to MP' },
+];
+
+let _adminTrainingMatrix = [];
+
+async function loadAdminTraining() {
+  const token = session.access_token;
+  const [allRecords, allRoster] = await Promise.all([
+    dbGet('lm_training_records', { select:'*' }, token),
+    dbGet('lm_roster', { active:'eq.true', select:'*' }, token)
+  ]);
+
+  _adminTrainingMatrix = movements.map(mov => {
+    const members = allRoster.filter(r => r.movement_id === mov.id);
+    const records = allRecords.filter(r => r.movement_id === mov.id);
+    const recMap  = Object.fromEntries(records.map(r => [r.roster_id, r]));
+    const cert    = records.filter(r => CHRADL_MODS.every(m => r[m.key+'_done'])).length;
+    return {
+      mov, members, recMap,
+      mod1: records.filter(r=>r.mod1_done).length,
+      mod2: records.filter(r=>r.mod2_done).length,
+      mod3: records.filter(r=>r.mod3_done).length,
+      mod4: records.filter(r=>r.mod4_done).length,
+      certified: cert
+    };
+  });
+
+  const tbody = document.getElementById('training-matrix');
+  if (!_adminTrainingMatrix.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">No movements found.</td></tr>'; return; }
+
+  tbody.innerHTML = _adminTrainingMatrix.map((row,i) => {
+    const total = row.members.length;
+    const cert  = row.certified;
+    const certColor = cert === 0 ? 'var(--muted)' : cert === total && total > 0 ? 'var(--success)' : 'var(--blue)';
+    const cell = (n) => `<td style="text-align:center;">
+      <strong style="color:${n>0?'var(--blue)':'var(--muted)'};">${n}</strong>
+      ${total>0 ? `<span style="font-size:0.7rem;color:var(--muted);display:block;">${Math.round(n/total*100)}%</span>` : ''}
+    </td>`;
+    return `<tr style="cursor:pointer;" onclick="showTrainingDetail(${i})">
+      <td style="font-weight:600;">${escHtml(row.mov.county_name||row.mov.city)}<div style="font-size:0.74rem;color:var(--muted);">${escHtml(row.mov.primary_city||'')}</div></td>
+      ${cell(row.mod1)}${cell(row.mod2)}${cell(row.mod3)}${cell(row.mod4)}
+      <td style="text-align:center;"><strong style="color:${certColor}">${cert}</strong>${total>0?`<span style="font-size:0.7rem;color:var(--muted);display:block;">${Math.round(cert/total*100)}%</span>`:''}</td>
+      <td style="text-align:center;color:var(--muted);">${total}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showTrainingDetail(idx) {
+  const row = _adminTrainingMatrix[idx];
+  if (!row) return;
+  document.getElementById('training-detail-title').textContent =
+    (row.mov.county_name||row.mov.city) + ' — Member Training Detail';
+  const fmt = (done,date) => done
+    ? `<span style="color:var(--success)">&#10003; ${date?new Date(date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</span>`
+    : '<span style="color:var(--border)">&#9675;</span>';
+  const tbody = document.getElementById('training-detail-body');
+  if (!row.members.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.25rem;">No roster members.</td></tr>'; }
+  else {
+    tbody.innerHTML = row.members.map(m => {
+      const r = row.recMap[m.id] || {};
+      const cert = CHRADL_MODS.every(mod => r[mod.key+'_done']);
+      return `<tr>
+        <td style="font-weight:600;">${escHtml(m.full_name)}</td>
+        <td style="color:var(--muted);font-size:0.82rem;">${escHtml(m.role_title||'')}</td>
+        <td style="text-align:center;font-size:0.82rem;">${fmt(r.mod1_done,r.mod1_date)}</td>
+        <td style="text-align:center;font-size:0.82rem;">${fmt(r.mod2_done,r.mod2_date)}</td>
+        <td style="text-align:center;font-size:0.82rem;">${fmt(r.mod3_done,r.mod3_date)}</td>
+        <td style="text-align:center;font-size:0.82rem;">${fmt(r.mod4_done,r.mod4_date)}</td>
+        <td style="text-align:center;">
+          ${cert ? '<span class="badge badge-green" style="font-size:0.68rem;">Certified</span>' : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('training-detail').style.display = 'block';
+  document.getElementById('training-detail').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function exportAdminTrainingXLSX() {
+  const token = session.access_token;
+  const [allRecords, allRoster] = await Promise.all([
+    dbGet('lm_training_records', { select:'*' }, token),
+    dbGet('lm_roster', { active:'eq.true', select:'*' }, token)
+  ]);
+  const data = allRoster.map(m => {
+    const mov = movements.find(mv => mv.id === m.movement_id);
+    const r = allRecords.find(rec => rec.roster_id === m.id) || {};
+    return {
+      'County':           mov?.county_name || mov?.city || '—',
+      'Name':             m.full_name,
+      'Role':             m.role_title || '',
+      'H to L':           r.mod1_done ? (r.mod1_date||'Complete') : '',
+      'A to H':           r.mod2_done ? (r.mod2_date||'Complete') : '',
+      'A to E':           r.mod3_done ? (r.mod3_date||'Complete') : '',
+      'MF to MP':         r.mod4_done ? (r.mod4_date||'Complete') : '',
+      'CHRADL Certified': (r.mod1_done&&r.mod2_done&&r.mod3_done&&r.mod4_done) ? 'Yes' : 'No'
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'CHRADL Training');
+  XLSX.writeFile(wb, `MM_CHRADL_AllMovements_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function exportAdminTrainingPDF() {
+  // Build summary matrix for PDF
+  const matrixRows = _adminTrainingMatrix.map(row => `<tr>
+    <td>${escHtml(row.mov.county_name||row.mov.city)}</td>
+    <td style="text-align:center">${row.mod1}</td>
+    <td style="text-align:center">${row.mod2}</td>
+    <td style="text-align:center">${row.mod3}</td>
+    <td style="text-align:center">${row.mod4}</td>
+    <td style="text-align:center;font-weight:700;color:#2d8a5e">${row.certified}</td>
+    <td style="text-align:center">${row.members.length}</td>
+  </tr>`).join('');
+  openAdminPrintWindow('Mission Mississippi — CHRADL Training Overview',
+    `<table>
+      <thead><tr>
+        <th>County</th><th style="text-align:center">H to L</th><th style="text-align:center">A to H</th>
+        <th style="text-align:center">A to E</th><th style="text-align:center">MF to MP</th>
+        <th style="text-align:center">Certified</th><th style="text-align:center">Members</th>
+      </tr></thead>
+      <tbody>${matrixRows}</tbody>
+    </table>`);
+}
+
+
+// ── MILESTONE definitions (same as coordinator)
+const MILESTONES_ADMIN = [
+  { key:'steering_committee_formed',  label:'Steering Committee Formed' },
+  { key:'first_prayer_gathering',     label:'First Prayer Gathering' },
+  { key:'first_table_talk_cohort',    label:'First Table Talk Cohort' },
+  { key:'first_chradl_training',      label:'First CHRADL Training' },
+  { key:'first_chradl_certified',     label:'First CHRADL Certified' },
+  { key:'entered_planning_phase',     label:'Planning Phase' },
+  { key:'entered_execution_phase',    label:'Execution Phase' },
+  { key:'first_story_submitted',      label:'First Story Submitted' },
+  { key:'first_year_celebration',     label:'Year-End Celebration' },
+  { key:'community_profile_complete', label:'Profile Complete' },
+];
+
+// ── PRAYER WALL (admin)
+async function loadAdminPrayer() {
+  const items = await dbGet('lm_prayer_wall', { select:'*', order:'created_at.desc' }, session.access_token);
+  const movMap = Object.fromEntries(movements.map(m=>[m.id, m.county_name||m.city]));
+  const el = document.getElementById('admin-prayer-list');
+  if (!items.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-text">No prayer requests posted yet.</div></div>'; return; }
+  el.innerHTML = items.map(p=>{
+    const age = Math.round((Date.now()-new Date(p.created_at))/86400000);
+    return `<div class="card" style="border-left:4px solid ${p.answered?'var(--success)':'var(--blue)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+          <strong style="color:var(--navy);">${escHtml(p.title)}</strong>
+          ${p.answered?'<span class="badge badge-green" style="margin-left:0.5rem;font-size:0.67rem;">Answered</span>':''}
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:0.18rem;">${escHtml(movMap[p.movement_id]||'—')}${p.poster_name?' &middot; '+escHtml(p.poster_name):''} &middot; ${age===0?'Today':age+'d ago'}</div>
+        </div>
+        <div style="display:flex;gap:0.4rem;">
+          ${!p.answered?`<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.6rem;border:1px solid var(--success);color:var(--success);background:transparent;" onclick="adminMarkPrayerAnswered('${p.id}')">Mark Answered</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="adminDeletePrayer('${p.id}')">Delete</button>
+        </div>
+      </div>
+      <p style="font-size:0.84rem;color:var(--text);line-height:1.7;margin-top:0.5rem;">${escHtml(p.body)}</p>
+    </div>`;
+  }).join('');
+}
+
+async function adminMarkPrayerAnswered(id) {
+  await dbPatch('lm_prayer_wall', id, { answered:true }, session.access_token);
+  toast('Marked as answered.');
+  loadAdminPrayer();
+}
+
+async function adminDeletePrayer(id) {
+  if (!confirm('Delete this prayer request?')) return;
+  await fetch(`${SB_URL}/rest/v1/lm_prayer_wall?id=eq.${id}`, { method:'DELETE', headers:sbHeaders(session.access_token) });
+  toast('Deleted.');
+  loadAdminPrayer();
+}
+
+// ── MOVEMENT TIMELINE
+let _timelineCache = [];
+
+async function loadTimeline() {
+  // Populate movement filter
+  const sel = document.getElementById('tl-filter-mov');
+  if (sel.options.length <= 1) {
+    movements.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id; opt.textContent = m.county_name||m.city;
+      sel.appendChild(opt);
+    });
+  }
+  const movFilter  = sel.value;
+  const typeFilter = document.getElementById('tl-filter-type').value;
+  let params = { select:'*', order:'event_date.desc', limit:'200' };
+  if (movFilter) params.movement_id = `eq.${movFilter}`;
+  if (typeFilter) params.event_type  = `eq.${typeFilter}`;
+  const events = await dbGet('lm_event_reports', params, session.access_token);
+  _timelineCache = events;
+
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,{name:m.county_name||m.city,color:movColor(m)}]));
+  const el = document.getElementById('timeline-body');
+
+  if (!events.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-text">No events found.</div></div>'; return; }
+
+  // Group by month
+  const byMonth = {};
+  events.forEach(e => {
+    const month = e.event_date.slice(0,7);
+    if (!byMonth[month]) byMonth[month] = [];
+    byMonth[month].push(e);
+  });
+
+  el.innerHTML = Object.entries(byMonth).map(([month, items]) => {
+    const [yr, mo] = month.split('-');
+    const monthName = new Date(yr, mo-1, 1).toLocaleString('en-US',{month:'long',year:'numeric'});
+    const rows = items.map(e => {
+      const mov = movMap[e.movement_id] || { name:'—', color:'#ccc' };
+      return `<div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.65rem 0.85rem;background:#fff;border-radius:4px;border:1px solid var(--border);margin-bottom:0.4rem;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${mov.color};flex-shrink:0;margin-top:4px;"></div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:0.65rem;align-items:baseline;flex-wrap:wrap;">
+            <strong style="font-size:0.88rem;color:var(--navy);">${escHtml(e.event_type)}</strong>
+            <span style="font-size:0.76rem;color:var(--blue);font-weight:600;">${escHtml(mov.name)}</span>
+            <span style="font-size:0.72rem;color:var(--muted);">${e.event_date}</span>
+            ${e.attendance!=null?`<span style="font-size:0.72rem;color:var(--muted);">${e.attendance} attendees</span>`:''}
+          </div>
+          ${e.description?`<div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem;">${escHtml(e.description.slice(0,120))}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:1.25rem;">
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);margin-bottom:0.55rem;padding:0 0.1rem;">${monthName}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function movColor(mov) {
+  const colors = ['#29a8e0','#e8674a','#4caf7d','#f0b429','#9b59b6','#e74c3c','#1abc9c'];
+  const idx = movements.findIndex(m=>m.id===mov.id) % colors.length;
+  return colors[idx];
+}
+
+async function exportTimelineXLSX() {
+  const movMap = Object.fromEntries(movements.map(m=>[m.id,m.county_name||m.city]));
+  const data = _timelineCache.map(e=>({
+    'County':      movMap[e.movement_id]||'—',
+    'Event Type':  e.event_type,
+    'Date':        e.event_date,
+    'Attendance':  e.attendance??'',
+    'Description': e.description||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Timeline');
+  XLSX.writeFile(wb, `MM_Timeline_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ── MILESTONE OVERVIEW (admin matrix)
+async function loadMilestoneOverview() {
+  const allMilestones = await dbGet('lm_milestones', { select:'*' }, session.access_token);
+  const byMov = Object.fromEntries(movements.map(m=>[m.id,{}]));
+  allMilestones.forEach(r => { if (byMov[r.movement_id]) byMov[r.movement_id][r.milestone_key] = r; });
+
+  const table = document.getElementById('milestone-matrix');
+  const headerCells = MILESTONES_ADMIN.map(m=>`<th style="font-size:0.7rem;text-align:center;white-space:nowrap;">${m.label}</th>`).join('');
+  const rows = movements.map(mov => {
+    const recs = byMov[mov.id]||{};
+    const done = MILESTONES_ADMIN.filter(m=>recs[m.key]?.completed).length;
+    const cells = MILESTONES_ADMIN.map(m => {
+      const r = recs[m.key];
+      return `<td style="text-align:center;">
+        ${r?.completed ? `<span style="color:var(--success);font-size:1rem;">&#10003;</span>` : '<span style="color:var(--border);">&#9675;</span>'}
+      </td>`;
+    }).join('');
+    return `<tr>
+      <td style="font-weight:600;white-space:nowrap;">${escHtml(mov.county_name||mov.city)}</td>
+      ${cells}
+      <td style="text-align:center;font-weight:700;color:${done===10?'var(--success)':'var(--navy)'};">${done}/10</td>
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `<thead><tr>
+    <th>County</th>${headerCells}<th style="text-align:center">Total</th>
+  </tr></thead><tbody>${rows}</tbody>`;
+}
+
+// ── ADMIN MOVEMENT REPORT
+async function adminGenerateReport(movId) {
+  const mov = movements.find(m=>m.id===movId);
+  if (!mov) return;
+  toast('Building report...', 'info');
+  const token = session.access_token;
+  const movName = mov.county_name||mov.city;
+
+  const [profile, rosterAll, reports, training, milestones] = await Promise.all([
+    dbGet('lm_community_profiles', { movement_id:`eq.${movId}`, select:'*' }),
+    dbGet('lm_roster', { movement_id:`eq.${movId}`, active:'eq.true', select:'*', order:'roster_type.asc,full_name.asc' }, token),
+    dbGet('lm_event_reports', { movement_id:`eq.${movId}`, select:'*', order:'event_date.desc' }, token),
+    dbGet('lm_training_records', { movement_id:`eq.${movId}`, select:'*' }, token),
+    dbGet('lm_milestones', { movement_id:`eq.${movId}`, select:'*' }, token),
+  ]);
+
+  const p = profile[0]||{};
+  const committee = rosterAll.filter(r=>r.roster_type==='committee');
+  const certified = training.filter(t=>t.mod1_done&&t.mod2_done&&t.mod3_done&&t.mod4_done).length;
+  const msAchieved = milestones.filter(m=>m.completed).length;
+
+  const html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8pt;margin-bottom:20pt;">
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${escHtml(mov.phase)}</div><div style="font-size:8pt;color:#6b6b6b;">Phase</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${committee.length}</div><div style="font-size:8pt;color:#6b6b6b;">Committee Members</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${reports.length}</div><div style="font-size:8pt;color:#6b6b6b;">Events Reported</div>
+      </div>
+      <div style="background:#f5f0e8;padding:8pt;border-radius:3pt;text-align:center;">
+        <div style="font-size:18pt;font-weight:700;color:#1a2744;">${certified}</div><div style="font-size:8pt;color:#6b6b6b;">CHRADL Certified</div>
+      </div>
+    </div>
+    ${p.population ? `
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Community Demographics</h2>
+    <table><tr>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtNum(p.population)}</strong><br><span style="color:#888;font-size:8pt">Population</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtCurrency(p.median_household_income)}</strong><br><span style="color:#888;font-size:8pt">Median Income</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtPct(p.poverty_rate)}</strong><br><span style="color:#888;font-size:8pt">Poverty Rate</span></td>
+      <td style="padding:4pt 12pt 4pt 0"><strong>${fmtPct(p.pct_black)}</strong><br><span style="color:#888;font-size:8pt">Black</span></td>
+      <td><strong>${fmtPct(p.pct_white)}</strong><br><span style="color:#888;font-size:8pt">White</span></td>
+    </tr></table>` : ''}
+    ${p.church_landscape?`<h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Church Landscape</h2><p>${escHtml(p.church_landscape)}</p>`:''}
+    ${committee.length?`
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Steering Committee</h2>
+    <table><thead><tr><th>Name</th><th>Role</th><th>Ethnicity</th><th>Phone</th><th>Email</th></tr></thead><tbody>
+      ${committee.map(m=>`<tr><td>${escHtml(m.full_name)}</td><td>${escHtml(m.role_title||'')}</td><td>${escHtml(m.ethnicity||'—')}</td><td>${escHtml(m.phone||'')}</td><td>${escHtml(m.email||'')}</td></tr>`).join('')}
+    </tbody></table>`:''}
+    ${reports.slice(0,10).length?`
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Recent Events</h2>
+    <table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>
+      ${reports.slice(0,10).map(r=>`<tr><td>${escHtml(r.event_type)}</td><td>${r.event_date}</td><td>${r.attendance??'—'}</td></tr>`).join('')}
+    </tbody></table>`:''}
+    ${msAchieved?`
+    <h2 style="color:#1a2744;font-size:12pt;border-bottom:2px solid #e8674a;padding-bottom:4pt;margin:16pt 0 10pt;">Milestones Achieved (${msAchieved}/10)</h2>
+    <ul>${milestones.filter(m=>m.completed).map(m=>{
+      const ms = MILESTONES_ADMIN.find(x=>x.key===m.milestone_key);
+      return `<li>${ms?ms.label:m.milestone_key}${m.completed_date?' — '+m.completed_date:''}</li>`;
+    }).join('')}</ul>`:''}
+  `;
+
+  openAdminPrintWindow(`${movName} — Movement Report`, html);
 }
 
 // ── INVITE ROLE TOGGLE
