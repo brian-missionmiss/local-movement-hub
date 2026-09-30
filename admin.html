@@ -308,7 +308,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <nav class="sidebar-nav">
           <a class="sidebar-link" href="#" onclick="showSection('training')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>
-            CHRADL Training
+            Training
           </a>
         </nav>
       </div>
@@ -409,7 +409,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           </select>
           <select class="form-select" id="filter-type" style="width:auto;" onchange="loadAllReports()">
             <option value="">All event types</option>
-            <option>Prayer Gathering</option><option>Table Talk</option><option>CHRADL Training</option>
+            <option>Prayer Gathering</option><option>Table Talk</option><option>Training</option>
             <option>4 The City Service Day</option><option>One Picnic</option>
             <option>One Community Conversation</option><option>Other</option>
           </select>
@@ -442,7 +442,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
                 <option value="">Select type...</option>
                 <option>Prayer Gathering</option>
                 <option>Table Talk</option>
-                <option>CHRADL Training</option>
+                <option>Training</option>
                 <option>4 The City Service Day</option>
                 <option>One Picnic</option>
                 <option>One Community Conversation</option>
@@ -537,7 +537,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             </select>
             <select class="form-select" id="tl-filter-type" style="width:auto;" onchange="loadTimeline()">
               <option value="">All event types</option>
-              <option>Prayer Gathering</option><option>Table Talk</option><option>CHRADL Training</option>
+              <option>Prayer Gathering</option><option>Table Talk</option><option>Training</option>
               <option>4 The City Service Day</option><option>One Picnic</option><option>One Community Conversation</option><option>Other</option>
             </select>
             <button class="btn btn-sm btn-outline" onclick="exportTimelineXLSX()">Export XLSX</button>
@@ -566,7 +566,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div id="section-training" style="display:none">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div>
-            <h1 class="page-title">CHRADL Training</h1>
+            <h1 class="page-title">Training</h1>
             <p class="page-sub">Module completion across all local movements. Click any county row to view member detail.</p>
           </div>
           <div style="display:flex;gap:0.45rem;">
@@ -720,7 +720,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <label class="form-label">Type</label>
           <select class="form-select" id="ev-type">
             <option>Living Reconciled Celebration</option><option>Prayer Breakfast</option>
-            <option>CHRADL Training</option><option>4 The City Service Day</option>
+            <option>Training</option><option>4 The City Service Day</option>
             <option>Legislative Prayer Breakfast</option><option>Other</option>
           </select>
         </div>
@@ -1712,7 +1712,7 @@ async function exportAdminTrainingXLSX() {
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'CHRADL Training');
+  XLSX.utils.book_append_sheet(wb, ws, 'Training');
   XLSX.writeFile(wb, `MM_CHRADL_AllMovements_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
@@ -1727,7 +1727,7 @@ async function exportAdminTrainingPDF() {
     <td style="text-align:center;font-weight:700;color:#2d8a5e">${row.certified}</td>
     <td style="text-align:center">${row.members.length}</td>
   </tr>`).join('');
-  openAdminPrintWindow('Mission Mississippi — CHRADL Training Overview',
+  openAdminPrintWindow('Mission Mississippi — Training Overview',
     `<table>
       <thead><tr>
         <th>County</th><th style="text-align:center">H to L</th><th style="text-align:center">A to H</th>
