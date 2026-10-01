@@ -254,6 +254,29 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<!-- VIEW SELECTION -->
+<div id="view-select" class="login-wrap" style="display:none">
+  <div style="max-width:480px;width:100%;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div class="login-title">Welcome back</div>
+      <p class="login-sub" style="margin-bottom:0;">Signed in as <span id="select-email" style="color:var(--navy);font-weight:600;"></span>. Choose your view.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <button onclick="enterAdminView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+        <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Admin Portal</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Manage movements,<br>reports, and settings</div>
+      </button>
+      <button onclick="enterCoordinatorView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+        <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Coordinator Portal</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Work from a local<br>movement perspective</div>
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button onclick="doLogout()" style="background:none;border:none;color:var(--muted);font-size:0.82rem;cursor:pointer;font-family:'Open Sans',sans-serif;">Sign out</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADMIN DASHBOARD -->
 <div id="view-admin" style="display:none">
   <div class="dash-wrap">
@@ -933,20 +956,32 @@ async function verifyAndLoad() {
     return;
   }
   document.getElementById('view-login').style.display = 'none';
-  document.getElementById('view-admin').style.display = 'block';
+  document.getElementById('select-email').textContent = userEmail;
+  document.getElementById('view-select').style.display = 'flex';
   document.getElementById('logout-btn').style.display = '';
   document.getElementById('nav-user').textContent = userEmail;
-  await loadMovementsData();
-  loadOverview();
 }
 
 async function doLogout() {
   if (session?.access_token) await auth.signOut(session.access_token);
   auth.clearSession(); session=null;
   document.getElementById('view-admin').style.display='none';
+  document.getElementById('view-select').style.display='none';
   document.getElementById('view-login').style.display='flex';
   document.getElementById('logout-btn').style.display='none';
   document.getElementById('nav-user').textContent='';
+}
+
+async function enterAdminView() {
+  document.getElementById('view-select').style.display = 'none';
+  document.getElementById('view-admin').style.display = 'block';
+  await loadMovementsData();
+  loadOverview();
+}
+
+function enterCoordinatorView() {
+  sessionStorage.setItem('lm_admin_as_coordinator', '1');
+  window.location.href = 'coordinator.html';
 }
 
 async function loadMovementsData() {
