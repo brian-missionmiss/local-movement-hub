@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Local Movement Hub</title>
+<title>Admin Panel | Mission Mississippi Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Merriweather:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 
@@ -211,6 +211,65 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   font-size: 0.76rem; font-weight: 700; text-align: center;
   padding: 0.4rem; letter-spacing: 0.08em; text-transform: uppercase;
 }
+/* ── MOBILE ── */
+.main-content { min-width: 0; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.mobile-tabs { display: none; }
+@media (max-width: 900px) {
+  .nav { position: relative; flex-wrap: wrap; height: auto; min-height: 60px; padding: 0.45rem 1rem; row-gap: 0.4rem; }
+  .nav-links { display: none !important; }
+  .nav-user { display: none; }
+  .mobile-tabs {
+    display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.6rem 1rem; background: var(--white);
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 90; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-tabs::-webkit-scrollbar { display: none; }
+  .mobile-tabs a {
+    flex: 0 0 auto; font-size: 0.82rem; font-weight: 700; color: var(--muted); text-decoration: none;
+    padding: 0.5rem 0.9rem; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap;
+  }
+  .mobile-tabs a.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .mobile-tabs .tab-sep { flex: 0 0 1px; background: var(--border); margin: 0.2rem 0.2rem; }
+  .data-table { min-width: 600px; }
+  .data-table th, .data-table td { padding: 0.6rem 0.7rem; }
+  .main-content { padding: 1.1rem 1rem 2rem; }
+}
+@media (max-width: 600px) {
+  .admin-banner { font-size: 0.66rem; letter-spacing: 0.05em; }
+  .nav-title { font-size: 0.8rem; }
+  .nav-title span { font-size: 0.66rem; }
+  .nav-logo { height: 30px; }
+  .nav-right { gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+  .nav-right .nav-btn-blue { display: none; }
+  .nav-btn { padding: 0.45rem 0.7rem; font-size: 0.7rem; }
+  .page-title { font-size: 1.35rem; }
+  .page-header { margin-bottom: 1.25rem; }
+  .card { padding: 1rem; }
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 36px; }
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+  .login-wrap { padding: 1rem; align-items: flex-start; }
+  .login-box { padding: 1.5rem; }
+  .modal-overlay { padding: 0.6rem; align-items: flex-end; }
+  .modal { max-height: 92vh; border-radius: 12px; }
+  .modal-body { padding: 1rem; }
+  .toast { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; text-align: center; }
+  .main-content input[type="checkbox"] { width: 22px !important; height: 22px !important; }
+  .grid-3:has(> .stat-card) { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+  .grid-3:has(> .stat-card:nth-child(4)) { grid-template-columns: 1fr 1fr; }
+  .grid-3 > .stat-card { padding: 0.8rem 0.7rem; }
+  .grid-3 > .stat-card .stat-num { font-size: 1.4rem; }
+  .grid-3 > .stat-card .stat-label { font-size: 0.7rem; }
+  .page-header select.form-select, .page-header .form-select { width: 100% !important; }
+}
+.data-table a[href^="tel:"] { white-space: nowrap; }
+@media (max-width: 600px) {
+  #view-select [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 900px) {
+  [style*="grid-template-columns:1fr 300px"] { grid-template-columns: 1fr !important; gap: 1rem !important; }
+}
 </style>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -224,10 +283,11 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 <nav class="nav">
   <a class="nav-brand" href="index.html">
     <img class="nav-logo" src="data:image/png;base64,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" alt="Mission Mississippi">
-    <div class="nav-title">Local Movement Hub <span>Admin Panel</span></div>
+    <div class="nav-title">Mission Mississippi Hub <span>Admin Panel</span></div>
   </a>
   <div class="nav-right">
     <span class="nav-user" id="nav-user"></span>
+    <button class="nav-btn nav-btn-outline" id="switch-view-btn" style="display:none" onclick="showViewSelect()">Switch View</button>
     <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
     <a class="nav-btn nav-btn-blue" href="index.html">Public Hub</a>
   </div>
@@ -256,12 +316,12 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
 <!-- VIEW SELECTION -->
 <div id="view-select" class="login-wrap" style="display:none">
-  <div style="max-width:480px;width:100%;">
+  <div style="max-width:680px;width:100%;">
     <div style="text-align:center;margin-bottom:2rem;">
       <div class="login-title">Welcome back</div>
       <p class="login-sub" style="margin-bottom:0;">Signed in as <span id="select-email" style="color:var(--navy);font-weight:600;"></span>. Choose your view.</p>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;">
       <button onclick="enterAdminView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
         <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Admin Portal</div>
         <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Manage movements,<br>reports, and settings</div>
@@ -269,6 +329,10 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <button onclick="enterCoordinatorView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
         <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Coordinator Portal</div>
         <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Work from a local<br>movement perspective</div>
+      </button>
+      <button onclick="enterBoardView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+        <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Board Portal</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Agendas, minutes,<br>and board documents</div>
       </button>
     </div>
     <div style="text-align:center;margin-top:1.5rem;">
@@ -279,6 +343,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
 <!-- ADMIN DASHBOARD -->
 <div id="view-admin" style="display:none">
+  <div class="mobile-tabs" id="mobile-tabs"></div>
   <div class="dash-wrap">
     <aside class="sidebar">
       <div class="sidebar-section">
@@ -345,6 +410,13 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <a class="sidebar-link" href="#" onclick="showSection('assets')">&#127912; Assets</a>
         </nav>
       </div>
+
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Board</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('board')">&#128188; Board Portal Content</a>
+        </nav>
+      </div>
     </aside>
 
     <main class="main-content">
@@ -353,7 +425,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div id="section-overview">
         <div class="page-header">
           <h1 class="page-title">Admin Overview</h1>
-          <p class="page-sub">Mission Mississippi — Local Movement Hub management.</p>
+          <p class="page-sub">Mission Mississippi Hub management.</p>
         </div>
         <div class="grid-3" style="margin-bottom:2rem;">
           <div class="stat-card stat-accent"><div class="stat-num" id="ov-movements">—</div><div class="stat-label">Active Movements</div></div>
@@ -525,6 +597,57 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <thead><tr><th>Title</th><th>Category</th><th>Size</th><th>Added</th><th></th></tr></thead>
             <tbody id="docs-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- BOARD PORTAL CONTENT -->
+      <div id="section-board" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div><h1 class="page-title">Board Portal Content</h1><p class="page-sub">Upload agendas, packets and minutes, manage meetings and action items, and keep the board roster current. Board members see only what you publish.</p></div>
+          <a class="btn btn-outline" href="board.html" target="_blank">Preview Board Portal</a>
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.1rem;" id="bd-tabs">
+          <button class="btn btn-sm btn-primary" data-bd="docs" onclick="showBoardTab('docs')">Documents</button>
+          <button class="btn btn-sm btn-outline" data-bd="meetings" onclick="showBoardTab('meetings')">Meetings</button>
+          <button class="btn btn-sm btn-outline" data-bd="actions" onclick="showBoardTab('actions')">Action Items</button>
+          <button class="btn btn-sm btn-outline" data-bd="roster" onclick="showBoardTab('roster')">Board Roster</button>
+        </div>
+        <div class="form-error" id="bd-load-error" style="margin-bottom:1rem;"></div>
+
+        <div id="bd-panel-docs">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="openBoardDocModal()">+ Upload Document</button></div>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Title</th><th>Type</th><th>Meeting</th><th>Status</th><th>Added</th><th></th></tr></thead>
+            <tbody id="bd-docs-table"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+          </table></div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.75rem;">Drafts are visible only to admins. Publishing makes a document visible to every board member immediately.</p>
+        </div>
+
+        <div id="bd-panel-meetings" style="display:none">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="openBoardMeetingModal()">+ Add Meeting</button></div>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Date</th><th>Meeting</th><th>Location</th><th></th></tr></thead>
+            <tbody id="bd-meetings-table"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <div id="bd-panel-actions" style="display:none">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="openBoardActionModal()">+ Add Action Item</button></div>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Item</th><th>Owner</th><th>Due</th><th>Status</th><th></th></tr></thead>
+            <tbody id="bd-actions-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <div id="bd-panel-roster" style="display:none">
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:0.9rem 1.1rem;font-size:0.82rem;line-height:1.7;color:var(--muted);margin-bottom:1rem;">
+            <strong style="color:var(--navy);">Giving a board member access:</strong> add them here, then create their login in Supabase under Authentication, Users, Add user (use the same email, set a password, tick auto confirm). Finally run the last block of <code>board_setup.sql</code> once to give the new account the board role. To remove access, delete their user in Supabase.
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="openBoardMemberModal()">+ Add Board Member</button></div>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Term</th><th>Status</th><th></th></tr></thead>
+            <tbody id="bd-roster-table"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+          </table></div>
         </div>
       </div>
 
@@ -800,6 +923,108 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<!-- BOARD: DOCUMENT -->
+<div class="modal-overlay" id="modal-bdoc">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Upload Board Document</div><button class="modal-close" onclick="closeModal('modal-bdoc')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="bd-title" type="text" placeholder="e.g. October 2026 Board Packet"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select" id="bd-cat" onchange="toggleMinutesApproved()">
+            <option value="agenda">Agenda</option><option value="packet">Board Packet</option><option value="minutes">Minutes</option>
+            <option value="report">Report (President's report, financials)</option><option value="governance">Governance (bylaws, policies)</option><option value="resource">Resource</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Document Date</label><input class="form-input" id="bd-date" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Meeting (optional)</label><select class="form-select" id="bd-meeting"></select></div>
+      <div class="form-group"><label class="form-label">Description (optional)</label><input class="form-input" id="bd-desc" type="text" placeholder="One line shown under the title"></div>
+      <div class="form-group"><label class="form-label">File</label><input class="form-input" id="bd-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.txt"><div class="form-hint">PDF is best. Or leave the file empty and paste a link below.</div></div>
+      <div class="form-group"><label class="form-label">Or link (optional)</label><input class="form-input" id="bd-url" type="url" placeholder="https://..."></div>
+      <label id="bd-approved-row" style="display:none;align-items:center;gap:0.5rem;font-size:0.84rem;margin-bottom:0.6rem;"><input type="checkbox" id="bd-approved"> These minutes have been approved by the board</label>
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.84rem;"><input type="checkbox" id="bd-publish"> Publish now (visible to the board immediately)</label>
+      <div class="form-error" id="bd-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bdoc')">Cancel</button>
+      <button class="btn btn-primary" id="bd-save-btn" onclick="saveBoardDoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD: MEETING -->
+<div class="modal-overlay" id="modal-bmeeting">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="bm-modal-title">Add Meeting</div><button class="modal-close" onclick="closeModal('modal-bmeeting')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="bm-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="bm-date" type="date"></div>
+        <div class="form-group"><label class="form-label">Time</label><input class="form-input" id="bm-time" type="text" placeholder="e.g. 10:00 AM"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="bm-title" type="text" value="Board Meeting"></div>
+      <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="bm-location" type="text" placeholder="236 E. Capitol Street, Suite 435, Jackson"></div>
+      <div class="form-group"><label class="form-label">Video link (optional)</label><input class="form-input" id="bm-video" type="url" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Note to the board (optional)</label><textarea class="form-textarea" id="bm-notes" placeholder="Anything members should know before the meeting"></textarea></div>
+      <div class="form-error" id="bm-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bmeeting')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBoardMeeting()">Save Meeting</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD: ACTION ITEM -->
+<div class="modal-overlay" id="modal-baction">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="ba-modal-title">Add Action Item</div><button class="modal-close" onclick="closeModal('modal-baction')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ba-id">
+      <div class="form-group"><label class="form-label">Action item</label><textarea class="form-textarea" id="ba-desc" placeholder="What needs to happen?"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="ba-owner" type="text" placeholder="Name"></div>
+        <div class="form-group"><label class="form-label">Due date</label><input class="form-input" id="ba-due" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">From meeting (optional)</label><select class="form-select" id="ba-meeting"></select></div>
+      <div class="form-error" id="ba-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-baction')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBoardAction()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD: ROSTER MEMBER -->
+<div class="modal-overlay" id="modal-bmember">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="bmem-modal-title">Add Board Member</div><button class="modal-close" onclick="closeModal('modal-bmember')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="bmem-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="bmem-name" type="text"></div>
+        <div class="form-group"><label class="form-label">Board role</label>
+          <select class="form-select" id="bmem-title"><option>Member</option><option>Chair</option><option>Vice Chair</option><option>Secretary</option><option>Treasurer</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Organization / Church</label><input class="form-input" id="bmem-org" type="text"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Email (their sign-in email)</label><input class="form-input" id="bmem-email" type="email"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="bmem-phone" type="tel"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Term start</label><input class="form-input" id="bmem-start" type="date"></div>
+        <div class="form-group"><label class="form-label">Term end</label><input class="form-input" id="bmem-end" type="date"></div>
+      </div>
+      <div class="form-error" id="bmem-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bmember')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBoardMember()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── SHARED CONFIG — used by all three hub pages
 const SB_URL = 'https://rjscdzpriwhgcukynnto.supabase.co';
@@ -898,7 +1123,9 @@ function escHtml(s) {
 }
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  // date-only values (YYYY-MM-DD) are parsed as UTC and show a day early in US time zones; pin them to noon local
+  const v = /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? d + 'T12:00:00' : d;
+  return new Date(v).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
 }
 function toast(msg, type='success') {
   const el = document.getElementById('toast');
@@ -969,14 +1196,44 @@ async function doLogout() {
   document.getElementById('view-select').style.display='none';
   document.getElementById('view-login').style.display='flex';
   document.getElementById('logout-btn').style.display='none';
+  document.getElementById('switch-view-btn').style.display='none';
   document.getElementById('nav-user').textContent='';
+}
+
+function buildMobileTabs() {
+  const box = document.getElementById('mobile-tabs');
+  if (box.dataset.built) return;
+  box.dataset.built = '1';
+  document.querySelectorAll('.sidebar .sidebar-section').forEach((sec, i) => {
+    if (i > 0) { const sep = document.createElement('span'); sep.className = 'tab-sep'; box.appendChild(sep); }
+    sec.querySelectorAll('.sidebar-link').forEach(src => {
+      const a = document.createElement('a');
+      a.textContent = src.textContent.replace(/\s+/g, ' ').trim().replace(/^[^A-Za-z0-9]+/, '');
+      const oc = src.getAttribute('onclick');
+      if (oc) { a.href = '#'; a.setAttribute('onclick', oc + ';return false;'); }
+      else { a.href = src.getAttribute('href') || '#'; if (src.target) { a.target = src.target; a.rel = 'noopener'; } }
+      box.appendChild(a);
+    });
+  });
+}
+
+function showViewSelect() {
+  document.getElementById('view-admin').style.display = 'none';
+  document.getElementById('view-select').style.display = 'flex';
+  document.getElementById('switch-view-btn').style.display = 'none';
 }
 
 async function enterAdminView() {
   document.getElementById('view-select').style.display = 'none';
   document.getElementById('view-admin').style.display = 'block';
+  document.getElementById('switch-view-btn').style.display = '';
+  buildMobileTabs();
   await loadMovementsData();
   loadOverview();
+}
+
+function enterBoardView() {
+  window.location.href = 'board.html';
 }
 
 function enterCoordinatorView() {
@@ -995,15 +1252,20 @@ async function loadMovementsData() {
 }
 
 function showSection(name) {
-  ['overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets']
+  ['overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
-  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link, .mobile-tabs a').forEach(l=>l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l=>l.classList.add('active'));
+  const activeTab = document.querySelector('.mobile-tabs a.active');
+  if (activeTab && getComputedStyle(document.getElementById('mobile-tabs')).display !== 'none') {
+    activeTab.scrollIntoView({ inline: 'center', block: 'nearest' });
+    window.scrollTo(0, 0);
+  }
   const loaders = {
     overview:loadOverview, movements:loadMovementsTable,
     coordinators:loadCoordinators, 'submit-report':loadSubmitReport, reports:loadAllReports,
     stories:loadStories, profiles:loadCommunityProfiles, training:loadAdminTraining, prayer:loadAdminPrayer, timeline:loadTimeline, 'milestone-overview':loadMilestoneOverview, announcements:loadAnnouncements,
-    events:loadEvents, documents:loadDocuments, assets:loadAssets
+    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin
   };
   if (loaders[name]) loaders[name]();
 }
@@ -1202,7 +1464,7 @@ async function saveAnnouncement() {
   const body=document.getElementById('an-body').value.trim();
   const errEl=document.getElementById('an-error'); errEl.style.display='none';
   if (!title||!body) { errEl.textContent='Title and body required.'; errEl.style.display='block'; return; }
-  await dbPost('lm_announcements',{ title,body,pinned:document.getElementById('an-pinned').checked,created_by:session.user?.id },session.access_token);
+  await dbPost('lm_announcements',{ title,body,pinned:document.getElementById('an-pinned').checked,created_by:currentUserId },session.access_token);
   closeModal('modal-announce'); toast('Announcement published.'); loadAnnouncements();
 }
 async function deleteAnnounce(id) { if(!confirm('Delete this announcement?')) return; await dbDelete('lm_announcements',id,session.access_token); toast('Deleted.'); loadAnnouncements(); }
@@ -1231,7 +1493,7 @@ async function saveEvent() {
     location:document.getElementById('ev-location').value.trim()||null,
     description:document.getElementById('ev-desc').value.trim()||null,
     registration_url:document.getElementById('ev-url').value.trim()||null,
-    created_by:session.user?.id },session.access_token);
+    created_by:currentUserId },session.access_token);
   closeModal('modal-event'); toast('Event added.'); loadEvents();
 }
 async function deleteEvent(id) { if(!confirm('Delete this event?')) return; await dbDelete('lm_events',id,session.access_token); toast('Deleted.'); loadEvents(); }
@@ -1256,7 +1518,7 @@ async function saveDocument() {
   if (!title||!url) { errEl.textContent='Title and URL required.'; errEl.style.display='block'; return; }
   await dbPost('lm_documents',{ title, category:document.getElementById('doc-cat').value,
     file_url:url, file_size:document.getElementById('doc-size').value.trim()||null,
-    created_by:session.user?.id },session.access_token);
+    created_by:currentUserId },session.access_token);
   closeModal('modal-doc'); toast('Document added.'); loadDocuments();
 }
 async function deleteDoc(id) { if(!confirm('Delete this document?')) return; await dbDelete('lm_documents',id,session.access_token); toast('Deleted.'); loadDocuments(); }
@@ -1279,7 +1541,7 @@ async function saveAsset() {
   const errEl=document.getElementById('ast-error'); errEl.style.display='none';
   if (!title||!url) { errEl.textContent='Title and URL required.'; errEl.style.display='block'; return; }
   await dbPost('lm_assets',{ title, category:document.getElementById('ast-cat').value,
-    file_url:url, created_by:session.user?.id },session.access_token);
+    file_url:url, created_by:currentUserId },session.access_token);
   closeModal('modal-asset'); toast('Asset added.'); loadAssets();
 }
 async function deleteAsset(id) { if(!confirm('Delete this asset?')) return; await dbDelete('lm_assets',id,session.access_token); toast('Deleted.'); loadAssets(); }
@@ -1372,6 +1634,7 @@ async function renderMSMap(containerId, movements, lastReports, onCountyClick) {
         .attr('text-anchor','middle').attr('dominant-baseline','middle')
         .attr('font-size', w < 320 ? '7px' : '9px')
         .attr('font-weight','700').attr('fill','#1a2744')
+        .attr('stroke','#fff').attr('stroke-width',2.5).attr('stroke-linejoin','round').attr('paint-order','stroke')
         .attr('pointer-events','none').text(m.primary_city || m.city);
     });
 
@@ -1564,7 +1827,7 @@ function openAdminPrintWindow(title, bodyHtml) {
     </style>
   </head><body>
     <h1>${escHtml(title)}</h1>
-    <div class="sub">Mission Mississippi Local Movement Hub &nbsp;&middot;&nbsp; Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+    <div class="sub">Mission Mississippi Hub &nbsp;&middot;&nbsp; Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
     ${bodyHtml}
     <script>window.onload = () => setTimeout(() => { window.print(); }, 400);<\/script>
   </body></html>`);
@@ -2041,6 +2304,319 @@ async function adminSubmitReport() {
   document.getElementById('ar-attendance').value='';
   document.getElementById('ar-desc').value='';
   toast('Report submitted successfully.');
+}
+
+// ── BOARD PORTAL CONTENT
+const BD_BUCKET = 'lm-board';
+const BD_CAT = { agenda:'Agenda', packet:'Packet', minutes:'Minutes', report:'Report', governance:'Governance', resource:'Resource' };
+let _bd = { meetings:[], docs:[], actions:[], roster:[] };
+let _bdTab = 'docs';
+
+function bdDate(d) {
+  if (!d) return '';
+  return new Date(String(d).slice(0,10) + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function bdTodayStr() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
+async function bdFetch(table, params) {
+  const q = params ? '?' + new URLSearchParams(params) : '';
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${q}`, { headers: sbHeaders(session.access_token) });
+  if (!r.ok) { const e = new Error('Query failed: ' + table); e.status = r.status; throw e; }
+  return r.json();
+}
+async function bdWrite(method, table, body, id) {
+  const url = `${SB_URL}/rest/v1/${table}${id ? '?id=eq.' + id : ''}`;
+  const r = await fetch(url, { method, headers: { ...sbHeaders(session.access_token), 'Prefer': 'return=representation' }, body: body ? JSON.stringify(body) : undefined });
+  if (!r.ok) {
+    let msg = ''; try { msg = (await r.json()).message || ''; } catch (e) {}
+    throw new Error(msg || ('Request failed (' + r.status + ')'));
+  }
+  try { return await r.json(); } catch (e) { return null; }
+}
+
+async function loadBoardAdmin() {
+  const errEl = document.getElementById('bd-load-error'); errEl.style.display = 'none';
+  try {
+    const [meetings, docs, actions, roster] = await Promise.all([
+      bdFetch('lm_board_meetings', { select:'*', order:'meeting_date.desc' }),
+      bdFetch('lm_board_documents', { select:'*', order:'created_at.desc' }),
+      bdFetch('lm_board_actions', { select:'*', order:'status.desc,due_date.asc.nullslast' }),
+      bdFetch('lm_board_roster', { select:'*', order:'full_name.asc' }),
+    ]);
+    _bd = { meetings, docs, actions, roster };
+  } catch (e) {
+    errEl.textContent = (e.status === 404 || e.status === 400)
+      ? 'The board tables are not set up yet. Run board_setup.sql in the Supabase SQL Editor, then reload this page.'
+      : 'Could not load board content: ' + e.message;
+    errEl.style.display = 'block';
+    _bd = { meetings:[], docs:[], actions:[], roster:[] };
+  }
+  renderBoardAdmin();
+  showBoardTab(_bdTab);
+}
+
+function showBoardTab(tab) {
+  _bdTab = tab;
+  ['docs','meetings','actions','roster'].forEach(t => {
+    document.getElementById('bd-panel-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('#bd-tabs [data-bd]').forEach(b => {
+    b.className = 'btn btn-sm ' + (b.dataset.bd === tab ? 'btn-primary' : 'btn-outline');
+  });
+}
+
+function renderBoardAdmin() {
+  const mtgName = id => { const m = _bd.meetings.find(x => x.id === id); return m ? bdDate(m.meeting_date) : '—'; };
+  const emptyRow = (cols, t) => `<tr><td colspan="${cols}" style="text-align:center;color:var(--muted);padding:1.5rem;">${t}</td></tr>`;
+
+  document.getElementById('bd-docs-table').innerHTML = _bd.docs.length ? _bd.docs.map(d => {
+    const pub = d.status === 'published';
+    const minutesNote = d.category === 'minutes' ? (d.is_approved ? ' <span class="badge badge-green">Approved</span>' : ' <span class="badge badge-coral">Unapproved</span>') : '';
+    return `<tr>
+      <td><a href="#" onclick="openBoardDoc('${d.id}');return false;" style="color:var(--blue);font-weight:600;">${escHtml(d.title)}</a>${minutesNote}</td>
+      <td><span class="badge badge-navy">${escHtml(BD_CAT[d.category] || d.category)}</span></td>
+      <td style="color:var(--muted);font-size:0.8rem;">${escHtml(mtgName(d.meeting_id))}</td>
+      <td><span class="badge ${pub ? 'badge-green' : 'badge-muted'}">${pub ? 'Published' : 'Draft'}</span></td>
+      <td style="color:var(--muted);font-size:0.8rem;">${escHtml(bdDate(d.created_at))}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-outline" onclick="toggleBoardDocPublish('${d.id}')">${pub ? 'Unpublish' : 'Publish'}</button>
+        ${d.category === 'minutes' ? `<button class="btn btn-sm btn-outline" onclick="toggleMinutesApproval('${d.id}')">${d.is_approved ? 'Mark unapproved' : 'Mark approved'}</button>` : ''}
+        <button class="btn btn-sm btn-danger" onclick="deleteBoardDoc('${d.id}')">Delete</button>
+      </td></tr>`;
+  }).join('') : emptyRow(6, 'No board documents yet. Click Upload Document to add one.');
+
+  document.getElementById('bd-meetings-table').innerHTML = _bd.meetings.length ? _bd.meetings.map(m => `<tr>
+    <td style="font-weight:600;">${escHtml(bdDate(m.meeting_date))}${m.start_time ? ' <span style="color:var(--muted);font-weight:400;">' + escHtml(m.start_time) + '</span>' : ''}</td>
+    <td>${escHtml(m.title)}</td><td style="color:var(--muted);font-size:0.8rem;">${escHtml(m.location || '')}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="openBoardMeetingModal('${m.id}')">Edit</button>
+    <button class="btn btn-sm btn-danger" onclick="deleteBoardMeeting('${m.id}')">Delete</button></td></tr>`).join('')
+    : emptyRow(4, 'No meetings yet.');
+
+  const today = bdTodayStr();
+  document.getElementById('bd-actions-table').innerHTML = _bd.actions.length ? _bd.actions.map(a => {
+    const done = a.status === 'done';
+    const late = !done && a.due_date && String(a.due_date).slice(0,10) < today;
+    return `<tr>
+      <td style="${done ? 'text-decoration:line-through;opacity:0.6;' : ''}font-weight:600;">${escHtml(a.description)}</td>
+      <td>${escHtml(a.owner_name || '')}</td>
+      <td style="${late ? 'color:var(--danger);font-weight:700;' : ''}">${escHtml(bdDate(a.due_date))}</td>
+      <td><span class="badge ${done ? 'badge-green' : 'badge-blue'}">${done ? 'Done' : 'Open'}</span></td>
+      <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="toggleBoardAction('${a.id}')">${done ? 'Reopen' : 'Mark done'}</button>
+      <button class="btn btn-sm btn-outline" onclick="openBoardActionModal('${a.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteBoardAction('${a.id}')">Delete</button></td></tr>`;
+  }).join('') : emptyRow(5, 'No action items yet.');
+
+  document.getElementById('bd-roster-table').innerHTML = _bd.roster.length ? _bd.roster.map(p => `<tr>
+    <td style="font-weight:600;">${escHtml(p.full_name)}</td><td>${escHtml(p.officer_title)}</td>
+    <td style="font-size:0.82rem;">${escHtml(p.email || '')}</td>
+    <td style="color:var(--muted);font-size:0.8rem;">${p.term_start ? escHtml(bdDate(p.term_start)) : ''}${p.term_end ? ' to ' + escHtml(bdDate(p.term_end)) : ''}</td>
+    <td><span class="badge ${p.active ? 'badge-green' : 'badge-muted'}">${p.active ? 'Active' : 'Inactive'}</span></td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="openBoardMemberModal('${p.id}')">Edit</button>
+    <button class="btn btn-sm btn-outline" onclick="toggleBoardMemberActive('${p.id}')">${p.active ? 'Deactivate' : 'Activate'}</button>
+    <button class="btn btn-sm btn-danger" onclick="deleteBoardMember('${p.id}')">Delete</button></td></tr>`).join('')
+    : emptyRow(6, 'No board members yet.');
+}
+
+function meetingOptions(selectId, selected) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">None</option>' + _bd.meetings.map(m =>
+    `<option value="${m.id}" ${m.id === selected ? 'selected' : ''}>${escHtml(bdDate(m.meeting_date))}: ${escHtml(m.title)}</option>`).join('');
+}
+function bdVal(id) { return document.getElementById(id).value.trim(); }
+function bdErr(id, msg) { const e = document.getElementById(id); e.textContent = msg; e.style.display = msg ? 'block' : 'none'; }
+
+// documents
+function openBoardDocModal() {
+  ['bd-title','bd-date','bd-desc','bd-url','bd-file'].forEach(i => { document.getElementById(i).value = ''; });
+  document.getElementById('bd-cat').value = 'agenda';
+  document.getElementById('bd-approved').checked = false;
+  document.getElementById('bd-publish').checked = false;
+  document.getElementById('bd-date').value = bdTodayStr();
+  meetingOptions('bd-meeting', '');
+  toggleMinutesApproved(); bdErr('bd-error', '');
+  openModal('modal-bdoc');
+}
+function toggleMinutesApproved() {
+  document.getElementById('bd-approved-row').style.display = document.getElementById('bd-cat').value === 'minutes' ? 'flex' : 'none';
+}
+function bdSafeName(n) { return n.normalize('NFKD').replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_').slice(-80); }
+function bdPathEnc(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+
+async function saveBoardDoc() {
+  const title = bdVal('bd-title'), cat = document.getElementById('bd-cat').value;
+  const file = document.getElementById('bd-file').files[0];
+  const url = bdVal('bd-url');
+  bdErr('bd-error', '');
+  if (!title) return bdErr('bd-error', 'Title is required.');
+  if (!file && !url) return bdErr('bd-error', 'Choose a file or paste a link.');
+  if (url && !/^https?:\/\//i.test(url)) return bdErr('bd-error', 'The link must start with http:// or https://');
+  const btn = document.getElementById('bd-save-btn'); btn.disabled = true; btn.textContent = 'Saving...';
+  let path = null;
+  try {
+    if (file) {
+      path = `${cat}/${new Date().getFullYear()}/${Date.now()}-${bdSafeName(file.name)}`;
+      const up = await fetch(`${SB_URL}/storage/v1/object/${BD_BUCKET}/${bdPathEnc(path)}`, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' },
+        body: file
+      });
+      if (!up.ok) {
+        let m = ''; try { m = (await up.json()).message || ''; } catch (e) {}
+        throw new Error(m || 'Upload failed. Has board_setup.sql been run?');
+      }
+    }
+    const publish = document.getElementById('bd-publish').checked;
+    await bdWrite('POST', 'lm_board_documents', {
+      category: cat, title, description: bdVal('bd-desc') || null,
+      meeting_id: document.getElementById('bd-meeting').value || null,
+      doc_date: document.getElementById('bd-date').value || null,
+      file_path: path, file_name: file ? file.name : null, file_size: file ? file.size : null,
+      external_url: file ? null : url,
+      status: publish ? 'published' : 'draft',
+      published_at: publish ? new Date().toISOString() : null,
+      is_approved: cat === 'minutes' ? document.getElementById('bd-approved').checked : false,
+      created_by: currentUserId
+    });
+    closeModal('modal-bdoc'); toast(publish ? 'Document published to the board.' : 'Saved as a draft.');
+    loadBoardAdmin();
+  } catch (e) {
+    if (path) { fetch(`${SB_URL}/storage/v1/object/${BD_BUCKET}/${bdPathEnc(path)}`, { method:'DELETE', headers: sbHeaders(session.access_token) }).catch(() => {}); }
+    bdErr('bd-error', e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Save'; }
+}
+async function openBoardDoc(id) {
+  const d = _bd.docs.find(x => x.id === id); if (!d) return;
+  const w = window.open('', '_blank');
+  try {
+    let target = d.external_url;
+    if (d.file_path) {
+      const r = await fetch(`${SB_URL}/storage/v1/object/sign/${BD_BUCKET}/${bdPathEnc(d.file_path)}`, {
+        method:'POST', headers: sbHeaders(session.access_token), body: JSON.stringify({ expiresIn: 300 })
+      });
+      if (!r.ok) throw new Error('sign failed');
+      target = `${SB_URL}/storage/v1${(await r.json()).signedURL}`;
+    }
+    if (!/^https?:\/\//i.test(target || '')) throw new Error('no target');
+    if (w) w.location = target; else window.location = target;
+  } catch (e) { if (w) w.close(); toast('That file could not be opened.', 'error'); }
+}
+async function toggleBoardDocPublish(id) {
+  const d = _bd.docs.find(x => x.id === id); if (!d) return;
+  const pub = d.status !== 'published';
+  try {
+    await bdWrite('PATCH', 'lm_board_documents', { status: pub ? 'published' : 'draft', published_at: pub ? new Date().toISOString() : null }, id);
+    toast(pub ? 'Published to the board.' : 'Moved back to draft.'); loadBoardAdmin();
+  } catch (e) { toast(e.message, 'error'); }
+}
+async function toggleMinutesApproval(id) {
+  const d = _bd.docs.find(x => x.id === id); if (!d) return;
+  try { await bdWrite('PATCH', 'lm_board_documents', { is_approved: !d.is_approved }, id); toast('Updated.'); loadBoardAdmin(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+async function deleteBoardDoc(id) {
+  const d = _bd.docs.find(x => x.id === id); if (!d) return;
+  if (!confirm(`Delete "${d.title}"? This also removes the uploaded file.`)) return;
+  try {
+    await bdWrite('DELETE', 'lm_board_documents', null, id);
+    if (d.file_path) await fetch(`${SB_URL}/storage/v1/object/${BD_BUCKET}/${bdPathEnc(d.file_path)}`, { method:'DELETE', headers: sbHeaders(session.access_token) });
+    toast('Deleted.'); loadBoardAdmin();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// meetings
+function openBoardMeetingModal(id) {
+  const m = id ? _bd.meetings.find(x => x.id === id) : null;
+  document.getElementById('bm-modal-title').textContent = m ? 'Edit Meeting' : 'Add Meeting';
+  document.getElementById('bm-id').value = m ? m.id : '';
+  document.getElementById('bm-date').value = m ? String(m.meeting_date).slice(0,10) : '';
+  document.getElementById('bm-time').value = m?.start_time || '';
+  document.getElementById('bm-title').value = m ? m.title : 'Board Meeting';
+  document.getElementById('bm-location').value = m?.location || '';
+  document.getElementById('bm-video').value = m?.video_link || '';
+  document.getElementById('bm-notes').value = m?.notes || '';
+  bdErr('bm-error', ''); openModal('modal-bmeeting');
+}
+async function saveBoardMeeting() {
+  bdErr('bm-error', '');
+  const date = bdVal('bm-date');
+  if (!date) return bdErr('bm-error', 'Date is required.');
+  const video = bdVal('bm-video');
+  if (video && !/^https?:\/\//i.test(video)) return bdErr('bm-error', 'The video link must start with http:// or https://');
+  const body = { meeting_date: date, start_time: bdVal('bm-time') || null, title: bdVal('bm-title') || 'Board Meeting',
+    location: bdVal('bm-location') || null, video_link: video || null, notes: bdVal('bm-notes') || null };
+  const id = document.getElementById('bm-id').value;
+  try { await bdWrite(id ? 'PATCH' : 'POST', 'lm_board_meetings', body, id || null); closeModal('modal-bmeeting'); toast('Meeting saved.'); loadBoardAdmin(); }
+  catch (e) { bdErr('bm-error', e.message); }
+}
+async function deleteBoardMeeting(id) {
+  if (!confirm('Delete this meeting? Documents attached to it are kept but unlinked.')) return;
+  try { await bdWrite('DELETE', 'lm_board_meetings', null, id); toast('Deleted.'); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
+}
+
+// action items
+function openBoardActionModal(id) {
+  const a = id ? _bd.actions.find(x => x.id === id) : null;
+  document.getElementById('ba-modal-title').textContent = a ? 'Edit Action Item' : 'Add Action Item';
+  document.getElementById('ba-id').value = a ? a.id : '';
+  document.getElementById('ba-desc').value = a?.description || '';
+  document.getElementById('ba-owner').value = a?.owner_name || '';
+  document.getElementById('ba-due').value = a?.due_date ? String(a.due_date).slice(0,10) : '';
+  meetingOptions('ba-meeting', a?.meeting_id || '');
+  bdErr('ba-error', ''); openModal('modal-baction');
+}
+async function saveBoardAction() {
+  bdErr('ba-error', '');
+  const desc = bdVal('ba-desc');
+  if (!desc) return bdErr('ba-error', 'Describe the action item.');
+  const body = { description: desc, owner_name: bdVal('ba-owner') || null, due_date: document.getElementById('ba-due').value || null,
+    meeting_id: document.getElementById('ba-meeting').value || null };
+  const id = document.getElementById('ba-id').value;
+  try { await bdWrite(id ? 'PATCH' : 'POST', 'lm_board_actions', body, id || null); closeModal('modal-baction'); toast('Saved.'); loadBoardAdmin(); }
+  catch (e) { bdErr('ba-error', e.message); }
+}
+async function toggleBoardAction(id) {
+  const a = _bd.actions.find(x => x.id === id); if (!a) return;
+  try { await bdWrite('PATCH', 'lm_board_actions', { status: a.status === 'done' ? 'open' : 'done' }, id); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
+}
+async function deleteBoardAction(id) {
+  if (!confirm('Delete this action item?')) return;
+  try { await bdWrite('DELETE', 'lm_board_actions', null, id); toast('Deleted.'); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
+}
+
+// roster
+function openBoardMemberModal(id) {
+  const p = id ? _bd.roster.find(x => x.id === id) : null;
+  document.getElementById('bmem-modal-title').textContent = p ? 'Edit Board Member' : 'Add Board Member';
+  document.getElementById('bmem-id').value = p ? p.id : '';
+  document.getElementById('bmem-name').value = p?.full_name || '';
+  document.getElementById('bmem-title').value = p?.officer_title || 'Member';
+  document.getElementById('bmem-org').value = p?.organization || '';
+  document.getElementById('bmem-email').value = p?.email || '';
+  document.getElementById('bmem-phone').value = p?.phone || '';
+  document.getElementById('bmem-start').value = p?.term_start ? String(p.term_start).slice(0,10) : '';
+  document.getElementById('bmem-end').value = p?.term_end ? String(p.term_end).slice(0,10) : '';
+  bdErr('bmem-error', ''); openModal('modal-bmember');
+}
+async function saveBoardMember() {
+  bdErr('bmem-error', '');
+  const name = bdVal('bmem-name');
+  if (!name) return bdErr('bmem-error', 'Name is required.');
+  const body = { full_name: name, officer_title: document.getElementById('bmem-title').value, organization: bdVal('bmem-org') || null,
+    email: bdVal('bmem-email') || null, phone: bdVal('bmem-phone') || null,
+    term_start: document.getElementById('bmem-start').value || null, term_end: document.getElementById('bmem-end').value || null };
+  const id = document.getElementById('bmem-id').value;
+  try { await bdWrite(id ? 'PATCH' : 'POST', 'lm_board_roster', body, id || null); closeModal('modal-bmember'); toast('Saved.'); loadBoardAdmin(); }
+  catch (e) { bdErr('bmem-error', e.message); }
+}
+async function toggleBoardMemberActive(id) {
+  const p = _bd.roster.find(x => x.id === id); if (!p) return;
+  try { await bdWrite('PATCH', 'lm_board_roster', { active: !p.active }, id); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
+}
+async function deleteBoardMember(id) {
+  if (!confirm('Delete this person from the board roster? Their login is not removed; delete the user in Supabase to end their access.')) return;
+  try { await bdWrite('DELETE', 'lm_board_roster', null, id); toast('Deleted.'); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
 }
 
 // ── MODALS
