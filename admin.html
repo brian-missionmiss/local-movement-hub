@@ -939,7 +939,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       </div>
       <div class="form-group"><label class="form-label">Meeting (optional)</label><select class="form-select" id="bd-meeting"></select></div>
       <div class="form-group"><label class="form-label">Description (optional)</label><input class="form-input" id="bd-desc" type="text" placeholder="One line shown under the title"></div>
-      <div class="form-group"><label class="form-label">File</label><input class="form-input" id="bd-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.txt"><div class="form-hint">PDF is best. Or leave the file empty and paste a link below.</div></div>
+      <div class="form-group"><label class="form-label">File</label><input class="form-input" id="bd-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp"><div class="form-hint">PDF is best. Word, Excel, PowerPoint and images also work, up to 25 MB. Or leave the file empty and paste a link below.</div></div>
       <div class="form-group"><label class="form-label">Or link (optional)</label><input class="form-input" id="bd-url" type="url" placeholder="https://..."></div>
       <label id="bd-approved-row" style="display:none;align-items:center;gap:0.5rem;font-size:0.84rem;margin-bottom:0.6rem;"><input type="checkbox" id="bd-approved"> These minutes have been approved by the board</label>
       <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.84rem;"><input type="checkbox" id="bd-publish"> Publish now (visible to the board immediately)</label>
@@ -1001,6 +1001,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   <div class="modal">
     <div class="modal-header"><div class="modal-title" id="bmem-modal-title">Add Board Member</div><button class="modal-close" onclick="closeModal('modal-bmember')">&times;</button></div>
     <div class="modal-body">
+      <div id="bmem-form">
       <input type="hidden" id="bmem-id">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="bmem-name" type="text"></div>
@@ -1016,11 +1017,27 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div class="form-group"><label class="form-label">Term start</label><input class="form-input" id="bmem-start" type="date"></div>
         <div class="form-group"><label class="form-label">Term end</label><input class="form-input" id="bmem-end" type="date"></div>
       </div>
+      <div class="form-group">
+        <label class="form-label" id="bmem-pw-label">Sign-in password</label>
+        <div style="display:flex;gap:0.5rem;">
+          <input class="form-input" id="bmem-pw" type="text" autocomplete="off" style="flex:1;min-width:0;">
+          <button type="button" class="btn btn-outline" onclick="bmemGenPw()">Generate</button>
+        </div>
+        <div class="form-hint" id="bmem-pw-hint"></div>
+      </div>
       <div class="form-error" id="bmem-error"></div>
+      </div>
+      <div id="bmem-result" style="display:none;">
+        <div style="font-weight:600;margin-bottom:0.4rem;" id="bmem-result-title"></div>
+        <div class="form-hint" style="margin-bottom:0.6rem;">Share these with them directly (text or phone). The password is not shown again.</div>
+        <textarea class="form-input" id="bmem-result-text" rows="4" readonly style="width:100%;font-family:monospace;"></textarea>
+        <div style="margin-top:0.5rem;"><button type="button" class="btn btn-outline" onclick="bmemCopyResult()">Copy</button></div>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-bmember')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveBoardMember()">Save</button>
+      <button class="btn btn-outline" id="bmem-cancel" onclick="closeModal('modal-bmember')">Cancel</button>
+      <button class="btn btn-primary" id="bmem-save" onclick="saveBoardMember()">Save</button>
+      <button class="btn btn-primary" id="bmem-done" style="display:none;" onclick="closeModal('modal-bmember')">Done</button>
     </div>
   </div>
 </div>
@@ -2441,6 +2458,22 @@ function openBoardDocModal() {
 function toggleMinutesApproved() {
   document.getElementById('bd-approved-row').style.display = document.getElementById('bd-cat').value === 'minutes' ? 'flex' : 'none';
 }
+const BD_MAX_BYTES = 25 * 1024 * 1024;
+const BD_MIME = {
+  pdf: 'application/pdf', doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp'
+};
+// Browsers sometimes report no type for Office files; work it out from the extension.
+// Returns null when the file is not an allowed kind.
+function bdMimeFor(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  return BD_MIME[ext] || null;
+}
 function bdSafeName(n) { return n.normalize('NFKD').replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_').slice(-80); }
 function bdPathEnc(p) { return p.split('/').map(encodeURIComponent).join('/'); }
 
@@ -2452,6 +2485,12 @@ async function saveBoardDoc() {
   if (!title) return bdErr('bd-error', 'Title is required.');
   if (!file && !url) return bdErr('bd-error', 'Choose a file or paste a link.');
   if (url && !/^https?:\/\//i.test(url)) return bdErr('bd-error', 'The link must start with http:// or https://');
+  let mime = null;
+  if (file) {
+    mime = bdMimeFor(file);
+    if (!mime) return bdErr('bd-error', 'That file type is not allowed. Use a PDF, Word, Excel, PowerPoint or image file.');
+    if (file.size > BD_MAX_BYTES) return bdErr('bd-error', 'That file is ' + (file.size / 1048576).toFixed(1) + ' MB. The limit is 25 MB. Try saving it as a smaller PDF.');
+  }
   const btn = document.getElementById('bd-save-btn'); btn.disabled = true; btn.textContent = 'Saving...';
   let path = null;
   try {
@@ -2459,7 +2498,7 @@ async function saveBoardDoc() {
       path = `${cat}/${new Date().getFullYear()}/${Date.now()}-${bdSafeName(file.name)}`;
       const up = await fetch(`${SB_URL}/storage/v1/object/${BD_BUCKET}/${bdPathEnc(path)}`, {
         method: 'POST',
-        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' },
+        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': mime, 'x-upsert': 'false' },
         body: file
       });
       if (!up.ok) {
@@ -2597,25 +2636,90 @@ function openBoardMemberModal(id) {
   document.getElementById('bmem-phone').value = p?.phone || '';
   document.getElementById('bmem-start').value = p?.term_start ? String(p.term_start).slice(0,10) : '';
   document.getElementById('bmem-end').value = p?.term_end ? String(p.term_end).slice(0,10) : '';
+  document.getElementById('bmem-form').style.display = '';
+  document.getElementById('bmem-result').style.display = 'none';
+  document.getElementById('bmem-cancel').style.display = '';
+  document.getElementById('bmem-save').style.display = '';
+  document.getElementById('bmem-done').style.display = 'none';
+  document.getElementById('bmem-save').disabled = false;
+  if (p) {
+    document.getElementById('bmem-pw').value = '';
+    document.getElementById('bmem-pw-label').textContent = 'Reset password (optional)';
+    document.getElementById('bmem-pw-hint').textContent = 'Leave blank to keep their current password. If you enter one, it replaces it.';
+  } else {
+    bmemGenPw();
+    document.getElementById('bmem-pw-label').textContent = 'Sign-in password';
+    document.getElementById('bmem-pw-hint').textContent = 'Their login is created automatically when you save, using the email above. Clear this box to add them to the roster only.';
+  }
   bdErr('bmem-error', ''); openModal('modal-bmember');
+}
+function bmemGenPw() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const a = new Uint32Array(12); crypto.getRandomValues(a);
+  document.getElementById('bmem-pw').value = Array.from(a, n => chars[n % chars.length]).join('');
+}
+function bmemCopyResult() {
+  const t = document.getElementById('bmem-result-text');
+  t.select();
+  try { navigator.clipboard.writeText(t.value); toast('Copied.'); } catch (e) { document.execCommand('copy'); toast('Copied.'); }
 }
 async function saveBoardMember() {
   bdErr('bmem-error', '');
   const name = bdVal('bmem-name');
   if (!name) return bdErr('bmem-error', 'Name is required.');
+  const email = bdVal('bmem-email');
+  const pw = document.getElementById('bmem-pw').value.trim();
+  if (pw && !email) return bdErr('bmem-error', 'Add their email address so a login can be created.');
+  if (pw && pw.length < 8) return bdErr('bmem-error', 'The password must be at least 8 characters.');
   const body = { full_name: name, officer_title: document.getElementById('bmem-title').value, organization: bdVal('bmem-org') || null,
-    email: bdVal('bmem-email') || null, phone: bdVal('bmem-phone') || null,
+    email: email || null, phone: bdVal('bmem-phone') || null,
     term_start: document.getElementById('bmem-start').value || null, term_end: document.getElementById('bmem-end').value || null };
   const id = document.getElementById('bmem-id').value;
-  try { await bdWrite(id ? 'PATCH' : 'POST', 'lm_board_roster', body, id || null); closeModal('modal-bmember'); toast('Saved.'); loadBoardAdmin(); }
-  catch (e) { bdErr('bmem-error', e.message); }
+  const saveBtn = document.getElementById('bmem-save'); saveBtn.disabled = true;
+  // 1. Roster row. The database then grants (or removes) the board role by itself.
+  try {
+    const rows = await bdWrite(id ? 'PATCH' : 'POST', 'lm_board_roster', body, id || null);
+    if (!id && rows && rows[0] && rows[0].id) document.getElementById('bmem-id').value = rows[0].id; // a retry updates instead of duplicating
+  } catch (e) { saveBtn.disabled = false; return bdErr('bmem-error', e.message); }
+  if (!pw) { closeModal('modal-bmember'); toast('Saved.'); loadBoardAdmin(); return; }
+  // 2. Sign-in account, via the board-invite Edge Function.
+  try {
+    const r = await fetch(`${SB_URL}/functions/v1/board-invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email, password: pw, full_name: name })
+    });
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (r.ok && j.ok) {
+      document.getElementById('bmem-form').style.display = 'none';
+      document.getElementById('bmem-result').style.display = 'block';
+      document.getElementById('bmem-result-title').textContent = (j.created ? 'Login created for ' : 'Password updated for ') + name;
+      document.getElementById('bmem-result-text').value =
+        `Mission Mississippi Hub\n${location.origin}/board.html\nEmail: ${email}\nPassword: ${pw}`;
+      document.getElementById('bmem-cancel').style.display = 'none';
+      document.getElementById('bmem-save').style.display = 'none';
+      document.getElementById('bmem-done').style.display = '';
+      loadBoardAdmin();
+      return;
+    }
+    saveBtn.disabled = false;
+    if (r.status === 404) {
+      loadBoardAdmin();
+      return bdErr('bmem-error', 'Saved to the roster, but the login service (board-invite) is not set up yet. Create their login in Supabase > Authentication > Users with this same email, and board access switches on by itself. Then clear the password box and press Save.');
+    }
+    loadBoardAdmin();
+    bdErr('bmem-error', 'Saved to the roster, but the login was not created: ' + (j.error || ('error ' + r.status)));
+  } catch (e) {
+    saveBtn.disabled = false; loadBoardAdmin();
+    bdErr('bmem-error', 'Saved to the roster, but the login service could not be reached: ' + e.message);
+  }
 }
 async function toggleBoardMemberActive(id) {
   const p = _bd.roster.find(x => x.id === id); if (!p) return;
   try { await bdWrite('PATCH', 'lm_board_roster', { active: !p.active }, id); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
 }
 async function deleteBoardMember(id) {
-  if (!confirm('Delete this person from the board roster? Their login is not removed; delete the user in Supabase to end their access.')) return;
+  if (!confirm('Delete this person from the board roster? Their board access ends right away. Their sign-in account stays in Supabase (harmless without the board role).')) return;
   try { await bdWrite('DELETE', 'lm_board_roster', null, id); toast('Deleted.'); loadBoardAdmin(); } catch (e) { toast(e.message, 'error'); }
 }
 
