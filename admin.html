@@ -461,7 +461,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div id="section-movements" style="display:none">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div><h1 class="page-title">Movements</h1><p class="page-sub">Manage local movement cities and phases.</p></div>
-          <button class="btn btn-primary" onclick="openModal('modal-movement')">+ Add Movement</button>
+          <button class="btn btn-primary" onclick="openMovementModal()">+ Add Movement</button>
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -786,6 +786,20 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 </div>
 
 <!-- MODALS -->
+<div class="modal-overlay" id="modal-mv-next">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="mvn-title">Movement added</div><button class="modal-close" onclick="closeModal('modal-mv-next')">&times;</button></div>
+    <div class="modal-body">
+      <p style="font-size:0.9rem;line-height:1.65;margin-bottom:0.75rem;" id="mvn-detail"></p>
+      <p style="font-size:0.9rem;line-height:1.65;"><strong>Next step:</strong> invite the coordinator who will lead this movement. They get access to this movement's dashboard only.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mv-next')">Not now</button>
+      <button class="btn btn-primary" onclick="mvInviteCoordinator()">Invite Coordinator</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-invite">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Invite Staff or Coordinator</div><button class="modal-close" onclick="closeModal('modal-invite')">&times;</button></div>
@@ -820,19 +834,21 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <div class="modal-header"><div class="modal-title">Add Movement</div><button class="modal-close" onclick="closeModal('modal-movement')">&times;</button></div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group"><label class="form-label">County Name</label><input class="form-input" id="mv-county" type="text" placeholder="e.g. Hinds County"></div>
-        <div class="form-group"><label class="form-label">Primary City</label><input class="form-input" id="mv-city" type="text" placeholder="e.g. Jackson"></div>
+        <div class="form-group"><label class="form-label">County</label><select class="form-select" id="mv-county" onchange="mvPreview()"></select></div>
+        <div class="form-group"><label class="form-label">Primary City</label><input class="form-input" id="mv-city" type="text" placeholder="e.g. Jackson" oninput="mvPreview()"></div>
       </div>
       <div class="form-group"><label class="form-label">Region</label><input class="form-input" id="mv-region" type="text" placeholder="e.g. Delta, Central MS"></div>
       <div class="form-group">
         <label class="form-label">Phase</label>
         <select class="form-select" id="mv-phase"><option>Formation</option><option>Planning</option><option>Execution</option></select>
       </div>
+      <div class="form-hint" id="mv-preview" style="font-weight:600;"></div>
+      <div class="form-hint">Counties come from the official list of Mississippi's 82 counties. The map pin and Census data are set up automatically from the county you pick. Check that the city is in that county.</div>
       <div class="form-error" id="mv-error"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-movement')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveMovement()">Add Movement</button>
+      <button class="btn btn-primary" id="mv-save" onclick="saveMovement()">Add Movement</button>
     </div>
   </div>
 </div>
@@ -1339,14 +1355,103 @@ async function loadMovementsTable() {
   </tr>`).join('');
 }
 
+// The 82 Mississippi counties and their 5-digit FIPS codes (state 28). This list is the
+// county verification: a movement can only be created for one of these.
+const MS_COUNTIES = [
+  ['Adams','28001'],['Alcorn','28003'],['Amite','28005'],['Attala','28007'],['Benton','28009'],['Bolivar','28011'],
+  ['Calhoun','28013'],['Carroll','28015'],['Chickasaw','28017'],['Choctaw','28019'],['Claiborne','28021'],['Clarke','28023'],
+  ['Clay','28025'],['Coahoma','28027'],['Copiah','28029'],['Covington','28031'],['DeSoto','28033'],['Forrest','28035'],
+  ['Franklin','28037'],['George','28039'],['Greene','28041'],['Grenada','28043'],['Hancock','28045'],['Harrison','28047'],
+  ['Hinds','28049'],['Holmes','28051'],['Humphreys','28053'],['Issaquena','28055'],['Itawamba','28057'],['Jackson','28059'],
+  ['Jasper','28061'],['Jefferson','28063'],['Jefferson Davis','28065'],['Jones','28067'],['Kemper','28069'],['Lafayette','28071'],
+  ['Lamar','28073'],['Lauderdale','28075'],['Lawrence','28077'],['Leake','28079'],['Lee','28081'],['Leflore','28083'],
+  ['Lincoln','28085'],['Lowndes','28087'],['Madison','28089'],['Marion','28091'],['Marshall','28093'],['Monroe','28095'],
+  ['Montgomery','28097'],['Neshoba','28099'],['Newton','28101'],['Noxubee','28103'],['Oktibbeha','28105'],['Panola','28107'],
+  ['Pearl River','28109'],['Perry','28111'],['Pike','28113'],['Pontotoc','28115'],['Prentiss','28117'],['Quitman','28119'],
+  ['Rankin','28121'],['Scott','28123'],['Sharkey','28125'],['Simpson','28127'],['Smith','28129'],['Stone','28131'],
+  ['Sunflower','28133'],['Tallahatchie','28135'],['Tate','28137'],['Tippah','28139'],['Tishomingo','28141'],['Tunica','28143'],
+  ['Union','28145'],['Walthall','28147'],['Warren','28149'],['Washington','28151'],['Wayne','28153'],['Webster','28155'],
+  ['Wilkinson','28157'],['Winston','28159'],['Yalobusha','28161'],['Yazoo','28163']
+];
+
+function openMovementModal() {
+  const taken = new Set(movements.map(m => m.county_fips).filter(Boolean));
+  document.getElementById('mv-county').innerHTML = '<option value="">Select a county...</option>' +
+    MS_COUNTIES.map(([n, f]) => `<option value="${f}"${taken.has(f) ? ' disabled' : ''}>${n} County${taken.has(f) ? ' (already a movement)' : ''}</option>`).join('');
+  ['mv-city', 'mv-region'].forEach(i => { document.getElementById(i).value = ''; });
+  document.getElementById('mv-phase').value = 'Formation';
+  document.getElementById('mv-error').style.display = 'none';
+  document.getElementById('mv-save').disabled = false;
+  mvPreview();
+  openModal('modal-movement');
+}
+function mvPreview() {
+  const sel = document.getElementById('mv-county'), city = document.getElementById('mv-city').value.trim();
+  const name = sel.value ? sel.options[sel.selectedIndex].text : '';
+  document.getElementById('mv-preview').textContent = (name && city) ? `This will create: ${name}, primary city ${city}.` : '';
+}
+async function mvPost(table, data) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { ...sbHeaders(session.access_token), 'Prefer': 'return=representation' },
+    body: JSON.stringify(data)
+  });
+  let body = null; try { body = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((body && (body.message || body.hint)) || ('Request failed (' + r.status + ')'));
+  return Array.isArray(body) ? body[0] : body;
+}
+
 async function saveMovement() {
-  const city=document.getElementById('mv-city').value.trim();
-  const errEl=document.getElementById('mv-error'); errEl.style.display='none';
-  if (!city) { errEl.textContent='City is required.'; errEl.style.display='block'; return; }
-  const countyVal = document.getElementById('mv-county')?.value.trim()||null;
-  await dbPost('lm_movements', { city, county_name:countyVal, region:document.getElementById('mv-region').value.trim()||null, phase:document.getElementById('mv-phase').value });
-  closeModal('modal-movement'); toast('Movement added.');
+  const errEl = document.getElementById('mv-error'); errEl.style.display = 'none';
+  const fail = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+  const sel = document.getElementById('mv-county');
+  const fips = sel.value;
+  const city = document.getElementById('mv-city').value.trim().replace(/\s+/g, ' ');
+  const entry = MS_COUNTIES.find(c => c[1] === fips);
+  if (!entry) return fail('Choose a county from the list.');
+  if (city.length < 2) return fail('Primary city is required.');
+  if (!/^[A-Za-z .'\-]+$/.test(city)) return fail('Use letters only for the city name (for example, Vicksburg).');
+  // Re-read the list so a duplicate made a moment ago by someone else is caught.
+  await loadMovementsData();
+  if (movements.some(m => m.county_fips === fips)) return fail(entry[0] + ' County already has a movement.');
+  const btn = document.getElementById('mv-save'); btn.disabled = true;
+  let mov;
+  try {
+    mov = await mvPost('lm_movements', {
+      city, primary_city: city,
+      county_name: entry[0] + ' County', county_fips: fips, census_geo_id: '05000US' + fips,
+      region: document.getElementById('mv-region').value.trim() || null,
+      phase: document.getElementById('mv-phase').value, active: true
+    });
+  } catch (e) { btn.disabled = false; return fail('The movement was not saved: ' + e.message); }
+  if (!mov || !mov.id) { btn.disabled = false; return fail('The movement was not saved. The database did not confirm it. Check that you are signed in as an admin.'); }
+  // Community Profile: create it now and pull Census data for the county.
+  let profileMsg = '';
+  try {
+    const census = await fetchCensusData('05000US' + fips);
+    await mvPost('lm_community_profiles', { movement_id: mov.id, ...census, last_updated: new Date().toISOString(), updated_by: currentUserId });
+  } catch (e) {
+    profileMsg = ' Census data could not be loaded yet. Open Community Profiles and press Fetch to retry.';
+  }
+  closeModal('modal-movement');
   await loadMovementsData(); loadMovementsTable();
+  if (typeof loadOverview === 'function') loadOverview();
+  // Next step: offer to invite this movement's coordinator.
+  _mvNew = mov;
+  document.getElementById('mvn-title').textContent = entry[0] + ' County movement added';
+  document.getElementById('mvn-detail').textContent = (profileMsg ? 'Census data could not be loaded yet. Open Community Profiles and press Fetch to retry.' : 'Its map pin and Community Profile (Census data) are set up.');
+  openModal('modal-mv-next');
+}
+let _mvNew = null;
+function mvInviteCoordinator() {
+  closeModal('modal-mv-next');
+  if (!_mvNew) return;
+  document.getElementById('inv-email').value = '';
+  document.getElementById('inv-role').value = 'coordinator';
+  toggleInviteMovement();
+  document.getElementById('inv-movement').value = _mvNew.id;
+  document.getElementById('inv-error').style.display = 'none';
+  openModal('modal-invite');
 }
 
 async function toggleMovement(id, active) {
