@@ -245,7 +245,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </a>
   <div class="nav-right">
     <span class="nav-user" id="nav-user"></span>
-    <button class="nav-btn nav-btn-outline" id="admin-view-btn" style="display:none" onclick="window.location.href='admin.html'">Switch View</button>
+    <button class="nav-btn nav-btn-outline" id="admin-view-btn" style="display:none" onclick="switchFromBoard()">Switch View</button>
     <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
   </div>
 </nav>
@@ -444,7 +444,16 @@ function saveSession(data, keep) {
     else localStorage.removeItem('lm_board_session');
   } catch (e) {}
 }
+function switchFromBoard() {
+  if (me && me.role === 'coordinator') {
+    try { sessionStorage.setItem('lm_view_chosen', 'coordinator'); } catch (e) {}
+    window.location.href = 'coordinator.html';
+  } else {
+    window.location.href = 'admin.html';
+  }
+}
 function clearSession() {
+  try { sessionStorage.removeItem('lm_view_chosen'); } catch (e) {}
   try { sessionStorage.removeItem('lm_session'); } catch (e) {}
   try { localStorage.removeItem('lm_board_session'); } catch (e) {}
 }
@@ -528,10 +537,13 @@ async function startPortal() {
   let profiles = [];
   try { profiles = await dbq('lm_profiles', { id: `eq.${userData.id}`, select: '*' }); } catch (e) {}
   const p = profiles[0];
-  if (!p || !['board','admin'].includes(p.role)) {
+  const allowed = !!p && p.active !== false && (p.role === 'board' || p.is_board === true || (p.role === 'admin' && p.is_super_admin === true));
+  if (!allowed) {
     clearSession(); session = null;
     document.getElementById('view-login').style.display = 'flex';
-    errEl.textContent = 'This page is for Mission Mississippi board members. If you should have access, please contact the President\'s Office.';
+    errEl.textContent = (p && p.active === false)
+      ? 'This account has been deactivated. Please contact the President\'s Office.'
+      : 'This page is for Mission Mississippi board members. If you should have access, please contact the President\'s Office.';
     errEl.style.display = 'block';
     return;
   }
@@ -540,7 +552,8 @@ async function startPortal() {
   document.getElementById('view-board').style.display = 'block';
   document.getElementById('logout-btn').style.display = '';
   document.getElementById('nav-user').textContent = me.email;
-  if (me.role === 'admin') document.getElementById('admin-view-btn').style.display = '';
+  // Admins and coordinators who are also on the board can hop back to their other portal.
+  if (me.role === 'admin' || me.role === 'coordinator') document.getElementById('admin-view-btn').style.display = '';
   const first = (me.name || '').split(' ')[0];
   document.getElementById('home-title').textContent = first ? `Welcome, ${first}` : 'Welcome';
   buildNav();

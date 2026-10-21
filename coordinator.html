@@ -283,6 +283,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <span class="nav-user" id="nav-user"></span>
     <select id="admin-movement-select" class="form-select" style="display:none;width:auto;max-width:190px;padding:0.35rem 0.6rem;font-size:0.78rem;" onchange="adminPickMovement(this.value)" title="Viewing as this movement"></select>
     <button class="nav-btn nav-btn-outline" id="switch-to-admin-btn" style="display:none" onclick="switchToAdminView()">Switch View</button>
+    <button class="nav-btn nav-btn-outline" id="switch-to-board-btn" style="display:none" onclick="chooseView('board')">Board Portal</button>
     <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
     <a class="nav-btn nav-btn-blue" href="index.html">Public Hub</a>
   </div>
@@ -338,6 +339,29 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 </div>
 
 <!-- COORDINATOR DASHBOARD VIEW -->
+<!-- Shown to people who hold two roles (a coordinator who is also on the board) -->
+<div id="view-choose" class="login-wrap" style="display:none">
+  <div style="max-width:560px;width:100%;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div class="login-title">Welcome back</div>
+      <p style="font-size:0.9rem;color:var(--muted);">Signed in as <span id="choose-email" style="color:var(--navy);font-weight:600;"></span>. Where would you like to go?</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+      <button onclick="chooseView('coordinator')" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;font-family:inherit;">
+        <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Coordinator Portal</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Your local movement</div>
+      </button>
+      <button onclick="chooseView('board')" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;font-family:inherit;">
+        <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Board Portal</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Agendas, minutes,<br>and board documents</div>
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button onclick="doLogout()" style="background:none;border:none;color:var(--muted);font-size:0.82rem;cursor:pointer;font-family:inherit;">Sign out</button>
+    </div>
+  </div>
+</div>
+
 <div id="view-dashboard" style="display:none">
   <div class="mobile-tabs" id="mobile-tabs">
     <a href="#" onclick="showSection('dashboard');return false;">Dashboard</a>
@@ -863,14 +887,34 @@ const auth = {
 async function dbGet(table, params, token) {
   const q = params ? '?' + new URLSearchParams(params) : '';
   const r = await fetch(`${SB_URL}/rest/v1/${table}${q}`, { headers: sbHeaders(token) });
-  return r.ok ? r.json() : [];
+  if (!r.ok) {
+    // A failed read used to look exactly like "no data". Say so (once per table).
+    console.warn('dbGet failed:', table, r.status);
+    if (!dbGet._warned) dbGet._warned = {};
+    if (!dbGet._warned[table]) { dbGet._warned[table] = true; toast(`Could not load ${table} (error ${r.status}). Some information may be missing.`, 'error'); }
+    return [];
+  }
+  return r.json();
 }
+// Writes now fail loudly. A rejected or blocked save throws, so the "saved" message and
+// any form-clearing code after it never run, and the reason is shown on screen.
+async function dbError(r, what) {
+  let body = null; try { body = await r.json(); } catch (e) {}
+  const why = body && (body.message || body.hint || body.error_description);
+  const e = new Error(why ? `${what} failed: ${why}` : `${what} failed (error ${r.status})`);
+  e.isDb = true; e.status = r.status; return e;
+}
+window.addEventListener('unhandledrejection', ev => {
+  const e = ev.reason;
+  if (e && e.isDb) { toast(e.message, 'error'); ev.preventDefault(); }
+});
 async function dbPost(table, data, token) {
   const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
     method: 'POST',
     headers: { ...sbHeaders(token), 'Prefer': 'return=representation' },
     body: JSON.stringify(data)
   });
+  if (!r.ok) throw await dbError(r, 'Saving to ' + table);
   return r.json();
 }
 async function dbPatch(table, id, data, token) {
@@ -879,12 +923,25 @@ async function dbPatch(table, id, data, token) {
     headers: { ...sbHeaders(token), 'Prefer': 'return=representation' },
     body: JSON.stringify(data)
   });
-  return r.json();
+  if (!r.ok) throw await dbError(r, 'Updating ' + table);
+  const rows = await r.json();
+  // A permissions block on an update returns success with zero rows, so check for that too.
+  if (Array.isArray(rows) && rows.length === 0) {
+    const e = new Error('Updating ' + table + ' changed nothing. You may not have permission, or the item no longer exists.');
+    e.isDb = true; throw e;
+  }
+  return rows;
 }
 async function dbDelete(table, id, token) {
-  await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {
-    method: 'DELETE', headers: sbHeaders(token)
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'DELETE', headers: { ...sbHeaders(token), 'Prefer': 'return=representation' }
   });
+  if (!r.ok) throw await dbError(r, 'Deleting from ' + table);
+  const rows = await r.json();
+  if (Array.isArray(rows) && rows.length === 0) {
+    const e = new Error('Nothing was deleted from ' + table + '. You may not have permission, or it is already gone.');
+    e.isDb = true; throw e;
+  }
 }
 
 function escHtml(s) {
@@ -976,11 +1033,24 @@ async function doForgot() {
   showLogin();
 }
 
+function chooseView(which) {
+  if (which === 'board') {
+    sessionStorage.setItem('lm_view_chosen', 'board');
+    window.location.href = 'board.html';
+    return;
+  }
+  sessionStorage.setItem('lm_view_chosen', 'coordinator');
+  loadUserData();
+}
+
 async function doLogout() {
   if (session?.access_token) await auth.signOut(session.access_token);
   auth.clearSession();
   session = null; profile = null; movement = null;
   sessionStorage.removeItem('lm_admin_as_coordinator');
+  sessionStorage.removeItem('lm_view_chosen');
+  document.getElementById('view-choose').style.display = 'none';
+  document.getElementById('switch-to-board-btn').style.display = 'none';
   document.getElementById('view-dashboard').style.display = 'none';
   document.getElementById('view-login').style.display = 'flex';
   document.getElementById('login-form').style.display = 'block';
@@ -1032,6 +1102,21 @@ async function loadUserData() {
     return;
   }
   profile = profiles[0];
+  if (profile.active === false) {
+    toast('This account has been deactivated. Please contact Mission Mississippi.', 'error');
+    doLogout(); return;
+  }
+  // Board-only members have no movement: send them to the board portal.
+  if (profile.role === 'board') { window.location.href = 'board.html'; return; }
+  // Two roles (coordinator + board member): let them choose where to go, once per sign-in.
+  if (profile.role === 'coordinator' && profile.is_board === true && sessionStorage.getItem('lm_view_chosen') !== 'coordinator') {
+    document.getElementById('view-login').style.display = 'none';
+    document.getElementById('choose-email').textContent = userEmail;
+    document.getElementById('view-choose').style.display = 'flex';
+    return;
+  }
+  document.getElementById('view-choose').style.display = 'none';
+  if (profile.role === 'coordinator' && profile.is_board === true) document.getElementById('switch-to-board-btn').style.display = '';
   // Redirect admin to admin panel (unless they chose coordinator view from admin portal)
   if (profile.role === 'admin') {
     if (!sessionStorage.getItem('lm_admin_as_coordinator')) {
@@ -1478,7 +1563,7 @@ async function coordFetchCensus() {
     renderCoordCensus(data);
     toast('Census data loaded successfully.');
   } catch(e) {
-    toast('Could not fetch Census data. Try again later.', 'error');
+    toast('Census data was not saved. ' + (e.isDb ? e.message : 'The Census service did not return data. Try again later.'), 'error');
   }
 }
 

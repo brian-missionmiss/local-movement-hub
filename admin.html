@@ -330,7 +330,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Coordinator Portal</div>
         <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Work from a local<br>movement perspective</div>
       </button>
-      <button onclick="enterBoardView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+      <button id="card-board" onclick="enterBoardView()" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.18s,box-shadow 0.18s;" onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 2px 12px rgba(26,39,68,0.10)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow=''">
         <div style="font-family:'Merriweather',serif;font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.35rem;">Board Portal</div>
         <div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">Agendas, minutes,<br>and board documents</div>
       </button>
@@ -411,7 +411,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </nav>
       </div>
 
-      <div class="sidebar-section" style="margin-top:1rem;">
+      <div class="sidebar-section" id="sidebar-board-group" style="margin-top:1rem;">
         <div class="sidebar-label">Board</div>
         <nav class="sidebar-nav">
           <a class="sidebar-link" href="#" onclick="showSection('board')">&#128188; Board Portal Content</a>
@@ -786,6 +786,34 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 </div>
 
 <!-- MODALS -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="eu-title">Edit user</div><button class="modal-close" onclick="closeModal('modal-edit-user')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-hint" style="margin-bottom:0.75rem;" id="eu-email"></div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" id="eu-role" onchange="euToggle()"><option value="coordinator">Coordinator</option><option value="admin">Admin (Mission Mississippi Staff)</option></select>
+        <div class="form-hint" id="eu-role-hint"></div>
+      </div>
+      <div class="form-group" id="eu-movement-group"><label class="form-label">Movement</label><select class="form-select" id="eu-movement"></select></div>
+      <div class="form-group" id="eu-super-row" style="display:none;">
+        <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.86rem;"><input type="checkbox" id="eu-super" style="margin-top:0.2rem;"><span><strong>Super admin</strong><br><span style="color:var(--muted);font-size:0.78rem;">Can create admins, change anyone's role, deactivate users and manage the Board portal. For the most trusted leaders only.</span></span></label>
+      </div>
+      <div class="form-group"><label class="form-label">Board member</label><div class="form-hint" id="eu-board" style="margin-top:0;"></div></div>
+      <div class="form-group" id="eu-active-row" style="display:none;border-top:1px solid var(--border);padding-top:0.9rem;">
+        <label class="form-label">Access</label>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;"><span class="form-hint" id="eu-active-text" style="margin:0;"></span><button type="button" class="btn btn-sm btn-danger" id="eu-active-btn">Deactivate</button></div>
+      </div>
+      <div class="form-error" id="eu-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-user')">Cancel</button>
+      <button class="btn btn-primary" id="eu-save" onclick="saveEditUser()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-mv-next">
   <div class="modal">
     <div class="modal-header"><div class="modal-title" id="mvn-title">Movement added</div><button class="modal-close" onclick="closeModal('modal-mv-next')">&times;</button></div>
@@ -1221,6 +1249,7 @@ function toast(msg, type='success') {
 
 let session = null;
 let movements = [];
+let mySuper = false, myIsBoard = false;
 let currentUserId = null;
 let currentUserEmail = null;
 
@@ -1265,6 +1294,17 @@ async function verifyAndLoad() {
     document.getElementById('login-error').style.display = 'block';
     return;
   }
+  if (profiles[0].active === false) {
+    auth.clearSession();
+    document.getElementById('login-error').textContent = 'This account has been deactivated. Please contact Mission Mississippi.';
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  mySuper = profiles[0].is_super_admin === true;
+  myIsBoard = profiles[0].is_board === true;
+  // Board portal: super admins and board members only. Board management: super admins only.
+  document.getElementById('card-board').style.display = (mySuper || myIsBoard) ? '' : 'none';
+  document.getElementById('sidebar-board-group').style.display = mySuper ? '' : 'none';
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('select-email').textContent = userEmail;
   document.getElementById('view-select').style.display = 'flex';
@@ -1287,8 +1327,9 @@ function buildMobileTabs() {
   const box = document.getElementById('mobile-tabs');
   if (box.dataset.built) return;
   box.dataset.built = '1';
-  document.querySelectorAll('.sidebar .sidebar-section').forEach((sec, i) => {
-    if (i > 0) { const sep = document.createElement('span'); sep.className = 'tab-sep'; box.appendChild(sep); }
+  document.querySelectorAll('.sidebar .sidebar-section').forEach((sec) => {
+    if (sec.style.display === 'none') return;
+    if (box.children.length) { const sep = document.createElement('span'); sep.className = 'tab-sep'; box.appendChild(sep); }
     sec.querySelectorAll('.sidebar-link').forEach(src => {
       const a = document.createElement('a');
       a.textContent = src.textContent.replace(/\s+/g, ' ').trim().replace(/^[^A-Za-z0-9]+/, '');
@@ -1335,6 +1376,7 @@ async function loadMovementsData() {
 }
 
 function showSection(name) {
+  if (name === 'board' && !mySuper) { toast('The Board portal content is managed by super admins.', 'error'); return; }
   ['overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
   document.querySelectorAll('.sidebar-link, .mobile-tabs a').forEach(l=>l.classList.remove('active'));
@@ -1505,21 +1547,113 @@ async function toggleMovement(id, active) {
 }
 
 // ── COORDINATORS / INVITATIONS
+let _users = [];
 async function loadCoordinators() {
   const profiles = await dbGet('lm_profiles', { select:'*', order:'created_at.desc' }, session.access_token);
+  _users = profiles;
   const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const tbody = document.getElementById('coord-table');
   if (!profiles.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff or coordinators yet.</td></tr>'; return; }
-  tbody.innerHTML = profiles.map(p=>`<tr>
+  tbody.innerHTML = profiles.map(p=>{
+    const inactive = p.active === false;
+    const badges = `<span class="badge ${p.role==='admin'?'badge-coral':'badge-navy'}">${escHtml(p.role||'coordinator')}</span>`
+      + (p.is_super_admin ? ' <span class="badge badge-coral">super admin</span>' : '')
+      + (p.is_board && p.role !== 'board' ? ' <span class="badge badge-green">board</span>' : '')
+      + (inactive ? ' <span class="badge badge-muted">inactive</span>' : '');
+    // Admins manage coordinators; only super admins manage admins. Board-only members are managed in the Board portal content.
+    const canManage = (p.role==='coordinator' || p.role==='admin') && (mySuper || p.role==='coordinator');
+    const actions = canManage
+      ? `<button class="btn btn-sm btn-outline" onclick="openEditUser('${p.id}')">Edit</button> `
+        + (p.email ? `<button class="btn btn-sm btn-outline" onclick="openInviteModal({email:'${escHtml(p.email)}',role:'${p.role}',movement_id:'${p.movement_id||''}',name:'${escHtml(p.full_name||'')}',reset:true})">Reset password</button>` : '')
+      : '';
+    return `<tr${inactive ? ' style="opacity:0.55;"' : ''}>
     <td>${escHtml(p.email||'—')}</td>
     <td>${p.role==='admin'
       ? '<span class="badge badge-muted">All Movements</span>'
       : escHtml(movMap[p.movement_id]||'—')}</td>
-    <td><span class="badge ${p.role==='admin'?'badge-coral':'badge-navy'}">${escHtml(p.role||'coordinator')}</span></td>
+    <td>${badges}</td>
     <td>${escHtml(p.full_name||'—')}</td>
     <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(p.created_at)}</td>
-    <td>${(p.role==='coordinator'||p.role==='admin') && p.email ? `<button class="btn btn-sm btn-outline" onclick="openInviteModal({email:'${escHtml(p.email)}',role:'${p.role}',movement_id:'${p.movement_id||''}',name:'${escHtml(p.full_name||'')}',reset:true})">Reset password</button>` : ''}</td>
-  </tr>`).join('');
+    <td style="white-space:nowrap;">${actions}</td>
+  </tr>`;
+  }).join('');
+}
+
+// ── EDIT USER (role, movement, super admin, active)
+let _editUser = null;
+function openEditUser(id) {
+  const p = _users.find(x => x.id === id); if (!p) return;
+  _editUser = p;
+  document.getElementById('eu-title').textContent = 'Edit ' + (p.full_name || p.email);
+  document.getElementById('eu-email').textContent = p.email || '';
+  const roleSel = document.getElementById('eu-role');
+  roleSel.value = p.role; roleSel.disabled = !mySuper;
+  const mv = document.getElementById('eu-movement');
+  mv.innerHTML = movements.map(m => `<option value="${m.id}">${escHtml(m.county_name || m.city)}</option>`).join('');
+  mv.value = p.movement_id || (movements[0] ? movements[0].id : '');
+  document.getElementById('eu-super').checked = !!p.is_super_admin;
+  document.getElementById('eu-board').textContent = p.is_board ? 'Yes. Managed on the Board Roster.' : 'No. Add them on the Board Roster to give board access.';
+  document.getElementById('eu-active-row').style.display = mySuper ? '' : 'none';
+  const inactive = p.active === false;
+  document.getElementById('eu-active-text').textContent = inactive ? 'This user is deactivated and cannot sign in.' : 'This user is active.';
+  const ab = document.getElementById('eu-active-btn');
+  ab.textContent = inactive ? 'Reactivate' : 'Deactivate';
+  ab.onclick = () => euSetActive(inactive);
+  euToggle();
+  document.getElementById('eu-error').style.display = 'none';
+  document.getElementById('eu-save').disabled = false;
+  openModal('modal-edit-user');
+}
+function euToggle() {
+  const role = document.getElementById('eu-role').value;
+  document.getElementById('eu-movement-group').style.display = role === 'coordinator' ? '' : 'none';
+  document.getElementById('eu-super-row').style.display = (mySuper && role === 'admin') ? '' : 'none';
+  document.getElementById('eu-role-hint').textContent = mySuper ? '' : 'Only a super admin can change roles. You can reassign a coordinator to a different movement.';
+}
+async function saveEditUser() {
+  const p = _editUser; if (!p) return;
+  const errEl = document.getElementById('eu-error'); errEl.style.display = 'none';
+  const fail = m => { errEl.textContent = m; errEl.style.display = 'block'; document.getElementById('eu-save').disabled = false; };
+  const role = document.getElementById('eu-role').value;
+  const movId = document.getElementById('eu-movement').value;
+  const wantSuper = document.getElementById('eu-super').checked && role === 'admin';
+  const who = p.full_name || p.email;
+  if (role === 'coordinator' && !movId) return fail('Choose a movement for this coordinator.');
+  const patch = {};
+  if (mySuper) {
+    if (role !== p.role) patch.role = role;
+    if (wantSuper !== !!p.is_super_admin) patch.is_super_admin = wantSuper;
+    const newMov = role === 'coordinator' ? movId : null;
+    if ((newMov || null) !== (p.movement_id || null)) patch.movement_id = newMov;
+  } else if (p.role === 'coordinator' && movId !== p.movement_id) {
+    patch.movement_id = movId;
+  }
+  if (!Object.keys(patch).length) { closeModal('modal-edit-user'); toast('No changes to save.', 'info'); return; }
+  if (patch.is_super_admin === true && !confirm(`Make ${who} a SUPER ADMIN?\n\nSuper admins can create admins, change anyone's role, deactivate users and manage the Board portal. Only do this for the most trusted leaders.`)) return;
+  if (patch.role === 'admin' && !patch.is_super_admin && !confirm(`Make ${who} an admin?\n\nAdmins can see and change every movement, report and piece of content.`)) return;
+  if (patch.role === 'coordinator' && p.role === 'admin' && !confirm(`Remove ${who}'s admin access and make them a coordinator?`)) return;
+  document.getElementById('eu-save').disabled = true;
+  try {
+    await dbPatch('lm_profiles', p.id, patch, session.access_token);
+    closeModal('modal-edit-user'); toast('User updated.'); loadCoordinators();
+  } catch (e) { fail(e.message); }
+}
+async function euSetActive(makeActive) {
+  const p = _editUser; if (!p) return;
+  const who = p.full_name || p.email;
+  if (!confirm(makeActive ? `Reactivate ${who}? They will be able to sign in again.` : `Deactivate ${who}?\n\nThey will be signed out and unable to sign in until reactivated. Their reports and history are kept.`)) return;
+  const errEl = document.getElementById('eu-error'); errEl.style.display = 'none';
+  try {
+    const r = await fetch(`${SB_URL}/functions/v1/staff-invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ action: 'set_active', user_id: p.id, active: makeActive })
+    });
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (r.ok && j.ok) { closeModal('modal-edit-user'); toast(makeActive ? 'User reactivated.' : 'User deactivated.'); loadCoordinators(); return; }
+    errEl.textContent = r.status === 404 ? 'The staff-invite function needs to be updated and deployed in Supabase first.' : (j.error || ('Could not change access (error ' + r.status + ').'));
+    errEl.style.display = 'block';
+  } catch (e) { errEl.textContent = 'Could not reach the service: ' + e.message; errEl.style.display = 'block'; }
 }
 
 function invGenPw() {
@@ -1535,6 +1669,8 @@ function invCopyResult() {
 // preset: { email, role, movement_id, name, reset }
 function openInviteModal(preset) {
   preset = preset || {};
+  const adminOpt = document.querySelector('#inv-role option[value="admin"]');
+  if (adminOpt) { adminOpt.disabled = !mySuper; adminOpt.textContent = mySuper ? 'Admin (Mission Mississippi Staff)' : 'Admin (super admins only)'; }
   document.getElementById('inv-form').style.display = '';
   document.getElementById('inv-result').style.display = 'none';
   document.getElementById('inv-cancel').style.display = '';
@@ -2875,9 +3011,15 @@ async function saveBoardMember() {
     if (r.ok && j.ok) {
       document.getElementById('bmem-form').style.display = 'none';
       document.getElementById('bmem-result').style.display = 'block';
+      if (j.linked) {
+        document.getElementById('bmem-result-title').textContent = 'Board access added for ' + name;
+        document.getElementById('bmem-result-text').value =
+          `${name} already has a ${j.role} login, so no new password was created and their password was not changed.\nThey keep their current sign-in and will see a choice screen to open the ${j.role === 'admin' ? 'Admin' : 'Coordinator'} or Board portal.`;
+      } else {
       document.getElementById('bmem-result-title').textContent = (j.created ? 'Login created for ' : 'Password updated for ') + name;
       document.getElementById('bmem-result-text').value =
         `Mission Mississippi Hub\n${location.origin}/board.html\nEmail: ${email}\nPassword: ${pw}`;
+      }
       document.getElementById('bmem-cancel').style.display = 'none';
       document.getElementById('bmem-save').style.display = 'none';
       document.getElementById('bmem-done').style.display = '';
