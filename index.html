@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mission Mississippi Hub</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1a2744">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MM Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Merriweather:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 
@@ -291,6 +299,13 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 .event-date-day { font-family: 'Merriweather', serif; font-size: 1.35rem; font-weight: 700; color: var(--white); line-height: 1; }
 .event-title { font-weight: 700; font-size: 0.95rem; color: var(--navy); margin-bottom: 0.22rem; }
 .event-meta { font-size: 0.76rem; color: var(--muted); }
+.event-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 0.65rem; }
+.rsvp-note { font-size: 0.74rem; color: var(--muted); }
+.rsvp-full { font-size: 0.78rem; font-weight: 700; color: var(--danger); }
+.cal-links { font-size: 0.74rem; color: var(--muted); margin-top: 0.55rem; }
+.cal-links a { color: var(--blue); font-weight: 600; text-decoration: none; }
+.cal-links a:hover { text-decoration: underline; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .event-empty { font-size: 0.88rem; color: var(--muted); font-style: italic; padding: 1.5rem 0; }
 
 /* Document grid */
@@ -412,6 +427,40 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   <a href="#events" data-t="events">Events</a>
   <a href="#resources" data-t="resources">Resources</a>
   <a href="#start" data-t="start">Start a Movement</a>
+</div>
+
+<!-- EVENT SIGN-UP -->
+<div class="modal-overlay" id="modal-signup">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="su-title">Sign up</div><button class="modal-close" type="button" onclick="closeModal('modal-signup')" aria-label="Close">&times;</button></div>
+    <div id="su-form">
+      <div class="modal-body">
+        <p id="su-event" style="font-size:0.86rem;color:var(--muted);margin-bottom:1rem;line-height:1.6;"></p>
+        <div class="form-group"><label class="form-label" for="su-name">Your name</label><input class="form-input" id="su-name" type="text" maxlength="120" autocomplete="name"></div>
+        <div class="form-group"><label class="form-label" for="su-email">Email</label><input class="form-input" id="su-email" type="email" maxlength="200" autocomplete="email"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label" for="su-phone">Phone (optional)</label><input class="form-input" id="su-phone" type="tel" maxlength="40" autocomplete="tel"></div>
+          <div class="form-group"><label class="form-label" for="su-guests">Number attending</label><select class="form-select" id="su-guests"></select></div>
+        </div>
+        <div class="form-group"><label class="form-label" for="su-org">Church or organization (optional)</label><input class="form-input" id="su-org" type="text" maxlength="160" autocomplete="organization"></div>
+        <div class="hp-field" aria-hidden="true"><label>Leave this empty<input id="su-website" type="text" tabindex="-1" autocomplete="off"></label></div>
+        <p class="form-hint">We use this only to contact you about this event.</p>
+        <div class="form-error" id="su-error" role="alert"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" type="button" onclick="closeModal('modal-signup')">Cancel</button>
+        <button class="btn btn-primary" type="button" id="su-save" onclick="submitSignup()">Sign up</button>
+      </div>
+    </div>
+    <div id="su-done" style="display:none;">
+      <div class="modal-body" style="text-align:center;">
+        <div style="font-family:'Merriweather',serif;font-size:1.15rem;font-weight:700;color:var(--navy);margin-bottom:0.6rem;">You are signed up.</div>
+        <p id="su-done-text" style="font-size:0.9rem;color:var(--muted);line-height:1.65;"></p>
+        <p class="cal-links" id="su-done-cal" style="margin-top:0.9rem;"></p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary" type="button" onclick="closeModal('modal-signup')">Done</button></div>
+    </div>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -940,15 +989,83 @@ async function loadAnnouncements() {
     </div>`).join('');
 }
 
+// ── ADD TO CALENDAR (all-day events; no email or account needed)
+function safeHttpUrl(u) {
+  try { const x = new URL(String(u || '').trim()); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; } catch (e) { return ''; }
+}
+function icsEscape(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsFold(line) { const out = []; let b = line; while (b.length > 73) { out.push(b.slice(0, 73)); b = ' ' + b.slice(73); } out.push(b); return out.join('\r\n'); }
+function compactDate(d) { return String(d).slice(0, 10).replace(/-/g, ''); }
+function nextCompactDate(d) { const x = new Date(String(d).slice(0, 10) + 'T12:00:00'); x.setDate(x.getDate() + 1); return x.getFullYear() + String(x.getMonth() + 1).padStart(2, '0') + String(x.getDate()).padStart(2, '0'); }
+function calDescription(ev) { return [ev.description, ev.url ? 'More information: ' + ev.url : ''].filter(Boolean).join('\n\n'); }
+function buildIcs(ev) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mission Mississippi//Hub//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    'UID:event-' + ev.id + '@hub.missionmississippi.org', 'DTSTAMP:' + stamp,
+    'DTSTART;VALUE=DATE:' + compactDate(ev.date), 'DTEND;VALUE=DATE:' + nextCompactDate(ev.date),
+    'SUMMARY:' + icsEscape(ev.title)];
+  if (ev.location) lines.push('LOCATION:' + icsEscape(ev.location));
+  const desc = calDescription(ev); if (desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.map(icsFold).join('\r\n') + '\r\n';
+}
+function googleCalUrl(ev) {
+  const q = new URLSearchParams({ action: 'TEMPLATE', text: ev.title, dates: compactDate(ev.date) + '/' + nextCompactDate(ev.date) });
+  if (ev.location) q.set('location', ev.location);
+  const d = calDescription(ev); if (d) q.set('details', d);
+  return 'https://calendar.google.com/calendar/render?' + q.toString();
+}
+const _events = {};
+function addToCalendar(id, kind) {
+  const ev = _events[id]; if (!ev) return;
+  if (kind === 'google') { window.open(googleCalUrl(ev), '_blank', 'noopener'); return; }
+  const blob = new Blob([buildIcs(ev)], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (ev.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function calLinksHtml(id) {
+  return `Add to calendar: <a href="#" onclick="addToCalendar('${id}','google');return false;">Google</a> &middot; <a href="#" onclick="addToCalendar('${id}','ics');return false;">Outlook / Apple (.ics)</a>`;
+}
+
+// ── EVENTS
+async function loadRsvpCounts() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/lm_event_rsvp_counts`, { method: 'POST', headers: sbHeaders(), body: '{}' });
+    if (!r.ok) return {};
+    const rows = await r.json();
+    const m = {}; (rows || []).forEach(x => { m[String(x.event_id)] = x.taken; }); return m;
+  } catch (e) { return {}; }
+}
 async function loadEvents() {
   const today = new Date().toISOString().split('T')[0];
-  const items = await dbGet('lm_events', { select: '*', event_date: `gte.${today}`, order: 'event_date.asc', limit: 8 });
+  const [items, counts] = await Promise.all([
+    dbGet('lm_events', { select: '*', event_date: `gte.${today}`, order: 'event_date.asc', limit: 8 }),
+    loadRsvpCounts()
+  ]);
   const el = document.getElementById('events-list');
   if (!items.length) { el.innerHTML = '<div class="event-empty">No upcoming statewide events. Check back soon.</div>'; return; }
   el.innerHTML = items.map(e => {
+    const id = String(e.id);
+    const url = safeHttpUrl(e.registration_url);
+    _events[id] = { id, title: e.title, date: e.event_date, location: e.location || '', description: e.description || '', url, limit: e.rsvp_limit, enabled: e.rsvp_enabled === true };
     const d = new Date(e.event_date + 'T12:00:00');
     const mon = d.toLocaleString('en-US', {month:'short'}).toUpperCase();
     const day = d.getDate();
+    let signup = '', note = '';
+    if (e.rsvp_enabled === true) {
+      const taken = counts[id] || 0;
+      const left = e.rsvp_limit ? Math.max(e.rsvp_limit - taken, 0) : null;
+      if (left === 0) signup = '<span class="rsvp-full">This event is full</span>';
+      else {
+        signup = `<button class="btn btn-sm btn-primary" type="button" onclick="openSignup('${id}')">Sign up</button>`;
+        if (left !== null) note = `<span class="rsvp-note">${left} spot${left === 1 ? '' : 's'} left</span>`;
+      }
+      _events[id].left = left;
+    }
+    const actions = [signup, url ? `<a href="${escHtml(url)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Register</a>` : '', note].filter(Boolean).join('');
     return `<div class="event-card">
       <div class="event-date-block">
         <div class="event-date-month">${mon}</div>
@@ -958,10 +1075,62 @@ async function loadEvents() {
         <div class="event-title">${escHtml(e.title)}</div>
         <div class="event-meta">${escHtml(e.event_type)}${e.location?' &middot; '+escHtml(e.location):''}</div>
         ${e.description?`<div style="font-size:0.82rem;color:var(--muted);margin-top:0.35rem;">${escHtml(e.description)}</div>`:''}
-        ${e.registration_url?`<a href="${e.registration_url}" target="_blank" class="btn btn-sm btn-outline" style="margin-top:0.65rem;">Register</a>`:''}
+        ${actions ? `<div class="event-actions">${actions}</div>` : ''}
+        <div class="cal-links">${calLinksHtml(id)}</div>
       </div>
     </div>`;
   }).join('');
+}
+
+// ── EVENT SIGN-UP (public; goes through a database function that checks everything)
+let _suEvent = null;
+function openSignup(id) {
+  const ev = _events[id]; if (!ev) return;
+  _suEvent = ev;
+  ['su-name','su-email','su-phone','su-org','su-website'].forEach(i => { document.getElementById(i).value = ''; });
+  const max = ev.left == null ? 10 : Math.max(1, Math.min(10, ev.left));
+  document.getElementById('su-guests').innerHTML = Array.from({ length: max }, (_, k) => `<option value="${k + 1}">${k + 1}</option>`).join('');
+  document.getElementById('su-title').textContent = 'Sign up';
+  document.getElementById('su-event').textContent = ev.title + ' on ' + fmtDate(ev.date) + (ev.location ? ', ' + ev.location : '') + '.';
+  const e = document.getElementById('su-error'); e.style.display = 'none'; e.textContent = '';
+  document.getElementById('su-save').disabled = false;
+  document.getElementById('su-form').style.display = ''; document.getElementById('su-done').style.display = 'none';
+  openModal('modal-signup');
+  setTimeout(() => document.getElementById('su-name').focus(), 60);
+}
+async function submitSignup() {
+  const ev = _suEvent; if (!ev) return;
+  const err = document.getElementById('su-error'), btn = document.getElementById('su-save');
+  const fail = m => { err.textContent = m; err.style.display = 'block'; btn.disabled = false; };
+  err.style.display = 'none';
+  const name = document.getElementById('su-name').value.trim(), email = document.getElementById('su-email').value.trim();
+  if (!name) return fail('Please enter your name.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Please enter a valid email address.');
+  btn.disabled = true;
+  const done = () => {
+    document.getElementById('su-form').style.display = 'none'; document.getElementById('su-done').style.display = '';
+    document.getElementById('su-done-text').textContent = 'Thank you, ' + name.split(' ')[0] + '. We have you down for ' + ev.title + ' on ' + fmtDate(ev.date) + '.';
+    document.getElementById('su-done-cal').innerHTML = calLinksHtml(ev.id);
+    loadEvents();
+  };
+  // A hidden field that only automated form-fillers complete: pretend it worked and send nothing.
+  if (document.getElementById('su-website').value) return done();
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/lm_event_signup`, {
+      method: 'POST', headers: sbHeaders(),
+      body: JSON.stringify({
+        p_event: ev.id, p_name: name, p_email: email,
+        p_phone: document.getElementById('su-phone').value.trim() || null,
+        p_org: document.getElementById('su-org').value.trim() || null,
+        p_guests: parseInt(document.getElementById('su-guests').value, 10) || 1
+      })
+    });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j) return fail('Sorry, we could not sign you up just now. Please try again in a moment.');
+    if (j.ok) return done();
+    fail(j.message || 'Sorry, we could not sign you up.');
+    if (j.reason === 'full' || j.reason === 'closed') loadEvents();
+  } catch (e) { fail('Could not reach the server. Please check your connection and try again.'); }
 }
 
 async function loadDocuments() {
@@ -994,5 +1163,6 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 loadPublic();
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 </body>
 </html>

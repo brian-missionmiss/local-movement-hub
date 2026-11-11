@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Board Portal | Mission Mississippi Hub</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1a2744">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MM Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Merriweather:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 
@@ -543,6 +551,67 @@ async function doLogout() {
   document.getElementById('nav-user').textContent = '';
 }
 
+
+// ── ADD TO CALENDAR (meetings). The time is typed as free text, so it is read leniently:
+// "10:00 AM", "10 am", "2:30pm", "14:00", or "10:00 AM - 12:00 PM". No time means an all-day entry.
+const _mtgs = {};
+function parseMeetingTimes(txt) {
+  const t = String(txt || ''), found = [];
+  const re12 = /(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\b\.?/gi; let m;
+  while ((m = re12.exec(t))) { let h = parseInt(m[1], 10) % 12; if (m[3].toLowerCase() === 'p') h += 12; if (h <= 23) found.push({ idx: m.index, h, mi: parseInt(m[2] || '0', 10) }); }
+  if (!found.length) { const re24 = /\b([01]?\d|2[0-3]):([0-5]\d)\b/g; while ((m = re24.exec(t))) found.push({ idx: m.index, h: parseInt(m[1], 10), mi: parseInt(m[2], 10) }); }
+  return found.slice(0, 2);
+}
+function p2(n) { return String(n).padStart(2, '0'); }
+function localStamp(dateStr, h, mi) { return String(dateStr).slice(0, 10).replace(/-/g, '') + 'T' + p2(h) + p2(mi) + '00'; }
+function meetingCal(m) {
+  const date = String(m.meeting_date).slice(0, 10), times = parseMeetingTimes(m.start_time);
+  const title = m.title || 'Board Meeting';
+  const desc = [m.notes, safeUrl(m.video_link) ? 'Join by video: ' + safeUrl(m.video_link) : ''].filter(Boolean).join('\n\n');
+  let start, end, allDay = false;
+  if (times.length) {
+    start = localStamp(date, times[0].h, times[0].mi);
+    // End time: the one given, or 2 hours after the start. If it lands at or before the start, it is the next day.
+    const sm = times[0].h * 60 + times[0].mi; let em = times[1] ? times[1].h * 60 + times[1].mi : sm + 120, dayAdd = 0;
+    if (em <= sm) em += 1440; if (em >= 1440) { dayAdd = Math.floor(em / 1440); em %= 1440; }
+    const ed = new Date(date + 'T12:00:00'); ed.setDate(ed.getDate() + dayAdd);
+    end = ed.getFullYear() + p2(ed.getMonth() + 1) + p2(ed.getDate()) + 'T' + p2(Math.floor(em / 60)) + p2(em % 60) + '00';
+  } else {
+    allDay = true; start = date.replace(/-/g, '');
+    const x = new Date(date + 'T12:00:00'); x.setDate(x.getDate() + 1); end = x.getFullYear() + p2(x.getMonth() + 1) + p2(x.getDate());
+  }
+  return { id: m.id, title, location: m.location || '', desc, start, end, allDay };
+}
+function icsEsc(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsFoldLine(line) { const out = []; let b = line; while (b.length > 73) { out.push(b.slice(0, 73)); b = ' ' + b.slice(73); } out.push(b); return out.join('\r\n'); }
+function buildMeetingIcs(c) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mission Mississippi//Hub//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    'UID:board-meeting-' + c.id + '@hub.missionmississippi.org', 'DTSTAMP:' + stamp,
+    c.allDay ? 'DTSTART;VALUE=DATE:' + c.start : 'DTSTART:' + c.start, c.allDay ? 'DTEND;VALUE=DATE:' + c.end : 'DTEND:' + c.end,
+    'SUMMARY:' + icsEsc(c.title)];
+  if (c.location) L.push('LOCATION:' + icsEsc(c.location));
+  if (c.desc) L.push('DESCRIPTION:' + icsEsc(c.desc));
+  L.push('END:VEVENT', 'END:VCALENDAR');
+  return L.map(icsFoldLine).join('\r\n') + '\r\n';
+}
+function addMeetingToCalendar(id, kind) {
+  const m = _mtgs[id]; if (!m) return; const c = meetingCal(m);
+  if (kind === 'google') {
+    const q = new URLSearchParams({ action: 'TEMPLATE', text: c.title, dates: c.start + '/' + c.end });
+    if (c.location) q.set('location', c.location); if (c.desc) q.set('details', c.desc);
+    window.open('https://calendar.google.com/calendar/render?' + q.toString(), '_blank', 'noopener'); return;
+  }
+  const blob = new Blob([buildMeetingIcs(c)], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'board-meeting-' + String(m.meeting_date).slice(0, 10) + '.ics';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function meetingCalLinks(m) {
+  _mtgs[m.id] = m;
+  return `<div style="font-size:0.76rem;color:var(--muted);margin-top:0.45rem;">Add to calendar: <a href="#" style="color:var(--blue);font-weight:600;text-decoration:none;" onclick="addMeetingToCalendar('${m.id}','google');return false;">Google</a> &middot; <a href="#" style="color:var(--blue);font-weight:600;text-decoration:none;" onclick="addMeetingToCalendar('${m.id}','ics');return false;">Outlook / Apple (.ics)</a></div>`;
+}
+
 async function startPortal() {
   const errEl = document.getElementById('login-error');
   let userData;
@@ -680,6 +749,7 @@ async function loadHome() {
       <div class="meeting-date">${escHtml(fmtLongDate(next.meeting_date))}</div>
       <div class="meeting-meta">${escHtml(next.title || 'Board Meeting')}${next.start_time ? ' &middot; ' + escHtml(next.start_time) : ''}${next.location ? '<br>' + escHtml(next.location) : ''}
         ${safeUrl(next.video_link) ? `<br><a href="${escHtml(safeUrl(next.video_link))}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;">Join by video</a>` : ''}</div>
+      ${meetingCalLinks(next)}
       ${next.notes ? `<p style="font-size:0.84rem;line-height:1.65;margin-top:0.6rem;">${escHtml(next.notes)}</p>` : ''}
       <div style="margin-top:0.75rem;">${mdocs.length ? mdocs.map(d => docRow(d, true)).join('') : EMPTY('The agenda and packet will appear here once they are published.')}</div>
     </div>`;
@@ -710,6 +780,7 @@ async function loadMeetings() {
         <div class="meeting-meta">${escHtml(m.title || 'Board Meeting')}${m.start_time ? ' &middot; ' + escHtml(m.start_time) : ''}${m.location ? ' &middot; ' + escHtml(m.location) : ''}</div></div>
         ${upcoming ? '<span class="badge badge-blue">Upcoming</span>' : ''}
       </div>
+      ${upcoming ? meetingCalLinks(m) : ''}
       <div style="margin-top:0.6rem;">${mdocs.length ? mdocs.map(d => docRow(d, true)).join('') : EMPTY('No documents for this meeting yet.')}</div>
     </div>`;
   }).join('');
@@ -907,5 +978,6 @@ async function saveChangePw() {
   }
 }
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 </body>
 </html>

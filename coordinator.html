@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coordinator Portal | Mission Mississippi Hub</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1a2744">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MM Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Merriweather:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 
@@ -484,6 +492,11 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <p class="page-sub">An overview of your local movement's activity and status.</p>
           </div>
           <button class="btn btn-outline" onclick="generateMovementReport()">&#128196; Generate Report</button>
+        </div>
+
+        <div id="report-reminder" role="status" style="display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:#fff8e6;border:1px solid #f0d58a;border-left:4px solid #f0b429;border-radius:6px;padding:0.85rem 1.1rem;margin-bottom:1.5rem;">
+          <div id="report-reminder-text" style="font-size:0.88rem;line-height:1.6;color:var(--navy);"></div>
+          <button class="btn btn-primary btn-sm" type="button" onclick="showSection('reports')">Report an Event</button>
         </div>
 
         <div class="grid-3" id="dash-stats" style="margin-bottom:1.75rem;">
@@ -1214,8 +1227,9 @@ async function loadDashboard() {
   const committee = await dbGet('lm_roster', { movement_id:`eq.${mid}`, roster_type:'eq.committee', active:'eq.true', select:'id' }, token);
   document.getElementById('stat-committee').textContent = committee.length;
 
-  const reports = await dbGet('lm_event_reports', { movement_id:`eq.${mid}`, select:'id' }, token);
+  const reports = await dbGet('lm_event_reports', { movement_id:`eq.${mid}`, select:'*', order:'event_date.desc' }, token);
   document.getElementById('stat-reports').textContent = reports.length;
+  updateReportReminder(reports);
 
   // Announcements
   const announces = await dbGet('lm_announcements', { select:'*', order:'pinned.desc,created_at.desc', limit:'4' });
@@ -1239,6 +1253,27 @@ async function loadDashboard() {
       <td>${r.attendance ?? '—'}</td>
       <td style="color:var(--muted);font-size:0.8rem;">${escHtml((r.description||'').slice(0,60))}</td>
     </tr>`).join('');
+}
+
+// ── MONTHLY REPORT REMINDER (a gentle note on the dashboard; no deadline is implied)
+function updateReportReminder(reports) {
+  const box = document.getElementById('report-reminder');
+  if (!box) return;
+  // Administrators looking at a movement are not the ones who report for it.
+  if (sessionStorage.getItem('lm_admin_as_coordinator')) { box.style.display = 'none'; return; }
+  const now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const monthName = now.toLocaleString('en-US', { month: 'long' });
+  const thisMonth = (reports || []).some(r => {
+    const made = r.created_at ? new Date(r.created_at) : null;
+    const madeYm = made && !isNaN(made) ? made.getFullYear() + '-' + String(made.getMonth() + 1).padStart(2, '0') : '';
+    return madeYm === ym || String(r.event_date || '').slice(0, 7) === ym;
+  });
+  if (thisMonth) { box.style.display = 'none'; return; }
+  document.getElementById('report-reminder-text').textContent = (reports || []).length
+    ? 'No event report yet for ' + monthName + '. When your movement has met or served, take a minute to report it.'
+    : 'Your movement has not reported an event yet. When you are ready, report your first one.';
+  box.style.display = 'flex';
 }
 
 // ── ROSTER
@@ -1344,6 +1379,7 @@ async function submitReport() {
   document.getElementById('report-attendance').value='';
   document.getElementById('report-desc').value='';
   toast('Report submitted. Thank you!');
+  const rr = document.getElementById('report-reminder'); if (rr) rr.style.display = 'none';
   loadReports();
 }
 
@@ -2247,5 +2283,6 @@ async function saveChangePw() {
   }
 }
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 </body>
 </html>

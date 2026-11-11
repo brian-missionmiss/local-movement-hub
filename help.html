@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mission Mississippi Hub Help</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1a2744">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MM Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Merriweather:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -176,11 +184,27 @@ a { color:#1e7fb0; }
   <h2 id="a-content">Announcements, Events, Documents and Assets</h2>
   <ul>
     <li><strong>Announcements</strong> are messages seen by every coordinator and on the public Hub. Give each a title and body, and use <em>Pin to top</em> to keep one at the top.</li>
-    <li><strong>Events</strong> are statewide events shown on the public Hub. Enter the type, date, location, a description, and an optional registration link.</li>
+    <li><strong>Events</strong> are statewide events shown on the public Hub. Enter the type, date, location, a description, and an optional registration link. Each upcoming event on the public Hub also has <em>Add to calendar</em> links, so visitors can save it to Google, Outlook or Apple calendars. Events are all-day entries, because there is no time field.</li>
     <li><strong>Documents</strong> are playbooks, guides and templates offered for download. Choose a category and paste the file&rsquo;s link from Google Drive, Dropbox or a similar service.</li>
     <li><strong>Assets</strong> are logos, flyers and social media templates. Paste the file&rsquo;s link in the same way.</li>
   </ul>
   <p>Whatever you publish in these four sections can be seen by the public, so read it over before you save.</p>
+
+  <h3>Taking sign-ups for an event</h3>
+  <ol>
+    <li>When you add or edit an event, check <strong>Take sign-ups on the Hub</strong>. You may also enter a <strong>Limit</strong>, which is the total number of people (including guests) you can take. Leave it blank for no limit.</li>
+    <li>The public Hub then shows a <strong>Sign up</strong> button on that event. Visitors give their name, email, an optional phone and organization, and how many people are coming. If there is a limit, the page shows how many spots are left, and it says the event is full when no spots remain.</li>
+    <li>On the Events list, the <strong>Sign-ups</strong> button on an event shows who has signed up. From there you can turn sign-ups on or off, change the limit, remove a sign-up, or select <strong>Export XLSX</strong> to download the list.</li>
+  </ol>
+  <p>The same email address can sign up only once for the same event. Sign-ups close automatically after the event date. Names and emails are visible only to admins, never to the public. The public sign-up form tells people that their details are used only to contact them about the event.</p>
+  <div class="note">Sign-up lists contain personal information. Download and share them only as needed, and delete downloaded copies when the event is over.</div>
+
+  <h2 id="a-search">Search</h2>
+  <p>Select <strong>Search</strong> at the top of the Admin Panel, or press <strong>/</strong> (or <strong>Ctrl+K</strong>, or <strong>Cmd+K</strong> on a Mac) to find movements, users, reports, stories, events and more from one place. Type a few letters, use the arrow keys to move through the results, and press <strong>Enter</strong> to jump to the right screen. Press <strong>Esc</strong> to close it. Super admins also see board items in the results.</p>
+
+  <h2 id="a-export">Export everything <span class="tag">Super admin</span></h2>
+  <p>At the bottom of the Overview screen, the <strong>Download all data (Excel)</strong> button downloads one Excel file with a sheet for each section of the Hub. It is a useful backup and works well for reports. The first sheet, <em>About this export</em>, shows the date and how many rows each sheet holds.</p>
+  <div class="note warn">The file contains personal information such as names, emails, phone numbers and sign-ups. Keep it in a safe place, share it only with people who need it, and delete extra copies. It does not include the files uploaded to the Board Portal.</div>
 
   <h2 id="a-board">Board Portal Content <span class="tag">Super admin</span></h2>
   <p>This is where the board&rsquo;s materials are managed. Board members see only what you publish. Use <strong>Preview Board Portal</strong> to see what they see.</p>
@@ -192,7 +216,7 @@ a { color:#1e7fb0; }
     <li>Leave <strong>Publish now</strong> unchecked to save it as a draft. A draft is visible only to super admins. Use the <strong>Publish</strong> and <strong>Unpublish</strong> button on the row at any time. Publishing shows the document to every board member right away.</li>
   </ol>
   <h3>Meetings</h3>
-  <p>Select <strong>+ Add Meeting</strong> and enter the date, time and location. Add a video link and a note to the board if you want them.</p>
+  <p>Select <strong>+ Add Meeting</strong> and enter the date, time and location. Add a video link and a note to the board if you want them. Type the time the way you would say it, such as <em>10:00 AM</em> or <em>10:00 AM - 12:00 PM</em>. Board members get <em>Add to calendar</em> links on upcoming meetings, and the Hub reads that time to build the calendar entry. If it cannot read a time, or none is entered, the meeting is saved to calendars as an all-day entry. With only a start time, the entry lasts two hours.</p>
   <h3>Action Items</h3>
   <p>Select <strong>+ Add Action Item</strong>. Enter the item, who owns it, a due date, and optionally the meeting it came from.</p>
   <h3>Board Roster</h3>
@@ -210,6 +234,14 @@ a { color:#1e7fb0; }
     <li>Enter your current password, then your new password twice. It must be at least 8 characters, and it has to be different from the old one.</li>
     <li>Select <strong>Change password</strong>. You stay signed in, and you use the new password next time.</li>
   </ol>
+
+  <h2 id="a-phone">Using the Hub on your phone</h2>
+  <p>You can put the Hub on your home screen so it opens like an app.</p>
+  <ul>
+    <li><strong>iPhone or iPad:</strong> open the Hub in Safari, select the Share button, then <strong>Add to Home Screen</strong>.</li>
+    <li><strong>Android:</strong> open the Hub in Chrome, select the menu (three dots), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+  </ul>
+  <p>The Hub always loads current information, so it needs an internet connection to work.</p>
 
   <h2 id="a-help">When something goes wrong</h2>
   <ul>
@@ -238,6 +270,7 @@ a { color:#1e7fb0; }
   <div class="note warn"><strong>Watch for the confirmation.</strong> When something saves, the Hub shows a short green message. When it fails, you will see a red message that says why. If you saw neither, assume it did not save and try again.</div>
 
   <h2 id="c-dashboard">Dashboard</h2>
+  <p>If you have not reported an event yet this month, a yellow reminder appears at the top with a <strong>Report an Event</strong> button. It goes away once you submit a report for the month. A reminder is only a nudge. If your movement did not meet or serve this month, nothing is wrong.</p>
   <p>A quick picture of your movement: your current phase, the number of committee members, and the number of events you have reported. The <strong>Generate Report</strong> button builds a printable summary of your movement, covering your community profile, roster, events, training and milestones. Choose &ldquo;Save as PDF&rdquo; in the print window to keep a copy, which works well for sharing with your committee or your church.</p>
 
   <h2 id="c-profile">Community Profile</h2>
@@ -294,6 +327,14 @@ a { color:#1e7fb0; }
     <li>Select <strong>Change password</strong>. You stay signed in, and you use the new password next time.</li>
   </ol>
 
+  <h2 id="c-phone">Using the Hub on your phone</h2>
+  <p>You can put the Hub on your home screen so it opens like an app.</p>
+  <ul>
+    <li><strong>iPhone or iPad:</strong> open the Hub in Safari, select the Share button, then <strong>Add to Home Screen</strong>.</li>
+    <li><strong>Android:</strong> open the Hub in Chrome, select the menu (three dots), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+  </ul>
+  <p>The Hub always loads current information, so it needs an internet connection to work.</p>
+
   <h2 id="c-help">When something goes wrong</h2>
   <ul>
     <li><strong>You cannot sign in.</strong> Check your email spelling first. If it still does not work, contact the Headquarters Office at <a href="mailto:grace@missionmississippi.org">grace@missionmississippi.org</a> or 601-353-6477 to have your password reset.</li>
@@ -325,6 +366,7 @@ a { color:#1e7fb0; }
 
   <h2 id="b-meetings">Meetings and Packets</h2>
   <p>Agendas, board packets and minutes, organized by meeting. Each meeting shows its date, time and location, with a link to join by video when one has been provided.</p>
+  <p>On the next meeting and on any upcoming meeting, <strong>Add to calendar</strong> lets you save it to Google Calendar, or download a file for Outlook or Apple Calendar. If a meeting has no time listed, it is saved as an all-day entry. Check the time in your calendar after you add it.</p>
 
   <h2 id="b-minutes">Minutes</h2>
   <p>Minutes from past meetings. Minutes marked <strong>Draft</strong> have not yet been approved by the board.</p>
@@ -349,6 +391,14 @@ a { color:#1e7fb0; }
     <li>Enter your current password, then your new password twice. It must be at least 8 characters, and it has to be different from the old one.</li>
     <li>Select <strong>Change password</strong>. You stay signed in, and you use the new password next time.</li>
   </ol>
+
+  <h2 id="b-phone">Using the Hub on your phone</h2>
+  <p>You can put the Hub on your home screen so it opens like an app.</p>
+  <ul>
+    <li><strong>iPhone or iPad:</strong> open the Hub in Safari, select the Share button, then <strong>Add to Home Screen</strong>.</li>
+    <li><strong>Android:</strong> open the Hub in Chrome, select the menu (three dots), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+  </ul>
+  <p>The Hub always loads current information, so it needs an internet connection to work.</p>
 
   <h2 id="b-help">When something goes wrong</h2>
   <ul>
@@ -419,5 +469,6 @@ a { color:#1e7fb0; }
   pick(q || 'admin', false);
 })();
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 </body>
 </html>
