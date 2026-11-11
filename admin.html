@@ -287,11 +287,32 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </a>
   <div class="nav-right">
     <span class="nav-user" id="nav-user"></span>
+    <a class="nav-btn nav-btn-outline" href="help.html?guide=admin" target="_blank" rel="noopener">Help</a>
     <button class="nav-btn nav-btn-outline" id="switch-view-btn" style="display:none" onclick="showViewSelect()">Switch View</button>
+    <button class="nav-btn nav-btn-outline" id="pw-btn" style="display:none" onclick="openChangePw()">Change password</button>
     <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
     <a class="nav-btn nav-btn-blue" href="index.html">Public Hub</a>
   </div>
 </nav>
+
+<!-- CHANGE PASSWORD -->
+<div class="modal-overlay" id="modal-changepw">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="cpw-title">Change your password</div><button class="modal-close" id="cpw-x" type="button" onclick="closeChangePw()">&times;</button></div>
+    <div class="modal-body" style="padding:1.25rem 1.5rem;">
+      <p id="cpw-intro" style="font-size:0.86rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.65;"></p>
+      <div class="form-group"><label class="form-label" for="cpw-current" id="cpw-current-label">Current password</label><input class="form-input" id="cpw-current" type="password" autocomplete="current-password"></div>
+      <div class="form-group"><label class="form-label" for="cpw-new">New password</label><input class="form-input" id="cpw-new" type="password" autocomplete="new-password"></div>
+      <div class="form-group"><label class="form-label" for="cpw-confirm">Confirm new password</label><input class="form-input" id="cpw-confirm" type="password" autocomplete="new-password"></div>
+      <div class="form-error" id="cpw-error" role="alert"></div>
+    </div>
+    <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.6rem;justify-content:flex-end;align-items:center;">
+      <button class="btn btn-outline" type="button" id="cpw-signout" style="display:none;margin-right:auto;" onclick="cpwSignOut()">Sign out instead</button>
+      <button class="btn btn-outline" type="button" id="cpw-cancel" onclick="closeChangePw()">Cancel</button>
+      <button class="btn btn-primary" type="button" id="cpw-save" onclick="saveChangePw()">Change password</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast" class="toast"></div>
 
@@ -359,7 +380,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           </a>
           <a class="sidebar-link" href="#" onclick="showSection('coordinators')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-            Staff &amp; Coordinators
+            Users
           </a>
           <a class="sidebar-link" href="#" onclick="showSection('submit-report')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
@@ -474,12 +495,12 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <!-- COORDINATORS -->
       <div id="section-coordinators" style="display:none">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-          <div><h1 class="page-title">Staff &amp; Coordinators</h1><p class="page-sub">Invite Mission Mississippi staff as admins or local coordinators tied to a specific movement.</p></div>
+          <div><h1 class="page-title">Users</h1><p class="page-sub">Manage who can sign in to the Hub and what they can see. Admins and coordinators are added here. Board members are added from the Board portal.</p></div>
           <div style="display:flex;gap:0.45rem;align-items:center;">
             <button class="btn btn-sm btn-outline" onclick="exportStaffXLSX()">Export XLSX</button>
             <button class="btn btn-sm btn-outline" onclick="exportStaffPDF()">Export PDF</button>
           </div>
-          <button class="btn btn-primary" onclick="openInviteModal()">+ Invite Staff or Coordinator</button>
+          <button class="btn btn-primary" onclick="openInviteModal()">+ Add User</button>
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -620,7 +641,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <thead><tr><th>Title</th><th>Type</th><th>Meeting</th><th>Status</th><th>Added</th><th></th></tr></thead>
             <tbody id="bd-docs-table"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table></div>
-          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.75rem;">Drafts are visible only to admins. Publishing makes a document visible to every board member immediately.</p>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.75rem;">Drafts are visible only to super admins. Publishing makes a document visible to every board member immediately.</p>
         </div>
 
         <div id="bd-panel-meetings" style="display:none">
@@ -830,7 +851,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
 <div class="modal-overlay" id="modal-invite">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="inv-title">Invite Staff or Coordinator</div><button class="modal-close" onclick="closeModal('modal-invite')">&times;</button></div>
+    <div class="modal-header"><div class="modal-title" id="inv-title">Add User</div><button class="modal-close" onclick="closeModal('modal-invite')">&times;</button></div>
     <div class="modal-body">
       <div id="inv-form">
       <p style="font-size:0.86rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.65;" id="inv-intro">Their login is created when you save. You send them the email and password yourself (text or phone). Admins have full panel access. Coordinators are tied to one movement.</p>
@@ -1296,10 +1317,11 @@ async function verifyAndLoad() {
   }
   if (profiles[0].active === false) {
     auth.clearSession();
-    document.getElementById('login-error').textContent = 'This account has been deactivated. Please contact Mission Mississippi.';
+    document.getElementById('login-error').textContent = 'This account has been deactivated. Please contact the Headquarters Office at 601-353-6477.';
     document.getElementById('login-error').style.display = 'block';
     return;
   }
+  enforcePwChange(profiles[0]);
   mySuper = profiles[0].is_super_admin === true;
   myIsBoard = profiles[0].is_board === true;
   // Board portal: super admins and board members only. Board management: super admins only.
@@ -1308,7 +1330,7 @@ async function verifyAndLoad() {
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('select-email').textContent = userEmail;
   document.getElementById('view-select').style.display = 'flex';
-  document.getElementById('logout-btn').style.display = '';
+  document.getElementById('logout-btn').style.display = ''; document.getElementById('pw-btn').style.display = '';
   document.getElementById('nav-user').textContent = userEmail;
 }
 
@@ -1318,7 +1340,7 @@ async function doLogout() {
   document.getElementById('view-admin').style.display='none';
   document.getElementById('view-select').style.display='none';
   document.getElementById('view-login').style.display='flex';
-  document.getElementById('logout-btn').style.display='none';
+  document.getElementById('logout-btn').style.display='none'; document.getElementById('pw-btn').style.display = 'none';
   document.getElementById('switch-view-btn').style.display='none';
   document.getElementById('nav-user').textContent='';
 }
@@ -1686,7 +1708,7 @@ function openInviteModal(preset) {
   toggleInviteMovement();
   if (preset.movement_id) document.getElementById('inv-movement').value = preset.movement_id;
   document.getElementById('inv-movement').disabled = !!preset.reset;
-  document.getElementById('inv-title').textContent = preset.reset ? 'Reset password' : 'Invite Staff or Coordinator';
+  document.getElementById('inv-title').textContent = preset.reset ? 'Reset password' : 'Add User';
   document.getElementById('inv-pw-label').textContent = preset.reset ? 'New password' : 'Sign-in password';
   document.getElementById('inv-save').textContent = preset.reset ? 'Set Password' : 'Create Login';
   invGenPw();
@@ -2221,8 +2243,8 @@ async function exportStaffXLSX() {
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Staff & Coordinators');
-  XLSX.writeFile(wb, `MM_Staff_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'Users');
+  XLSX.writeFile(wb, `MM_Users_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 async function exportStaffPDF() {
@@ -2235,7 +2257,7 @@ async function exportStaffPDF() {
     <td>${p.role==='admin'?'All Movements':escHtml(movMap[p.movement_id]||'—')}</td>
     <td>${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td>
   </tr>`).join('');
-  openAdminPrintWindow('Mission Mississippi — Staff &amp; Coordinators',
+  openAdminPrintWindow('Mission Mississippi Hub Users',
     `<table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Movement</th><th>Added</th></tr></thead><tbody>${rows}</tbody></table>`);
 }
 
@@ -3055,6 +3077,99 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 });
 
 init();
+</script>
+<script>
+// ── CHANGE OWN PASSWORD (signed-in users; no email needed)
+// "Forced" mode: when the profile says must_change_password, the person must choose their own
+// password before using the portal. The database clears the flag when the password changes.
+var _cpwForced = false;
+var CPW_HELP = 'If you cannot sign in at all, contact the Headquarters Office at grace@missionmississippi.org or 601-353-6477 and an admin can set a new one for you.';
+(function () {
+  var ov = document.getElementById('modal-changepw');
+  // The pages close any modal when its dark background is clicked; a forced prompt must stay open.
+  new MutationObserver(function () {
+    if (_cpwForced && !ov.classList.contains('open')) ov.classList.add('open');
+  }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+})();
+function openChangePw(forced) {
+  _cpwForced = forced === true;
+  var ov = document.getElementById('modal-changepw');
+  ['cpw-current','cpw-new','cpw-confirm'].forEach(function (id) { document.getElementById(id).value = ''; });
+  var e = document.getElementById('cpw-error'); e.style.display = 'none'; e.textContent = '';
+  document.getElementById('cpw-save').disabled = false;
+  document.getElementById('cpw-title').textContent = _cpwForced ? 'Choose your own password' : 'Change your password';
+  document.getElementById('cpw-intro').textContent = _cpwForced
+    ? 'For your security, please choose your own password before you continue. The one you were given was only a starting point. It must be at least 8 characters. Enter the password you were given first. ' + CPW_HELP
+    : 'Choose a new password for your own login. It must be at least 8 characters. ' + CPW_HELP;
+  document.getElementById('cpw-current-label').textContent = _cpwForced ? 'Password you were given' : 'Current password';
+  document.getElementById('cpw-x').style.display = _cpwForced ? 'none' : '';
+  document.getElementById('cpw-cancel').style.display = _cpwForced ? 'none' : '';
+  document.getElementById('cpw-signout').style.display = _cpwForced ? '' : 'none';
+  document.getElementById('cpw-save').textContent = _cpwForced ? 'Save my password' : 'Change password';
+  ov.style.background = _cpwForced ? 'var(--navy)' : '';
+  ov.classList.add('open');
+  setTimeout(function () { document.getElementById('cpw-current').focus(); }, 50);
+}
+function closeChangePw() { if (_cpwForced) return; document.getElementById('modal-changepw').classList.remove('open'); }
+function enforcePwChange(profile) { if (profile && profile.must_change_password === true) openChangePw(true); }
+async function cpwSignOut() {
+  _cpwForced = false;
+  document.getElementById('modal-changepw').classList.remove('open');
+  document.getElementById('modal-changepw').style.background = '';
+  if (typeof doLogout === 'function') await doLogout();
+}
+async function saveChangePw() {
+  var cur = document.getElementById('cpw-current').value;
+  var nw = document.getElementById('cpw-new').value;
+  var cf = document.getElementById('cpw-confirm').value;
+  var errEl = document.getElementById('cpw-error');
+  var btn = document.getElementById('cpw-save');
+  function fail(m) { errEl.textContent = m; errEl.style.display = 'block'; btn.disabled = false; }
+  errEl.style.display = 'none';
+  if (!session || !session.access_token) return fail('Please sign in again.');
+  if (!cur) return fail(_cpwForced ? 'Enter the password you were given.' : 'Enter your current password.');
+  if (nw.length < 8) return fail('The new password must be at least 8 characters.');
+  if (nw !== cf) return fail('The two new passwords do not match.');
+  if (nw === cur) return fail('Choose a password that is different from ' + (_cpwForced ? 'the one you were given.' : 'your current one.'));
+  btn.disabled = true;
+  try {
+    // 1. Who am I? (also confirms the session is still good)
+    var me = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token } });
+    var mj = await me.json().catch(function () { return {}; });
+    if (!me.ok || !mj.email) return fail('Your session has expired. Please sign out and sign in again.');
+    // 2. Prove they know the current password.
+    var v = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email: mj.email, password: cur })
+    });
+    var vj = await v.json().catch(function () { return {}; });
+    if (!v.ok || !vj.access_token) return fail(_cpwForced ? 'That is not the password you were given. Please check it and try again.' : 'Your current password is not correct.');
+    // 3. Set the new one.
+    var u = await fetch(SB_URL + '/auth/v1/user', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + vj.access_token },
+      body: JSON.stringify({ password: nw })
+    });
+    var uj = await u.json().catch(function () { return {}; });
+    if (!u.ok) return fail(uj.msg || uj.message || uj.error_description || ('The password was not changed (error ' + u.status + ').'));
+    // 4. In forced mode, confirm the database cleared the notice, then let them in.
+    var wasForced = _cpwForced, stillFlagged = false;
+    if (wasForced) {
+      try {
+        var pr = await fetch(SB_URL + '/rest/v1/lm_profiles?id=eq.' + encodeURIComponent(mj.id) + '&select=must_change_password', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token } });
+        var pj = await pr.json();
+        stillFlagged = Array.isArray(pj) && pj[0] && pj[0].must_change_password === true;
+      } catch (e) {}
+    }
+    _cpwForced = false;
+    document.getElementById('modal-changepw').style.background = '';
+    document.getElementById('modal-changepw').classList.remove('open');
+    toast(stillFlagged
+      ? 'Password changed. The Hub could not clear the first-sign-in notice, so you may be asked again. Please tell the Headquarters Office.'
+      : 'Password changed. Use the new one next time you sign in.');
+  } catch (e) {
+    fail('Could not reach the server. Check your connection and try again.');
+  }
+}
 </script>
 </body>
 </html>

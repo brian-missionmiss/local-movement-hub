@@ -282,12 +282,33 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   <div class="nav-right">
     <span class="nav-user" id="nav-user"></span>
     <select id="admin-movement-select" class="form-select" style="display:none;width:auto;max-width:190px;padding:0.35rem 0.6rem;font-size:0.78rem;" onchange="adminPickMovement(this.value)" title="Viewing as this movement"></select>
+    <a class="nav-btn nav-btn-outline" href="help.html?guide=coordinator" target="_blank" rel="noopener">Help</a>
     <button class="nav-btn nav-btn-outline" id="switch-to-admin-btn" style="display:none" onclick="switchToAdminView()">Switch View</button>
     <button class="nav-btn nav-btn-outline" id="switch-to-board-btn" style="display:none" onclick="chooseView('board')">Board Portal</button>
+    <button class="nav-btn nav-btn-outline" id="pw-btn" style="display:none" onclick="openChangePw()">Change password</button>
     <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
     <a class="nav-btn nav-btn-blue" href="index.html">Public Hub</a>
   </div>
 </nav>
+
+<!-- CHANGE PASSWORD -->
+<div class="modal-overlay" id="modal-changepw">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="cpw-title">Change your password</div><button class="modal-close" id="cpw-x" type="button" onclick="closeChangePw()">&times;</button></div>
+    <div class="modal-body" style="padding:1.25rem 1.5rem;">
+      <p id="cpw-intro" style="font-size:0.86rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.65;"></p>
+      <div class="form-group"><label class="form-label" for="cpw-current" id="cpw-current-label">Current password</label><input class="form-input" id="cpw-current" type="password" autocomplete="current-password"></div>
+      <div class="form-group"><label class="form-label" for="cpw-new">New password</label><input class="form-input" id="cpw-new" type="password" autocomplete="new-password"></div>
+      <div class="form-group"><label class="form-label" for="cpw-confirm">Confirm new password</label><input class="form-input" id="cpw-confirm" type="password" autocomplete="new-password"></div>
+      <div class="form-error" id="cpw-error" role="alert"></div>
+    </div>
+    <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.6rem;justify-content:flex-end;align-items:center;">
+      <button class="btn btn-outline" type="button" id="cpw-signout" style="display:none;margin-right:auto;" onclick="cpwSignOut()">Sign out instead</button>
+      <button class="btn btn-outline" type="button" id="cpw-cancel" onclick="closeChangePw()">Cancel</button>
+      <button class="btn btn-primary" type="button" id="cpw-save" onclick="saveChangePw()">Change password</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast" class="toast"></div>
 
@@ -1056,7 +1077,7 @@ async function doLogout() {
   document.getElementById('login-form').style.display = 'block';
   document.getElementById('set-password-form').style.display = 'none';
   document.getElementById('nav-links').style.display = 'none';
-  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none'; document.getElementById('pw-btn').style.display = 'none';
   document.getElementById('switch-to-admin-btn').style.display = 'none';
   document.getElementById('admin-movement-select').style.display = 'none';
   sessionStorage.removeItem('lm_admin_movement');
@@ -1098,14 +1119,15 @@ async function loadUserData() {
   const profiles = await dbGet('lm_profiles', { id: `eq.${userId}`, select: '*' }, token);
   // If no profile row yet (first login after invite), we can't proceed
   if (!profiles.length) {
-    toast('Account setup needed. Contact HQ.', 'error');
+    toast('Account setup needed. Please contact the Headquarters Office at 601-353-6477.', 'error');
     return;
   }
   profile = profiles[0];
   if (profile.active === false) {
-    toast('This account has been deactivated. Please contact Mission Mississippi.', 'error');
+    toast('This account has been deactivated. Please contact the Headquarters Office at 601-353-6477.', 'error');
     doLogout(); return;
   }
+  enforcePwChange(profile);
   // Board-only members have no movement: send them to the board portal.
   if (profile.role === 'board') { window.location.href = 'board.html'; return; }
   // Two roles (coordinator + board member): let them choose where to go, once per sign-in.
@@ -1143,7 +1165,7 @@ async function loadUserData() {
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('view-dashboard').style.display = 'block';
   document.getElementById('nav-links').style.display = 'flex';
-  document.getElementById('logout-btn').style.display = '';
+  document.getElementById('logout-btn').style.display = ''; document.getElementById('pw-btn').style.display = '';
   document.getElementById('nav-user').textContent = userEmail;
 
   if (movement) {
@@ -1550,7 +1572,7 @@ function renderCoordCensus(p) {
 }
 
 async function coordFetchCensus() {
-  if (!movement?.census_geo_id) { toast('No Census ID configured for your city. Contact HQ.', 'error'); return; }
+  if (!movement?.census_geo_id) { toast('No Census ID configured for your city. Contact the Headquarters Office.', 'error'); return; }
   toast('Fetching Census data...', 'info');
   try {
     const data = await fetchCensusData(movement.census_geo_id);
@@ -2131,6 +2153,99 @@ async function generateMovementReport() {
 }
 
 init();
+</script>
+<script>
+// ── CHANGE OWN PASSWORD (signed-in users; no email needed)
+// "Forced" mode: when the profile says must_change_password, the person must choose their own
+// password before using the portal. The database clears the flag when the password changes.
+var _cpwForced = false;
+var CPW_HELP = 'If you cannot sign in at all, contact the Headquarters Office at grace@missionmississippi.org or 601-353-6477 and an admin can set a new one for you.';
+(function () {
+  var ov = document.getElementById('modal-changepw');
+  // The pages close any modal when its dark background is clicked; a forced prompt must stay open.
+  new MutationObserver(function () {
+    if (_cpwForced && !ov.classList.contains('open')) ov.classList.add('open');
+  }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+})();
+function openChangePw(forced) {
+  _cpwForced = forced === true;
+  var ov = document.getElementById('modal-changepw');
+  ['cpw-current','cpw-new','cpw-confirm'].forEach(function (id) { document.getElementById(id).value = ''; });
+  var e = document.getElementById('cpw-error'); e.style.display = 'none'; e.textContent = '';
+  document.getElementById('cpw-save').disabled = false;
+  document.getElementById('cpw-title').textContent = _cpwForced ? 'Choose your own password' : 'Change your password';
+  document.getElementById('cpw-intro').textContent = _cpwForced
+    ? 'For your security, please choose your own password before you continue. The one you were given was only a starting point. It must be at least 8 characters. Enter the password you were given first. ' + CPW_HELP
+    : 'Choose a new password for your own login. It must be at least 8 characters. ' + CPW_HELP;
+  document.getElementById('cpw-current-label').textContent = _cpwForced ? 'Password you were given' : 'Current password';
+  document.getElementById('cpw-x').style.display = _cpwForced ? 'none' : '';
+  document.getElementById('cpw-cancel').style.display = _cpwForced ? 'none' : '';
+  document.getElementById('cpw-signout').style.display = _cpwForced ? '' : 'none';
+  document.getElementById('cpw-save').textContent = _cpwForced ? 'Save my password' : 'Change password';
+  ov.style.background = _cpwForced ? 'var(--navy)' : '';
+  ov.classList.add('open');
+  setTimeout(function () { document.getElementById('cpw-current').focus(); }, 50);
+}
+function closeChangePw() { if (_cpwForced) return; document.getElementById('modal-changepw').classList.remove('open'); }
+function enforcePwChange(profile) { if (profile && profile.must_change_password === true) openChangePw(true); }
+async function cpwSignOut() {
+  _cpwForced = false;
+  document.getElementById('modal-changepw').classList.remove('open');
+  document.getElementById('modal-changepw').style.background = '';
+  if (typeof doLogout === 'function') await doLogout();
+}
+async function saveChangePw() {
+  var cur = document.getElementById('cpw-current').value;
+  var nw = document.getElementById('cpw-new').value;
+  var cf = document.getElementById('cpw-confirm').value;
+  var errEl = document.getElementById('cpw-error');
+  var btn = document.getElementById('cpw-save');
+  function fail(m) { errEl.textContent = m; errEl.style.display = 'block'; btn.disabled = false; }
+  errEl.style.display = 'none';
+  if (!session || !session.access_token) return fail('Please sign in again.');
+  if (!cur) return fail(_cpwForced ? 'Enter the password you were given.' : 'Enter your current password.');
+  if (nw.length < 8) return fail('The new password must be at least 8 characters.');
+  if (nw !== cf) return fail('The two new passwords do not match.');
+  if (nw === cur) return fail('Choose a password that is different from ' + (_cpwForced ? 'the one you were given.' : 'your current one.'));
+  btn.disabled = true;
+  try {
+    // 1. Who am I? (also confirms the session is still good)
+    var me = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token } });
+    var mj = await me.json().catch(function () { return {}; });
+    if (!me.ok || !mj.email) return fail('Your session has expired. Please sign out and sign in again.');
+    // 2. Prove they know the current password.
+    var v = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email: mj.email, password: cur })
+    });
+    var vj = await v.json().catch(function () { return {}; });
+    if (!v.ok || !vj.access_token) return fail(_cpwForced ? 'That is not the password you were given. Please check it and try again.' : 'Your current password is not correct.');
+    // 3. Set the new one.
+    var u = await fetch(SB_URL + '/auth/v1/user', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + vj.access_token },
+      body: JSON.stringify({ password: nw })
+    });
+    var uj = await u.json().catch(function () { return {}; });
+    if (!u.ok) return fail(uj.msg || uj.message || uj.error_description || ('The password was not changed (error ' + u.status + ').'));
+    // 4. In forced mode, confirm the database cleared the notice, then let them in.
+    var wasForced = _cpwForced, stillFlagged = false;
+    if (wasForced) {
+      try {
+        var pr = await fetch(SB_URL + '/rest/v1/lm_profiles?id=eq.' + encodeURIComponent(mj.id) + '&select=must_change_password', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token } });
+        var pj = await pr.json();
+        stillFlagged = Array.isArray(pj) && pj[0] && pj[0].must_change_password === true;
+      } catch (e) {}
+    }
+    _cpwForced = false;
+    document.getElementById('modal-changepw').style.background = '';
+    document.getElementById('modal-changepw').classList.remove('open');
+    toast(stillFlagged
+      ? 'Password changed. The Hub could not clear the first-sign-in notice, so you may be asked again. Please tell the Headquarters Office.'
+      : 'Password changed. Use the new one next time you sign in.');
+  } catch (e) {
+    fail('Could not reach the server. Check your connection and try again.');
+  }
+}
 </script>
 </body>
 </html>
