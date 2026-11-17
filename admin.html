@@ -279,6 +279,25 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   [style*="grid-template-columns:1fr 300px"] { grid-template-columns: 1fr !important; gap: 1rem !important; }
 }
 </style>
+<style>
+/* Nav fit: the bar grows a second row instead of overflowing when many buttons are showing. */
+.nav { height: auto; min-height: 60px; flex-wrap: wrap; row-gap: 0.4rem; padding-top: 0.45rem; padding-bottom: 0.45rem; }
+.nav-brand { flex: 0 0 auto; }
+.nav-title { white-space: nowrap; }
+.nav-right { flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; row-gap: 0.4rem; }
+.nav-btn { white-space: nowrap; }
+@media (max-width: 1250px) { .nav-links { display: none !important; } }
+</style>
+<style>
+/* Account menu: Help, Change password and Sign out live in one dropdown so the bar stays on one row. */
+.acct { position: relative; }
+.acct-panel { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; max-width: 86vw; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.22); padding: 0.35rem; z-index: 300; }
+.acct-panel.open { display: block; }
+.acct-panel .nav-user { display: block !important; padding: 0.45rem 0.7rem 0.55rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; word-break: break-all; }
+.acct-panel .nav-user:empty { display: none !important; }
+.acct-item { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 5px; padding: 0.6rem 0.7rem; font-family: 'Open Sans', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--navy); text-decoration: none; cursor: pointer; }
+.acct-item:hover, .acct-item:focus-visible { background: var(--cream); outline: none; }
+</style>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -294,13 +313,18 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <div class="nav-title">Mission Mississippi Hub <span>Admin Panel</span></div>
   </a>
   <div class="nav-right">
-    <span class="nav-user" id="nav-user"></span>
     <button class="nav-btn nav-btn-outline" id="search-btn" style="display:none" onclick="openSearch()" title="Search the Hub (press / or Ctrl+K)">Search</button>
-    <a class="nav-btn nav-btn-outline" href="help.html?guide=admin" target="_blank" rel="noopener">Help</a>
     <button class="nav-btn nav-btn-outline" id="switch-view-btn" style="display:none" onclick="showViewSelect()">Switch View</button>
-    <button class="nav-btn nav-btn-outline" id="pw-btn" style="display:none" onclick="openChangePw()">Change password</button>
-    <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
     <a class="nav-btn nav-btn-blue" href="index.html">Public Hub</a>
+    <div class="acct">
+      <button class="nav-btn nav-btn-outline" id="acct-toggle" aria-haspopup="true" aria-expanded="false" onclick="toggleAcct(event)">Account &#9662;</button>
+      <div class="acct-panel" id="acct-panel" role="menu" onclick="event.stopPropagation()">
+        <div class="nav-user" id="nav-user"></div>
+        <a class="acct-item" role="menuitem" href="help.html?guide=admin" target="_blank" rel="noopener" onclick="closeAcctMenu()">Help</a>
+        <button class="acct-item" role="menuitem" id="pw-btn" style="display:none" onclick="closeAcctMenu();openChangePw()">Change password</button>
+        <button class="acct-item" role="menuitem" id="logout-btn" style="display:none" onclick="closeAcctMenu();doLogout()">Sign out</button>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -320,6 +344,15 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <button class="btn btn-outline" type="button" id="cpw-cancel" onclick="closeChangePw()">Cancel</button>
       <button class="btn btn-primary" type="button" id="cpw-save" onclick="saveChangePw()">Change password</button>
     </div>
+  </div>
+</div>
+
+
+<!-- REPORT DETAIL -->
+<div class="modal-overlay" id="modal-report-detail">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header"><div class="modal-title" id="rdt-title">Report</div><button class="modal-close" type="button" onclick="closeModal('modal-report-detail')">&times;</button></div>
+    <div class="modal-body" id="rdt-body"></div>
   </div>
 </div>
 
@@ -408,32 +441,22 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   <div class="mobile-tabs" id="mobile-tabs"></div>
   <div class="dash-wrap">
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">Admin</div>
+      <div class="sidebar-section" style="margin-top:0;">
+        <div class="sidebar-label">Overview</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('impact')">&#128200; Impact Dashboard</a>
+        </nav>
+      </div>
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Local Movements</div>
         <nav class="sidebar-nav">
           <a class="sidebar-link active" href="#" onclick="showSection('overview')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-            Overview
+            Movement Overview
           </a>
           <a class="sidebar-link" href="#" onclick="showSection('movements')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
             Movements
-          </a>
-          <a class="sidebar-link" href="#" onclick="showSection('coordinators')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-            Users
-          </a>
-          <a class="sidebar-link" href="#" onclick="showSection('submit-report')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
-            Submit Report
-          </a>
-          <a class="sidebar-link" href="#" onclick="showSection('reports')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
-            All Reports
-          </a>
-          <a class="sidebar-link" href="#" onclick="showSection('prayer')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
-            Prayer Wall
           </a>
           <a class="sidebar-link" href="#" onclick="showSection('timeline')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
@@ -443,28 +466,41 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
             Milestone Overview
           </a>
-          <a class="sidebar-link" href="#" onclick="showSection('stories')">
-            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
-            Stories
-          </a>
           <a class="sidebar-link" href="#" onclick="showSection('profiles')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
             Community Profiles
           </a>
-        </nav>
-      </div>
-      <div class="sidebar-section" style="margin-top:0.5rem;">
-        <div class="sidebar-label">Training</div>
-        <nav class="sidebar-nav">
           <a class="sidebar-link" href="#" onclick="showSection('training')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>
             Training
           </a>
         </nav>
       </div>
-
       <div class="sidebar-section" style="margin-top:1rem;">
-        <div class="sidebar-label">Content</div>
+        <div class="sidebar-label">Reports and Activity</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('reports')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            All Reports
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('submit-report')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+            Submit Report
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('staff')">&#127908; Staff Activity</a>
+          <a class="sidebar-link" href="#" onclick="showSection('evals')">&#127891; Training Evaluations</a>
+          <a class="sidebar-link" href="#" onclick="showSection('stories')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
+            Stories
+          </a>
+          <a class="sidebar-link" href="#" onclick="showSection('prayer')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+            Prayer Wall
+          </a>
+        </nav>
+      </div>
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Public Hub Content</div>
         <nav class="sidebar-nav">
           <a class="sidebar-link" href="#" onclick="showSection('announcements')">&#128226; Announcements</a>
           <a class="sidebar-link" href="#" onclick="showSection('events')">&#128197; Events</a>
@@ -472,11 +508,21 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <a class="sidebar-link" href="#" onclick="showSection('assets')">&#127912; Assets</a>
         </nav>
       </div>
-
-      <div class="sidebar-section" id="sidebar-board-group" style="margin-top:1rem;">
+      <div class="sidebar-section" style="margin-top:1rem;" id="sidebar-board-group">
         <div class="sidebar-label">Board</div>
         <nav class="sidebar-nav">
-          <a class="sidebar-link" href="#" onclick="showSection('board')">&#128188; Board Portal Content</a>
+          <a class="sidebar-link" href="#" onclick="showSection('board')">&#128188; Board Content</a>
+        </nav>
+      </div>
+      <div class="sidebar-section" style="margin-top:1rem;">
+        <div class="sidebar-label">Settings</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-link" href="#" onclick="showSection('coordinators')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+            Users
+          </a>
+          <a class="sidebar-link" id="sidebar-export-link" href="#" style="display:none" onclick="exportEverything();return false;">&#128190; Export All Data</a>
+          <a class="sidebar-link" href="#" onclick="openSearch();return false;">&#128269; Search</a>
         </nav>
       </div>
     </aside>
@@ -573,13 +619,13 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <option value="">All event types</option>
             <option>Prayer Gathering</option><option>Table Talk</option><option>Training</option>
             <option>4 The City Service Day</option><option>One Picnic</option>
-            <option>One Community Conversation</option><option>Other</option>
+            <option>One Community Conversation</option><option>Community-Wide Worship Service</option><option>Other</option>
           </select>
         </div>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Movement</th><th>Event</th><th>Date</th><th>Attendance</th><th>Description</th></tr></thead>
-            <tbody id="all-reports-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+            <thead><tr><th>Movement</th><th>Event</th><th>Date</th><th>Attendance</th><th>Location</th><th>Description</th><th></th></tr></thead>
+            <tbody id="all-reports-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -608,6 +654,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
                 <option>4 The City Service Day</option>
                 <option>One Picnic</option>
                 <option>One Community Conversation</option>
+                <option>Community-Wide Worship Service</option>
                 <option>Other</option>
               </select>
             </div>
@@ -624,9 +671,109 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <label class="form-label">Description</label>
             <textarea class="form-textarea" id="ar-desc" placeholder="Brief description of the event and any notable highlights..."></textarea>
           </div>
+          <div id="ar-details-slot"></div>
           <div class="form-error" id="ar-error"></div>
           <button class="btn btn-primary" onclick="adminSubmitReport()">Submit Report</button>
         </div>
+      </div>
+
+      <!-- IMPACT DASHBOARD -->
+      <div id="section-impact" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <h1 class="page-title">Impact Dashboard</h1>
+            <p class="page-sub" id="im-sub">Totals from local movement reports and staff activity.</p>
+          </div>
+          <div class="no-print" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+            <select class="form-select" id="im-period" style="width:auto;" onchange="imPeriodChanged()"></select>
+            <span id="im-custom" style="display:none;gap:0.4rem;align-items:center;"><input class="form-input" type="date" id="im-from" style="width:auto;" onchange="loadImpact()"> to <input class="form-input" type="date" id="im-to" style="width:auto;" onchange="loadImpact()"></span>
+            <button class="btn btn-sm btn-outline" onclick="window.print()">Print summary</button>
+            <button class="btn btn-sm btn-outline" onclick="imExport()">Export Excel</button>
+          </div>
+        </div>
+        <div class="form-error" id="im-error" style="display:none;"></div>
+        <div id="im-cards" class="im-cards"></div>
+        <h2 class="im-h">Our work</h2>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Activity</th><th>Local movements</th><th>Staff-led</th><th>Total</th></tr></thead><tbody id="im-work"></tbody></table></div>
+        <h2 class="im-h">By local movement</h2>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Movement</th><th>Reports</th><th>People reached</th><th>Last event</th></tr></thead><tbody id="im-movements"></tbody></table></div>
+        <h2 class="im-h">Who we reached</h2>
+        <p class="im-note" id="im-demo-note"></p>
+        <div id="im-demo"></div>
+        <details class="im-how"><summary>How these numbers are counted</summary>
+          <ul>
+            <li><strong>People reached</strong> adds the attendance on local movement reports and the audience on staff activities. A person who comes to three events is counted three times, so this is not the number of different individuals.</li>
+            <li>Podcast downloads are not included in people reached. They are shown on their own.</li>
+            <li>Trainings combine movement-reported trainings and staff-led CHRADL trainings. If both log the same training it is counted twice, so check the table above.</li>
+            <li>Race, age and education figures come only from reports where the coordinator filled in the optional attendee details. They are estimates. The percentages are of the people counted, not of everyone who attended.</li>
+            <li>Counties reached counts each Mississippi county that has a movement report in the period, by the county on the report or the county of the reporting movement.</li>
+          </ul>
+        </details>
+      </div>
+
+      <!-- STAFF ACTIVITY -->
+      <div id="section-staff" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Staff Activity</h1>
+          <p class="page-sub">Speaking, preaching, CHRADL trainings, podcast episodes, consulting and more. These feed the Impact Dashboard.</p>
+        </div>
+        <div class="form-error" id="sa-unavailable" style="display:none;"></div>
+        <div class="card" style="max-width:760px;margin-bottom:1.5rem;">
+          <div class="card-title" id="sa-form-title" style="margin-bottom:0.8rem;">Add an activity</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="sa-date">Date</label><input class="form-input" type="date" id="sa-date"></div>
+            <div class="form-group"><label class="form-label" for="sa-staff">Staff member</label><input class="form-input" type="text" id="sa-staff" list="sa-staff-list" maxlength="120" autocomplete="off"><datalist id="sa-staff-list"></datalist></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="sa-type">Type</label><select class="form-select" id="sa-type" onchange="saTypeChanged()"></select></div>
+            <div class="form-group"><label class="form-label" for="sa-audience" id="sa-audience-label">Audience or attendance</label><input class="form-input" type="number" min="0" id="sa-audience"></div>
+          </div>
+          <div class="form-group" id="sa-downloads-row" style="display:none;"><label class="form-label" for="sa-downloads">Downloads so far</label><input class="form-input" type="number" min="0" id="sa-downloads" style="max-width:220px;"><div class="rd-help">Update this number when you edit the episode later. Use the figure from your podcast host.</div></div>
+          <div class="form-group"><label class="form-label" for="sa-title">Title or topic</label><input class="form-input" type="text" id="sa-title" maxlength="200"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="sa-host">Host or organization</label><input class="form-input" type="text" id="sa-host" maxlength="200"></div>
+            <div class="form-group"><label class="form-label" for="sa-location">Location</label><input class="form-input" type="text" id="sa-location" maxlength="200"></div>
+          </div>
+          <div class="form-group"><label class="form-label" for="sa-notes">Notes</label><textarea class="form-textarea" id="sa-notes" maxlength="2000" style="min-height:70px;"></textarea></div>
+          <div class="form-error" id="sa-error"></div>
+          <div style="display:flex;gap:0.5rem;"><button class="btn btn-primary" id="sa-save" onclick="saSave()">Save activity</button><button class="btn btn-outline" id="sa-cancel" style="display:none;" onclick="saReset()">Cancel edit</button></div>
+        </div>
+        <details class="rd-details" style="max-width:760px;margin-bottom:1.5rem;">
+          <summary>Add many at once (paste from a spreadsheet)</summary>
+          <div class="rd-body">
+            <p class="rd-help">Paste rows with these columns in this order: date, staff member, type, title, host or organization, location, audience, downloads, notes. Copy them straight from Excel, or use commas. A header row is fine. Dates can be 2026-03-14 or 3/14/2026. Types are matched by name, such as Speaking, Preaching, CHRADL, Podcast, Consulting or Worship.</p>
+            <textarea class="form-textarea" id="sa-bulk" style="min-height:120px;font-family:monospace;font-size:0.78rem;"></textarea>
+            <div id="sa-bulk-result" class="rd-help" style="margin-top:0.6rem;"></div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.6rem;"><button class="btn btn-sm btn-outline" onclick="saBulkCheck()">Check rows</button><button class="btn btn-sm btn-primary" id="sa-bulk-go" onclick="saBulkImport()" disabled>Import checked rows</button></div>
+          </div>
+        </details>
+        <div style="display:flex;gap:0.65rem;margin-bottom:1rem;flex-wrap:wrap;">
+          <select class="form-select" id="sa-f-year" style="width:auto;" onchange="saRender()"></select>
+          <select class="form-select" id="sa-f-type" style="width:auto;" onchange="saRender()"></select>
+          <select class="form-select" id="sa-f-staff" style="width:auto;" onchange="saRender()"><option value="">All staff</option></select>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Title</th><th>Host</th><th>Audience</th><th>Downloads</th><th></th></tr></thead><tbody id="sa-table"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody></table></div>
+      </div>
+
+
+      <!-- TRAINING EVALUATIONS -->
+      <div id="section-evals" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="page-title">Training Evaluations</h1>
+            <p class="page-sub">What participants said after local movement trainings, as entered by each movement.</p>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="evExport()">Download Excel</button>
+        </div>
+        <div class="form-error" id="ev-unavailable" style="display:none;"></div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.2rem;">
+          <select class="form-select" id="ev-year" onchange="evRender()" style="width:auto;"></select>
+          <select class="form-select" id="ev-quarter" onchange="evRender()" style="width:auto;"><option value="">Whole year</option><option value="1">Q1 (Jan to Mar)</option><option value="2">Q2 (Apr to Jun)</option><option value="3">Q3 (Jul to Sep)</option><option value="4">Q4 (Oct to Dec)</option></select>
+          <select class="form-select" id="ev-movement" onchange="evRender()" style="width:auto;"></select>
+        </div>
+        <div class="im-cards" id="ev-cards"></div>
+        <div class="card" style="margin-bottom:1.2rem;"><div class="card-title" style="margin-bottom:0.5rem;">Active movements with no evaluation in this period</div><div id="ev-missing" style="font-size:0.86rem;line-height:1.7;"></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Movement</th><th>Training</th><th>Attended</th><th>Forms</th><th>Overall</th><th>Recommend</th><th>Comments</th></tr></thead><tbody id="ev-table"></tbody></table></div>
       </div>
 
       <!-- STORIES -->
@@ -678,6 +825,9 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <button class="btn btn-sm btn-outline" data-bd="meetings" onclick="showBoardTab('meetings')">Meetings</button>
           <button class="btn btn-sm btn-outline" data-bd="actions" onclick="showBoardTab('actions')">Action Items</button>
           <button class="btn btn-sm btn-outline" data-bd="roster" onclick="showBoardTab('roster')">Board Roster</button>
+          <button class="btn btn-sm btn-outline" data-bd="events" onclick="showBoardTab('events')">Events</button>
+          <button class="btn btn-sm btn-outline" data-bd="plan" onclick="showBoardTab('plan')">Strategic Plan</button>
+          <button class="btn btn-sm btn-outline" data-bd="motions" onclick="showBoardTab('motions')">Motions &amp; Votes</button>
         </div>
         <div class="form-error" id="bd-load-error" style="margin-bottom:1rem;"></div>
 
@@ -703,6 +853,42 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <div class="table-wrap"><table class="data-table">
             <thead><tr><th>Item</th><th>Owner</th><th>Due</th><th>Status</th><th></th></tr></thead>
             <tbody id="bd-actions-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+          </table></div>
+        </div>
+
+
+        <div id="bd-panel-events" style="display:none">
+          <div class="form-error bd2-unavailable" style="display:none;margin-bottom:0.75rem;"></div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="bd2Open('event')">+ Add Event</button></div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.75rem;">Retreats, the Legislative Prayer Breakfast, the Living Reconciled Celebration and similar. Attach materials and reports to an event when you upload a document. Unpublished events are visible only to super admins.</p>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th></th></tr></thead>
+            <tbody id="bd-events-table"></tbody>
+          </table></div>
+        </div>
+
+        <div id="bd-panel-plan" style="display:none">
+          <div class="form-error bd2-unavailable" style="display:none;margin-bottom:0.75rem;"></div>
+          <div style="display:flex;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+            <select class="form-select" id="bd-plan-year" onchange="renderBoard2()" style="width:auto;"></select>
+            <button class="btn btn-primary" onclick="bd2Open('goal')">+ Add to Plan</button>
+          </div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.75rem;">Add the vision once, then each background goal, then the annual goals under it. Rate each annual goal green, amber or red and keep the latest update current. Board members see changes right away.</p>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Type</th><th>Goal</th><th>Rating</th><th>Updated</th><th></th></tr></thead>
+            <tbody id="bd-plan-table"></tbody>
+          </table></div>
+        </div>
+
+        <div id="bd-panel-motions" style="display:none">
+          <div class="form-error bd2-unavailable" style="display:none;margin-bottom:0.75rem;"></div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem;"><button class="btn btn-primary" onclick="bd2Open('motion')">+ Add Motion</button></div>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:0.9rem 1.1rem;font-size:0.82rem;line-height:1.7;color:var(--muted);margin-bottom:1rem;">
+            <strong style="color:var(--navy);">How voting works:</strong> a motion starts as a draft that only super admins see. Opening it shows it to the board and locks its wording. Board members vote and can change their vote until voting closes. While it is open nobody, including you, can see how anyone voted, only how many have voted. Closing it shows the totals to the board and locks every vote. Only people with the board role or the board flag can vote; staff super admins who are not board members cannot. Whether an electronic vote is valid for a given decision, and what counts as a quorum or a majority, depends on your bylaws and state law. Please confirm that with counsel before relying on an official vote.
+          </div>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Motion</th><th>Type</th><th>Status</th><th>Turnout</th><th></th></tr></thead>
+            <tbody id="bd-motions-table"></tbody>
           </table></div>
         </div>
 
@@ -751,7 +937,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <select class="form-select" id="tl-filter-type" style="width:auto;" onchange="loadTimeline()">
               <option value="">All event types</option>
               <option>Prayer Gathering</option><option>Table Talk</option><option>Training</option>
-              <option>4 The City Service Day</option><option>One Picnic</option><option>One Community Conversation</option><option>Other</option>
+              <option>4 The City Service Day</option><option>One Picnic</option><option>One Community Conversation</option><option>Community-Wide Worship Service</option><option>Other</option>
             </select>
             <button class="btn btn-sm btn-outline" onclick="exportTimelineXLSX()">Export XLSX</button>
           </div>
@@ -1070,6 +1256,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div class="form-group"><label class="form-label">Document Date</label><input class="form-input" id="bd-date" type="date"></div>
       </div>
       <div class="form-group"><label class="form-label">Meeting (optional)</label><select class="form-select" id="bd-meeting"></select></div>
+      <div class="form-group"><label class="form-label">Event (optional)</label><select class="form-select" id="bd-event"><option value="">None</option></select></div>
       <div class="form-group"><label class="form-label">Description (optional)</label><input class="form-input" id="bd-desc" type="text" placeholder="One line shown under the title"></div>
       <div class="form-group"><label class="form-label">File</label><input class="form-input" id="bd-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp"><div class="form-hint">PDF is best. Word, Excel, PowerPoint and images also work, up to 25 MB. Or leave the file empty and paste a link below.</div></div>
       <div class="form-group"><label class="form-label">Or link (optional)</label><input class="form-input" id="bd-url" type="url" placeholder="https://..."></div>
@@ -1080,6 +1267,19 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-bdoc')">Cancel</button>
       <button class="btn btn-primary" id="bd-save-btn" onclick="saveBoardDoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD: GENERIC EDITOR (events, plan, motions, roll call) -->
+<div class="modal-overlay" id="modal-bd2">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="b2-title">Edit</div><button class="modal-close" onclick="closeModal('modal-bd2')">&times;</button></div>
+    <div class="modal-body"><div id="b2-fields"></div><div class="form-error" id="b2-error"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bd2')">Close</button>
+      <button class="btn btn-outline" id="b2-extra" style="display:none" onclick="bd2RollExport()">Download Excel</button>
+      <button class="btn btn-primary" id="b2-save" onclick="bd2Save()">Save</button>
     </div>
   </div>
 </div>
@@ -1377,6 +1577,7 @@ async function verifyAndLoad() {
   // Board portal: super admins and board members only. Board management: super admins only.
   document.getElementById('card-board').style.display = (mySuper || myIsBoard) ? '' : 'none';
   document.getElementById('sidebar-board-group').style.display = mySuper ? '' : 'none';
+  document.getElementById('sidebar-export-link').style.display = mySuper ? '' : 'none';
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('select-email').textContent = userEmail;
   document.getElementById('view-select').style.display = 'flex';
@@ -1403,7 +1604,7 @@ function buildMobileTabs() {
   document.querySelectorAll('.sidebar .sidebar-section').forEach((sec) => {
     if (sec.style.display === 'none') return;
     if (box.children.length) { const sep = document.createElement('span'); sep.className = 'tab-sep'; box.appendChild(sep); }
-    sec.querySelectorAll('.sidebar-link').forEach(src => {
+    sec.querySelectorAll('.sidebar-link').forEach(src => { if (src.style.display === 'none') return;
       const a = document.createElement('a');
       a.textContent = src.textContent.replace(/\s+/g, ' ').trim().replace(/^[^A-Za-z0-9]+/, '');
       const oc = src.getAttribute('onclick');
@@ -1429,7 +1630,7 @@ async function enterAdminView() {
   document.getElementById('backup-card').style.display = mySuper ? '' : 'none';
   buildMobileTabs();
   await loadMovementsData();
-  loadOverview();
+  showSection('impact');
 }
 
 function enterBoardView() {
@@ -1453,7 +1654,7 @@ async function loadMovementsData() {
 
 function showSection(name) {
   if (name === 'board' && !mySuper) { toast('The Board portal content is managed by super admins.', 'error'); return; }
-  ['overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
+  ['impact','staff','evals','overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
   document.querySelectorAll('.sidebar-link, .mobile-tabs a').forEach(l=>l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l=>l.classList.add('active'));
@@ -1466,7 +1667,7 @@ function showSection(name) {
     overview:loadOverview, movements:loadMovementsTable,
     coordinators:loadCoordinators, 'submit-report':loadSubmitReport, reports:loadAllReports,
     stories:loadStories, profiles:loadCommunityProfiles, training:loadAdminTraining, prayer:loadAdminPrayer, timeline:loadTimeline, 'milestone-overview':loadMilestoneOverview, announcements:loadAnnouncements,
-    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin
+    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin, impact:loadImpact, staff:loadStaff, evals:loadEvals
   };
   if (loaders[name]) loaders[name]();
 }
@@ -1818,13 +2019,16 @@ async function loadAllReports() {
   const rpts = await dbGet('lm_event_reports', params, session.access_token);
   const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const tbody = document.getElementById('all-reports-table');
-  if (!rpts.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No reports found.</td></tr>'; return; }
+  window._allReportsCache = rpts; window._allReportsMov = movMap;
+  if (!rpts.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">No reports found.</td></tr>'; return; }
   tbody.innerHTML = rpts.map(r=>`<tr>
     <td style="font-weight:600;">${escHtml(movMap[r.movement_id]||'—')}</td>
     <td>${escHtml(r.event_type)}</td>
     <td>${fmtDate(r.event_date)}</td>
     <td>${r.attendance??'—'}</td>
+    <td style="font-size:0.8rem;">${escHtml(rdLocation(r) || '—')}</td>
     <td style="color:var(--muted);font-size:0.8rem;">${escHtml((r.description||'').slice(0,80))}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="showReportDetail('${r.id}')">Details</button></td>
   </tr>`).join('');
 }
 
@@ -1841,6 +2045,7 @@ async function loadStories() {
           <div class="card-title">${escHtml(s.title)}</div>
           <div class="card-meta">${escHtml(movMap[s.movement_id]||'—')}${s.submitter?' &middot; '+escHtml(s.submitter):''} &middot; ${fmtDate(s.created_at)}</div>
           <p style="font-size:0.86rem;color:var(--text);line-height:1.7;margin-top:0.5rem;">${escHtml(s.story)}</p>
+          ${(s.media_links && s.media_links.length) ? `<div style="margin-top:0.6rem;font-size:0.82rem;"><strong>Photos and videos:</strong> ${s.media_links.map((l, i) => /^https?:\/\//i.test(l) ? `<a href="${escHtml(l)}" target="_blank" rel="noopener noreferrer">Link ${i + 1}</a>` : escHtml(l)).join(' &middot; ')} &middot; ${s.media_permission ? '<span class="badge badge-green">Permission confirmed</span>' : '<span class="badge badge-red">No permission recorded</span>'}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;gap:0.45rem;flex-shrink:0;">
           ${!s.approved?`<button class="btn btn-sm btn-blue" onclick="approveStory('${s.id}')">Approve</button>`:
@@ -2731,14 +2936,19 @@ async function adminSubmitReport() {
   if (!movId) { errEl.textContent='Please select a movement.'; errEl.style.display='block'; return; }
   if (!type)  { errEl.textContent='Please select an event type.'; errEl.style.display='block'; return; }
   if (!date)  { errEl.textContent='Please enter a date.'; errEl.style.display='block'; return; }
+  const attendance = parseInt(document.getElementById('ar-attendance').value)||null;
+  const det = rdRead('ard', attendance);
+  if (det.error) { errEl.textContent = det.error; errEl.style.display='block'; return; }
   await dbPost('lm_event_reports', {
     movement_id: movId,
     event_type: type,
     event_date: date,
-    attendance: parseInt(document.getElementById('ar-attendance').value)||null,
+    attendance,
     description: document.getElementById('ar-desc').value.trim()||null,
+    county: det.county, city: det.city, venue: det.venue, demographics: det.demographics,
     submitted_by: currentUserId
   }, session.access_token);
+  rdClear('ard', '');
   document.getElementById('ar-movement').value='';
   document.getElementById('ar-type').value='';
   document.getElementById('ar-date').value='';
@@ -2795,12 +3005,13 @@ async function loadBoardAdmin() {
     _bd = { meetings:[], docs:[], actions:[], roster:[] };
   }
   renderBoardAdmin();
+  await loadBoard2();
   showBoardTab(_bdTab);
 }
 
 function showBoardTab(tab) {
   _bdTab = tab;
-  ['docs','meetings','actions','roster'].forEach(t => {
+  ['docs','meetings','actions','roster','events','plan','motions'].forEach(t => {
     document.getElementById('bd-panel-' + t).style.display = t === tab ? 'block' : 'none';
   });
   document.querySelectorAll('#bd-tabs [data-bd]').forEach(b => {
@@ -2876,6 +3087,7 @@ function openBoardDocModal() {
   document.getElementById('bd-publish').checked = false;
   document.getElementById('bd-date').value = bdTodayStr();
   meetingOptions('bd-meeting', '');
+  document.getElementById('bd-event').innerHTML = '<option value="">None</option>' + (_bd2.events || []).map(e => `<option value="${e.id}">${escHtml(bdDate(e.start_date))}: ${escHtml(e.title)}</option>`).join('');
   toggleMinutesApproved(); bdErr('bd-error', '');
   openModal('modal-bdoc');
 }
@@ -2940,6 +3152,7 @@ async function saveBoardDoc() {
       status: publish ? 'published' : 'draft',
       published_at: publish ? new Date().toISOString() : null,
       is_approved: cat === 'minutes' ? document.getElementById('bd-approved').checked : false,
+      ...(document.getElementById('bd-event').value ? { event_id: document.getElementById('bd-event').value } : {}),
       created_by: currentUserId
     });
     closeModal('modal-bdoc'); toast(publish ? 'Document published to the board.' : 'Saved as a draft.');
@@ -3340,6 +3553,7 @@ function searchSources() {
     { label: 'Prayer wall', section: 'prayer', table: 'lm_prayer_wall', title: r => r.title || 'Prayer request', sub: r => clip(r.request || r.body || '', 90) },
     { label: 'Announcements', section: 'announcements', table: 'lm_announcements', title: r => r.title, sub: r => clip(r.body, 90) },
     { label: 'Events', section: 'events', table: 'lm_events', title: r => r.title, sub: r => [fmtDate(r.event_date), r.location].filter(Boolean).join(' · ') },
+    { label: 'Staff activity', section: 'staff', table: 'lm_staff_activities', title: r => [r.staff_name, r.activity_type].filter(Boolean).join(': '), sub: r => [fmtDate(r.activity_date), r.title, r.host_org].filter(Boolean).join(' · ') },
     { label: 'Documents', section: 'documents', table: 'lm_documents', title: r => r.title, sub: r => r.category || '' },
     { label: 'Assets', section: 'assets', table: 'lm_assets', title: r => r.title, sub: r => r.category || '' }
   ];
@@ -3414,7 +3628,7 @@ const EXPORT_TABLES = [
   ['Event reports', 'lm_event_reports'], ['Milestones', 'lm_milestones'], ['Training records', 'lm_training_records'], ['Stories', 'lm_stories'],
   ['Prayer wall', 'lm_prayer_wall'], ['Announcements', 'lm_announcements'], ['Events', 'lm_events'], ['Event sign-ups', 'lm_event_rsvps'],
   ['Documents', 'lm_documents'], ['Assets', 'lm_assets'], ['Invitations', 'lm_invitations'], ['Board meetings', 'lm_board_meetings'],
-  ['Board documents', 'lm_board_documents'], ['Board action items', 'lm_board_actions'], ['Board roster', 'lm_board_roster'], ['Change log', 'lm_audit']
+  ['Board documents', 'lm_board_documents'], ['Board action items', 'lm_board_actions'], ['Board roster', 'lm_board_roster'], ['Staff activity', 'lm_staff_activities'], ['Board events', 'lm_board_events'], ['Strategic plan', 'lm_strategic_goals'], ['Board motions', 'lm_board_motions'], ['Training evaluations', 'lm_training_evaluations'], ['Change log', 'lm_audit']
 ];
 async function fetchAllRows(table, token) {
   const rows = [];
@@ -3469,6 +3683,587 @@ async function exportEverything() {
   } finally { btn.disabled = false; btn.textContent = label; }
 }
 </script>
+<script>
+// ── REPORT DETAILS (location and optional attendee counts). Shared by the coordinator report and the admin "Submit Report" form.
+const RD_COUNTIES = ['Adams','Alcorn','Amite','Attala','Benton','Bolivar','Calhoun','Carroll','Chickasaw','Choctaw','Claiborne','Clarke','Clay','Coahoma','Copiah','Covington','DeSoto','Forrest','Franklin','George','Greene','Grenada','Hancock','Harrison','Hinds','Holmes','Humphreys','Issaquena','Itawamba','Jackson','Jasper','Jefferson','Jefferson Davis','Jones','Kemper','Lafayette','Lamar','Lauderdale','Lawrence','Leake','Lee','Leflore','Lincoln','Lowndes','Madison','Marion','Marshall','Monroe','Montgomery','Neshoba','Newton','Noxubee','Oktibbeha','Panola','Pearl River','Perry','Pike','Pontotoc','Prentiss','Quitman','Rankin','Scott','Sharkey','Simpson','Smith','Stone','Sunflower','Tallahatchie','Tate','Tippah','Tishomingo','Tunica','Union','Walthall','Warren','Washington','Wayne','Webster','Wilkinson','Winston','Yalobusha','Yazoo'];
+const REPORT_DEMO = {
+  race: { label: 'Race and ethnicity', items: [['aian','American Indian or Alaska Native'],['asian','Asian'],['black','Black or African American'],['hispanic','Hispanic or Latino'],['mena','Middle Eastern or North African'],['nhpi','Native Hawaiian or Pacific Islander'],['white','White'],['multiple','Two or more'],['other','Other'],['unknown','Unknown']] },
+  age: { label: 'Age range', items: [['u18','Under 18'],['18_24','18 to 24'],['25_34','25 to 34'],['35_44','35 to 44'],['45_54','45 to 54'],['55_64','55 to 64'],['65p','65 and over'],['unknown','Unknown']] },
+  education: { label: 'Education level (adults)', items: [['lt_hs','Less than high school'],['hs','High school or GED'],['some_college','Some college'],['associate','Associate degree'],['bachelor','Bachelor’s degree'],['graduate','Graduate or professional degree'],['unknown','Unknown']] }
+};
+function rdHtml(p) {
+  const county = '<option value="">Select county...</option>' + RD_COUNTIES.map(c => `<option>${c}</option>`).join('') + '<option>Outside Mississippi</option>';
+  const groups = Object.keys(REPORT_DEMO).map(g => `
+    <div class="rd-group">
+      <div class="rd-group-head"><span>${REPORT_DEMO[g].label}</span><span class="rd-total" id="${p}-t-${g}"></span></div>
+      <div class="rd-grid">${REPORT_DEMO[g].items.map(it => `<label class="rd-cell"><span>${it[1]}</span><input class="form-input" type="number" min="0" inputmode="numeric" id="${p}-d-${g}-${it[0]}" oninput="rdTotals('${p}')"></label>`).join('')}</div>
+    </div>`).join('');
+  return `<details class="rd-details">
+    <summary>Location and attendee details (optional)</summary>
+    <div class="rd-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">County</label><select class="form-select" id="${p}-county">${county}</select></div>
+        <div class="form-group"><label class="form-label">City or town</label><input class="form-input" type="text" id="${p}-city" maxlength="80"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Venue or place</label><input class="form-input" type="text" id="${p}-venue" maxlength="120" placeholder="Church, school, park..."></div>
+      <p class="rd-help">Enter your best estimate of how many people attended in each group. Each person counts once per group, and leaving a box blank is fine. Use Unknown when you are not sure. Fill in only the groups you can estimate.</p>
+      ${groups}
+    </div>
+  </details>`;
+}
+function rdMount(slotId, p) { const el = document.getElementById(slotId); if (el && !el.dataset.done) { el.innerHTML = rdHtml(p); el.dataset.done = '1'; } }
+function rdGroupSum(p, g) { return REPORT_DEMO[g].items.reduce((s, it) => s + (parseInt(document.getElementById(`${p}-d-${g}-${it[0]}`)?.value, 10) || 0), 0); }
+function rdTotals(p) {
+  Object.keys(REPORT_DEMO).forEach(g => { const n = rdGroupSum(p, g), el = document.getElementById(`${p}-t-${g}`); if (el) el.textContent = n ? 'Counted: ' + n : ''; });
+}
+// Returns { error } or { county, city, venue, demographics }. attendance is the number typed in the main form (or null).
+function rdRead(p, attendance) {
+  const out = { county: document.getElementById(p + '-county')?.value || null, city: (document.getElementById(p + '-city')?.value || '').trim() || null, venue: (document.getElementById(p + '-venue')?.value || '').trim() || null, demographics: null };
+  const demo = {};
+  for (const g of Object.keys(REPORT_DEMO)) {
+    const o = {};
+    for (const it of REPORT_DEMO[g].items) { const v = parseInt(document.getElementById(`${p}-d-${g}-${it[0]}`)?.value, 10); if (v > 0) o[it[0]] = v; }
+    const sum = Object.values(o).reduce((a, b) => a + b, 0);
+    if (attendance && sum > attendance) return { error: `${REPORT_DEMO[g].label} adds up to ${sum}, which is more than the attendance of ${attendance}. Please check the numbers.` };
+    if (sum) demo[g] = o;
+  }
+  if (Object.keys(demo).length) out.demographics = demo;
+  return out;
+}
+function rdClear(p, county) {
+  document.querySelectorAll(`[id^="${p}-d-"]`).forEach(i => i.value = '');
+  const c = document.getElementById(p + '-county'); if (c) c.value = county || '';
+  ['city', 'venue'].forEach(k => { const e = document.getElementById(`${p}-${k}`); if (e) e.value = ''; });
+  rdTotals(p);
+}
+function rdLocation(r) { return [r.venue, r.city, r.county ? r.county + (/outside/i.test(r.county) ? '' : ' County') : ''].filter(Boolean).join(', '); }
+function rdFlat(r) {
+  const o = { County: r.county || '', City: r.city || '', Venue: r.venue || '' };
+  Object.keys(REPORT_DEMO).forEach(g => REPORT_DEMO[g].items.forEach(it => { o[`${REPORT_DEMO[g].label.replace(/ \(adults\)/, '')}: ${it[1]}`] = (r.demographics && r.demographics[g] && r.demographics[g][it[0]]) || ''; }));
+  return o;
+}
+rdMount('ar-details-slot', 'ard');
+
+function showReportDetail(id) {
+  const r = (window._allReportsCache || []).find(x => String(x.id) === String(id)); if (!r) return;
+  const mov = (window._allReportsMov || {})[r.movement_id] || '';
+  document.getElementById('rdt-title').textContent = (mov ? mov + ': ' : '') + r.event_type;
+  const row = (k, v) => v ? `<div style="display:flex;gap:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border);font-size:0.86rem;"><div style="width:120px;color:var(--muted);flex-shrink:0;">${k}</div><div>${escHtml(String(v))}</div></div>` : '';
+  let html = row('Date', fmtDate(r.event_date)) + row('Attendance', r.attendance) + row('Location', rdLocation(r)) + row('Description', r.description);
+  const d = r.demographics;
+  if (d) {
+    Object.keys(REPORT_DEMO).forEach(g => {
+      if (!d[g]) return;
+      const parts = REPORT_DEMO[g].items.filter(it => d[g][it[0]]).map(it => `${it[1]}: ${d[g][it[0]]}`);
+      html += `<div style="margin-top:0.9rem;font-size:0.72rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);">${REPORT_DEMO[g].label}</div><div style="font-size:0.86rem;line-height:1.6;">${escHtml(parts.join(' · '))}</div>`;
+    });
+    html += '<p style="font-size:0.74rem;color:var(--muted);margin-top:0.8rem;">Attendee counts are the coordinator\u2019s estimates.</p>';
+  } else html += '<p style="font-size:0.8rem;color:var(--muted);margin-top:0.8rem;">No attendee details were entered for this report.</p>';
+  document.getElementById('rdt-body').innerHTML = html;
+  openModal('modal-report-detail');
+}
+</script>
+<style>
+.rd-details { border: 1px solid var(--border); border-radius: 8px; margin: 0.25rem 0 1rem; background: var(--white); }
+.rd-details > summary { cursor: pointer; padding: 0.7rem 0.9rem; font-weight: 700; font-size: 0.86rem; color: var(--navy); list-style: none; }
+.rd-details > summary::-webkit-details-marker { display: none; }
+.rd-details > summary::before { content: '+'; display: inline-block; width: 1.1rem; font-weight: 800; color: var(--blue); }
+.rd-details[open] > summary::before { content: '\2212'; }
+.rd-body { padding: 0.2rem 0.9rem 0.9rem; border-top: 1px solid var(--border); }
+.rd-help { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin: 0.4rem 0 0.9rem; }
+.rd-group { margin-bottom: 1rem; }
+.rd-group-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+.rd-total { color: var(--blue); text-transform: none; letter-spacing: 0; }
+.rd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; }
+.rd-cell { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.76rem; color: var(--text); }
+.rd-cell .form-input { padding: 0.4rem 0.55rem; }
+@media (max-width: 520px) { .rd-grid { grid-template-columns: 1fr; } }
+</style>
+<style>
+.im-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.8rem; margin-bottom: 1.8rem; }
+.im-cards .stat-card { padding: 1rem 1.1rem; }
+.im-cards .stat-num { font-size: 1.7rem; }
+.im-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.35; }
+.im-h { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 700; color: var(--navy); margin: 1.6rem 0 0.8rem; }
+.im-note { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.8rem; }
+.im-how { margin-top: 1.6rem; font-size: 0.82rem; color: var(--muted); }
+.im-how summary { cursor: pointer; font-weight: 700; color: var(--navy); }
+.im-how ul { margin: 0.6rem 0 0 1.1rem; line-height: 1.55; }
+.im-demo-group { margin-bottom: 1.4rem; }
+.im-demo-title { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.45rem; }
+.im-row { display: grid; grid-template-columns: minmax(130px, 220px) 1fr 90px; gap: 0.7rem; align-items: center; font-size: 0.82rem; padding: 0.2rem 0; }
+.im-bar { height: 10px; background: var(--cream); border-radius: 5px; overflow: hidden; }
+.im-bar > span { display: block; height: 100%; background: var(--blue); }
+.im-print-title { display: none; }
+@media print {
+  .nav, .sidebar, .mobile-tabs, .no-print, #toast, .modal-overlay { display: none !important; }
+  .dash-wrap { display: block !important; } .main-content { padding: 0 !important; }
+  .im-print-title { display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.6rem; }
+  .im-cards { grid-template-columns: repeat(4, 1fr); } .stat-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .table-wrap { overflow: visible !important; } .im-how { display: none; }
+}
+@media (max-width: 600px) { .im-row { grid-template-columns: 1fr 70px; } .im-row .im-bar { grid-column: 1 / -1; order: 3; } }
+</style>
+<script>
+// ── STAFF ACTIVITY ───────────────────────────────────────────────────────────────
+const SA_TYPES = ['Speaking Engagement', 'Preaching Engagement', 'CHRADL Training', 'Podcast Episode', 'Consulting Engagement', 'Community-Wide Worship Service', 'Other'];
+const SA_STAFF = ['Brian Crawford', 'Neddie Winters', 'Felicia Bowens', 'Austin Hoyle', 'Ashley Stewart'];
+let _sa = [], _saEditId = null, _saBulkGood = [];
+const fmtN = n => Number(n || 0).toLocaleString('en-US');
+function saFillTypes(sel, first) { sel.innerHTML = (first ? `<option value="">${first}</option>` : '') + SA_TYPES.map(t => `<option>${escHtml(t)}</option>`).join(''); }
+function saTypeChanged() {
+  const pod = document.getElementById('sa-type').value === 'Podcast Episode';
+  document.getElementById('sa-downloads-row').style.display = pod ? '' : 'none';
+  document.getElementById('sa-audience-label').textContent = pod ? 'Listeners (if known)' : 'Audience or attendance';
+}
+function saReset() {
+  _saEditId = null;
+  ['sa-staff', 'sa-audience', 'sa-downloads', 'sa-title', 'sa-host', 'sa-location', 'sa-notes'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('sa-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('sa-type').selectedIndex = 0; saTypeChanged();
+  document.getElementById('sa-form-title').textContent = 'Add an activity';
+  document.getElementById('sa-save').textContent = 'Save activity';
+  document.getElementById('sa-cancel').style.display = 'none';
+  document.getElementById('sa-error').style.display = 'none';
+}
+async function loadStaff() {
+  const un = document.getElementById('sa-unavailable'); un.style.display = 'none';
+  const typeSel = document.getElementById('sa-type');
+  if (!typeSel.options.length) { saFillTypes(typeSel); saFillTypes(document.getElementById('sa-f-type'), 'All types'); saReset(); }
+  const res = await fetchAllRows('lm_staff_activities', session.access_token);
+  if (!res.ok) {
+    _sa = [];
+    un.textContent = (res.status === 404 || res.status === 400) ? 'The staff activity table has not been set up yet. Run phase2_setup.sql in Supabase, then reload this page.' : 'The staff activity list could not be loaded. Please refresh and try again.';
+    un.style.display = 'block';
+  } else _sa = res.rows;
+  const years = [...new Set(_sa.map(r => String(r.activity_date).slice(0, 4)))].sort().reverse();
+  const cur = String(new Date().getFullYear()); if (!years.includes(cur)) years.unshift(cur);
+  const ySel = document.getElementById('sa-f-year'), prev = ySel.value;
+  ySel.innerHTML = '<option value="">All years</option>' + years.map(y => `<option>${y}</option>`).join(''); ySel.value = prev || cur;
+  const names = [...new Set([...SA_STAFF, ..._sa.map(r => r.staff_name)])].sort();
+  document.getElementById('sa-staff-list').innerHTML = names.map(n => `<option value="${escHtml(n)}"></option>`).join('');
+  const fSel = document.getElementById('sa-f-staff'), pf = fSel.value;
+  fSel.innerHTML = '<option value="">All staff</option>' + [...new Set(_sa.map(r => r.staff_name))].sort().map(n => `<option>${escHtml(n)}</option>`).join(''); fSel.value = pf;
+  saRender();
+}
+function saRender() {
+  const y = document.getElementById('sa-f-year').value, t = document.getElementById('sa-f-type').value, s = document.getElementById('sa-f-staff').value;
+  const rows = _sa.filter(r => (!y || String(r.activity_date).startsWith(y)) && (!t || r.activity_type === t) && (!s || r.staff_name === s))
+    .sort((a, b) => String(b.activity_date).localeCompare(String(a.activity_date)));
+  const tb = document.getElementById('sa-table');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">No activities found.</td></tr>'; return; }
+  tb.innerHTML = rows.map(r => `<tr>
+    <td>${fmtDate(r.activity_date)}</td><td>${escHtml(r.staff_name)}</td><td>${escHtml(r.activity_type)}</td>
+    <td>${escHtml(r.title || '')}</td><td style="font-size:0.8rem;color:var(--muted);">${escHtml(r.host_org || '')}</td>
+    <td>${r.audience ?? '—'}</td><td>${r.downloads ?? '—'}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="saEdit('${r.id}')">Edit</button> <button class="btn btn-sm btn-outline" onclick="saDelete('${r.id}')">Delete</button></td></tr>`).join('');
+}
+function saNum(id) { const v = document.getElementById(id).value.trim(); return v === '' ? null : parseInt(v, 10); }
+async function saSave() {
+  const err = document.getElementById('sa-error'); err.style.display = 'none';
+  const row = {
+    activity_date: document.getElementById('sa-date').value, staff_name: document.getElementById('sa-staff').value.trim(),
+    activity_type: document.getElementById('sa-type').value, title: document.getElementById('sa-title').value.trim() || null,
+    host_org: document.getElementById('sa-host').value.trim() || null, location: document.getElementById('sa-location').value.trim() || null,
+    audience: saNum('sa-audience'), downloads: document.getElementById('sa-type').value === 'Podcast Episode' ? saNum('sa-downloads') : null,
+    notes: document.getElementById('sa-notes').value.trim() || null
+  };
+  const bad = !row.activity_date ? 'Please enter a date.' : !row.staff_name ? 'Please enter the staff member.' : (row.audience !== null && (isNaN(row.audience) || row.audience < 0)) || (row.downloads !== null && (isNaN(row.downloads) || row.downloads < 0)) ? 'Audience and downloads must be whole numbers, zero or more.' : '';
+  if (bad) { err.textContent = bad; err.style.display = 'block'; return; }
+  try {
+    if (_saEditId) await dbPatch('lm_staff_activities', _saEditId, row, session.access_token); else await dbPost('lm_staff_activities', row, session.access_token);
+    toast(_saEditId ? 'Activity updated.' : 'Activity saved.'); saReset(); await loadStaff();
+  } catch (e) { err.textContent = e.message || 'Could not save.'; err.style.display = 'block'; }
+}
+function saEdit(id) {
+  const r = _sa.find(x => String(x.id) === String(id)); if (!r) return;
+  _saEditId = r.id;
+  document.getElementById('sa-date').value = String(r.activity_date).slice(0, 10); document.getElementById('sa-staff').value = r.staff_name;
+  const ts = document.getElementById('sa-type'); if (![...ts.options].some(o => o.value === r.activity_type)) ts.insertAdjacentHTML('beforeend', `<option>${escHtml(r.activity_type)}</option>`);
+  ts.value = r.activity_type; saTypeChanged();
+  document.getElementById('sa-audience').value = r.audience ?? ''; document.getElementById('sa-downloads').value = r.downloads ?? '';
+  document.getElementById('sa-title').value = r.title || ''; document.getElementById('sa-host').value = r.host_org || '';
+  document.getElementById('sa-location').value = r.location || ''; document.getElementById('sa-notes').value = r.notes || '';
+  document.getElementById('sa-form-title').textContent = 'Edit activity'; document.getElementById('sa-save').textContent = 'Save changes';
+  document.getElementById('sa-cancel').style.display = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+async function saDelete(id) {
+  const r = _sa.find(x => String(x.id) === String(id)); if (!r) return;
+  if (!confirm(`Delete this activity?\n\n${fmtDate(r.activity_date)}: ${r.staff_name}, ${r.activity_type}${r.title ? ' (' + r.title + ')' : ''}`)) return;
+  try { await dbDelete('lm_staff_activities', id, session.access_token); toast('Activity deleted.'); await loadStaff(); } catch (e) { toast(e.message || 'Could not delete.', 'error'); }
+}
+// Bulk paste
+function saParseRows(text) {
+  const t = String(text || '').replace(/\r/g, '').trim(); if (!t) return [];
+  if (t.includes('\t')) return t.split('\n').map(l => l.split('\t').map(c => c.trim()));
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cur.trim()); cur = ''; }
+    else if (ch === '\n') { row.push(cur.trim()); rows.push(row); row = []; cur = ''; }
+    else cur += ch;
+  }
+  row.push(cur.trim()); rows.push(row); return rows;
+}
+function saParseDate(s) {
+  s = String(s || '').trim(); let y, mo, d, m;
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/))) { mo = +m[1]; d = +m[2]; y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; }
+  else return null;
+  const t = new Date(Date.UTC(y, mo - 1, d));
+  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return null;
+  return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+function saMatchType(s) {
+  const t = String(s || '').toLowerCase().trim(); if (!t) return null;
+  const exact = SA_TYPES.find(x => x.toLowerCase() === t); if (exact) return exact;
+  if (/speak/.test(t)) return 'Speaking Engagement'; if (/preach|sermon/.test(t)) return 'Preaching Engagement';
+  if (/chradl|train/.test(t)) return 'CHRADL Training'; if (/podcast|episode/.test(t)) return 'Podcast Episode';
+  if (/consult/.test(t)) return 'Consulting Engagement'; if (/worship/.test(t)) return 'Community-Wide Worship Service';
+  if (t === 'other') return 'Other'; return null;
+}
+function saBulkCheck() {
+  const rows = saParseRows(document.getElementById('sa-bulk').value), out = document.getElementById('sa-bulk-result');
+  _saBulkGood = []; const bad = [];
+  rows.forEach((c, i) => {
+    if (!c.some(x => x)) return;
+    const d = saParseDate(c[0]);
+    if (i === 0 && !d && /^\s*date\b/i.test(c[0] || '')) return;   // header row
+    const n = i + 1, num = v => { v = String(v || '').replace(/,/g, '').trim(); return v === '' ? null : (/^\d+$/.test(v) ? parseInt(v, 10) : NaN); };
+    const type = saMatchType(c[2]), aud = num(c[6]), dl = num(c[7]);
+    if (!d) return bad.push(`Row ${n}: the date "${c[0] || ''}" is not recognized.`);
+    if (!(c[1] || '').trim()) return bad.push(`Row ${n}: the staff member is missing.`);
+    if (!type) return bad.push(`Row ${n}: the type "${c[2] || ''}" is not recognized.`);
+    if (Number.isNaN(aud) || Number.isNaN(dl)) return bad.push(`Row ${n}: audience and downloads must be whole numbers.`);
+    _saBulkGood.push({ activity_date: d, staff_name: c[1].trim(), activity_type: type, title: (c[3] || '').trim() || null, host_org: (c[4] || '').trim() || null, location: (c[5] || '').trim() || null, audience: aud, downloads: dl, notes: (c[8] || '').trim() || null });
+  });
+  out.innerHTML = `<strong>${_saBulkGood.length}</strong> row${_saBulkGood.length === 1 ? '' : 's'} ready.` + (bad.length ? ` <span style="color:var(--coral,#c0392b);">${bad.length} need fixing:</span><br>${bad.slice(0, 8).map(escHtml).join('<br>')}${bad.length > 8 ? '<br>and ' + (bad.length - 8) + ' more.' : ''}` : '');
+  document.getElementById('sa-bulk-go').disabled = !(_saBulkGood.length && !bad.length);
+}
+async function saBulkImport() {
+  if (!_saBulkGood.length) return;
+  const btn = document.getElementById('sa-bulk-go'); btn.disabled = true;
+  try {
+    for (let i = 0; i < _saBulkGood.length; i += 100) await dbPost('lm_staff_activities', _saBulkGood.slice(i, i + 100), session.access_token);
+    toast(`${_saBulkGood.length} activities imported.`); document.getElementById('sa-bulk').value = ''; document.getElementById('sa-bulk-result').textContent = ''; _saBulkGood = [];
+    await loadStaff();
+  } catch (e) { toast(e.message || 'Import failed. Nothing further was added.', 'error'); document.getElementById('sa-bulk-result').textContent = (e.message || 'Import failed.') + ' Check the Staff Activity list before trying again, since earlier groups of 100 rows may already be in.'; btn.disabled = false; }
+}
+
+// ── BOARD: EVENTS, STRATEGIC PLAN, MOTIONS AND VOTES (phase4_setup.sql)
+let _bd2 = { events: [], goals: [], motions: [], turnout: {} };
+let _b2 = { kind: '', id: '' }, _b2Roll = [];
+const B2_EVENT_TYPES = [['retreat', 'Retreat'], ['lpb', 'Legislative Prayer Breakfast'], ['lrc', 'Living Reconciled Celebration'], ['committee', 'Committee'], ['other', 'Other']];
+const B2_RATING = { green: 'On track', amber: 'Needs attention', red: 'Off track' };
+async function bd2Rpc(fn, args) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: sbHeaders(session.access_token), body: JSON.stringify(args || {}) });
+  if (!r.ok) { let m = ''; try { m = (await r.json()).message || ''; } catch (e) {} const e = new Error(m || ('Request failed: ' + fn)); e.status = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+async function loadBoard2() {
+  let missing = false;
+  const get = async (t, params) => { try { return await bdFetch(t, params); } catch (e) { if (e.status === 404 || e.status === 400) missing = true; return []; } };
+  const [events, goals, motions] = await Promise.all([get('lm_board_events', { select:'*', order:'start_date.desc' }), get('lm_strategic_goals', { select:'*', order:'plan_year.desc,sort_order.asc' }), get('lm_board_motions', { select:'*', order:'created_at.desc' })]);
+  _bd2 = { events, goals, motions, turnout: {} };
+  await Promise.all(motions.filter(m => m.status !== 'draft').map(async m => { try { _bd2.turnout[m.id] = (await bd2Rpc('lm_motion_results', { p_motion: m.id }))[0]; } catch (e) {} }));
+  document.querySelectorAll('.bd2-unavailable').forEach(el => { el.textContent = 'The events, strategic plan and voting tables are not set up yet. Run phase4_setup.sql in the Supabase SQL Editor, then reload this page.'; el.style.display = missing ? 'block' : 'none'; });
+  renderBoard2();
+}
+function renderBoard2() {
+  const empty = (n, t) => `<tr><td colspan="${n}" style="text-align:center;color:var(--muted);padding:1.5rem;">${t}</td></tr>`;
+  const et = Object.fromEntries(B2_EVENT_TYPES);
+  document.getElementById('bd-events-table').innerHTML = _bd2.events.length ? _bd2.events.map(e => `<tr>
+    <td>${escHtml(bdDate(e.start_date))}${e.end_date ? ' to ' + escHtml(bdDate(e.end_date)) : ''}</td><td style="font-weight:600;">${escHtml(e.title)}<div style="font-size:0.76rem;color:var(--muted);font-weight:400;">${escHtml(e.location || '')}</div></td>
+    <td><span class="badge badge-navy">${escHtml(et[e.event_type] || e.event_type)}</span></td>
+    <td><span class="badge ${e.published ? 'badge-green' : 'badge-muted'}">${e.published ? 'Published' : 'Draft'}</span></td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="bd2Toggle('${e.id}')">${e.published ? 'Unpublish' : 'Publish'}</button> <button class="btn btn-sm btn-outline" onclick="bd2Open('event','${e.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="bd2Delete('lm_board_events','${e.id}','this event')">Delete</button></td></tr>`).join('') : empty(5, 'No events yet.');
+
+  const years = [...new Set(_bd2.goals.map(g => g.plan_year))]; const cy = new Date().getFullYear(); if (!years.includes(cy)) years.unshift(cy);
+  const ys = document.getElementById('bd-plan-year'), py = ys.value; ys.innerHTML = years.map(y => `<option>${y}</option>`).join(''); ys.value = py && years.map(String).includes(py) ? py : String(years[0]);
+  const rows = _bd2.goals.filter(g => String(g.plan_year) === ys.value);
+  document.getElementById('bd-plan-table').innerHTML = rows.length ? rows.map(g => `<tr>
+    <td><span class="badge badge-navy">${g.kind === 'vision' ? 'Vision' : g.kind === 'background' ? 'Background goal' : 'Annual goal'}</span></td>
+    <td style="${g.kind === 'annual' ? 'padding-left:1.4rem;' : 'font-weight:700;'}">${escHtml(clip(g.goal, 140))}${g.kind === 'annual' && g.pillar ? `<div style="font-size:0.74rem;color:var(--muted);">Under: ${escHtml(clip(g.pillar, 70))}</div>` : ''}</td>
+    <td>${g.rating ? `<span class="badge ${g.rating === 'green' ? 'badge-green' : g.rating === 'amber' ? 'badge-coral' : 'badge-red'}">${B2_RATING[g.rating]}</span>` : '<span style="color:var(--muted);">—</span>'}</td>
+    <td style="color:var(--muted);font-size:0.8rem;">${escHtml(bdDate(g.updated_at))}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="bd2Open('goal','${g.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="bd2Delete('lm_strategic_goals','${g.id}','this plan item')">Delete</button></td></tr>`).join('') : empty(5, 'Nothing in the plan for this year yet.');
+
+  document.getElementById('bd-motions-table').innerHTML = _bd2.motions.length ? _bd2.motions.map(m => {
+    const t = _bd2.turnout[m.id], open = t ? t.is_open : false;
+    const label = m.status === 'draft' ? 'Draft' : open ? 'Open' : 'Closed';
+    let acts = '';
+    if (m.status === 'draft') acts = `<button class="btn btn-sm btn-primary" onclick="bd2MotionStatus('${m.id}','open')">Open voting</button> <button class="btn btn-sm btn-outline" onclick="bd2Open('motion','${m.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="bd2Delete('lm_board_motions','${m.id}','this draft motion')">Delete</button>`;
+    else if (open) acts = `<button class="btn btn-sm btn-primary" onclick="bd2MotionStatus('${m.id}','closed')">Close voting</button>`;
+    else acts = `<button class="btn btn-sm btn-outline" onclick="bd2RollCall('${m.id}')">Roll call</button> <button class="btn btn-sm btn-outline" onclick="bd2Open('motion','${m.id}')">Note</button>` + (m.status === 'open' ? ` <button class="btn btn-sm btn-outline" onclick="bd2MotionStatus('${m.id}','closed')">Record as closed</button>` : '');
+    const tu = t ? `${t.voted} of ${t.eligible}` + (!open ? `<div style="font-size:0.76rem;color:var(--muted);">Yes ${t.yes_count}, No ${t.no_count}, Abstain ${t.abstain_count}</div>` : '') : '—';
+    return `<tr><td style="font-weight:600;">${escHtml(m.title)}${m.closes_at ? `<div style="font-size:0.74rem;color:var(--muted);font-weight:400;">Closes ${escHtml(new Date(m.closes_at).toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' }))}</div>` : ''}</td>
+      <td><span class="badge ${m.vote_type === 'official' ? 'badge-navy' : 'badge-blue'}">${m.vote_type === 'official' ? 'Official' : 'Advisory'}</span></td>
+      <td><span class="badge ${label === 'Open' ? 'badge-green' : 'badge-muted'}">${label}</span></td><td>${tu}</td><td style="white-space:nowrap;">${acts}</td></tr>`;
+  }).join('') : empty(5, 'No motions yet.');
+}
+function b2Field(id, label, input, hint) { return `<div class="form-group"><label class="form-label" for="${id}">${label}</label>${input}${hint ? `<div class="form-hint">${hint}</div>` : ''}</div>`; }
+function bd2Open(kind, id) {
+  _b2 = { kind, id: id || '' }; bdErr('b2-error', '');
+  document.getElementById('b2-save').style.display = ''; document.getElementById('b2-extra').style.display = 'none';
+  const el = document.getElementById('b2-fields'), tt = document.getElementById('b2-title');
+  if (kind === 'event') {
+    const e = _bd2.events.find(x => x.id === id) || {};
+    tt.textContent = id ? 'Edit Event' : 'Add Event';
+    el.innerHTML = b2Field('b2-ev-title', 'Title', `<input class="form-input" id="b2-ev-title" maxlength="200" value="${escHtml(e.title || '')}">`) +
+      b2Field('b2-ev-type', 'Type', `<select class="form-select" id="b2-ev-type">${B2_EVENT_TYPES.map(([k, l]) => `<option value="${k}" ${e.event_type === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`) +
+      `<div class="form-row">${b2Field('b2-ev-start', 'Start date', `<input class="form-input" type="date" id="b2-ev-start" value="${escHtml(String(e.start_date || '').slice(0, 10))}">`)}${b2Field('b2-ev-end', 'End date (optional)', `<input class="form-input" type="date" id="b2-ev-end" value="${escHtml(String(e.end_date || '').slice(0, 10))}">`)}</div>` +
+      b2Field('b2-ev-time', 'Time (optional)', `<input class="form-input" id="b2-ev-time" maxlength="60" placeholder="For example, 9:00 AM - 3:00 PM" value="${escHtml(e.start_time || '')}">`, 'Leave blank for an all-day event.') +
+      b2Field('b2-ev-loc', 'Location (optional)', `<input class="form-input" id="b2-ev-loc" maxlength="200" value="${escHtml(e.location || '')}">`) +
+      b2Field('b2-ev-desc', 'Description (optional)', `<textarea class="form-textarea" id="b2-ev-desc" maxlength="4000">${escHtml(e.description || '')}</textarea>`) +
+      `<label style="display:flex;gap:0.5rem;align-items:center;font-size:0.84rem;"><input type="checkbox" id="b2-ev-pub" ${e.published ? 'checked' : ''}> Publish (visible to the board)</label>`;
+  } else if (kind === 'goal') {
+    const g = _bd2.goals.find(x => x.id === id) || {}, yr = g.plan_year || document.getElementById('bd-plan-year').value || new Date().getFullYear();
+    tt.textContent = id ? 'Edit Plan Item' : 'Add to Plan';
+    const pillars = _bd2.goals.filter(x => x.kind === 'background' && String(x.plan_year) === String(yr));
+    el.innerHTML = `<div class="form-row">${b2Field('b2-g-year', 'Plan year', `<input class="form-input" type="number" id="b2-g-year" min="2000" max="2100" value="${escHtml(yr)}">`)}${b2Field('b2-g-kind', 'Type', `<select class="form-select" id="b2-g-kind" onchange="bd2GoalKind()"><option value="vision" ${g.kind === 'vision' ? 'selected' : ''}>Vision</option><option value="background" ${g.kind === 'background' ? 'selected' : ''}>Background goal</option><option value="annual" ${!g.kind || g.kind === 'annual' ? 'selected' : ''}>Annual goal</option></select>`)}</div>` +
+      `<div id="b2-g-pillar-row">${b2Field('b2-g-pillar', 'Falls under (background goal)', `<select class="form-select" id="b2-g-pillar"><option value="">None</option>${pillars.map(x => `<option ${x.goal === g.pillar ? 'selected' : ''} value="${escHtml(x.goal)}">${escHtml(clip(x.goal, 90))}</option>`).join('')}</select>`)}</div>` +
+      b2Field('b2-g-goal', 'Goal', `<textarea class="form-textarea" id="b2-g-goal" maxlength="1000">${escHtml(g.goal || '')}</textarea>`) +
+      `<div id="b2-g-annual">${b2Field('b2-g-steps', 'Steps (optional)', `<textarea class="form-textarea" id="b2-g-steps" maxlength="4000">${escHtml(g.steps || '')}</textarea>`)}` +
+      b2Field('b2-g-rating', 'Rating', `<select class="form-select" id="b2-g-rating"><option value="">Not rated yet</option>${Object.entries(B2_RATING).map(([k, l]) => `<option value="${k}" ${g.rating === k ? 'selected' : ''}>${k[0].toUpperCase() + k.slice(1)}: ${l}</option>`).join('')}</select>`) +
+      b2Field('b2-g-upd', 'Latest update (optional)', `<textarea class="form-textarea" id="b2-g-upd" maxlength="4000">${escHtml(g.latest_update || '')}</textarea>`) + '</div>' +
+      b2Field('b2-g-order', 'Order on the page (smaller shows first)', `<input class="form-input" type="number" id="b2-g-order" value="${escHtml(g.sort_order ?? (_bd2.goals.filter(x => String(x.plan_year) === String(yr)).length + 1) * 10)}">`);
+    bd2GoalKind();
+  } else if (kind === 'motion') {
+    const m = _bd2.motions.find(x => x.id === id) || {}, locked = m.status && m.status !== 'draft';
+    tt.textContent = id ? (locked ? 'Motion Note' : 'Edit Motion') : 'Add Motion';
+    const ro = locked ? 'disabled' : '';
+    const ca = m.closes_at ? new Date(new Date(m.closes_at).getTime() - new Date(m.closes_at).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+    el.innerHTML = (locked ? '<div class="form-hint" style="margin-bottom:0.8rem;">Voting has opened, so the wording is locked. You can add a note to this closed motion.</div>' : '') +
+      b2Field('b2-m-title', 'Title', `<input class="form-input" id="b2-m-title" maxlength="200" ${ro} value="${escHtml(m.title || '')}">`) +
+      b2Field('b2-m-body', 'Motion text', `<textarea class="form-textarea" id="b2-m-body" style="min-height:140px;" maxlength="6000" ${ro}>${escHtml(m.body || '')}</textarea>`) +
+      b2Field('b2-m-type', 'Type', `<select class="form-select" id="b2-m-type" ${ro}><option value="advisory" ${m.vote_type !== 'official' ? 'selected' : ''}>Advisory (a straw poll to see where the board stands)</option><option value="official" ${m.vote_type === 'official' ? 'selected' : ''}>Official (recorded with names for the board record)</option></select>`, 'Whether an electronic vote can count as the board\'s decision depends on your bylaws. Confirm with counsel before treating an official vote as binding.') +
+      (locked && m.status === 'closed' ? '' : b2Field('b2-m-closes', 'Voting closes (optional)', `<input class="form-input" type="datetime-local" id="b2-m-closes" value="${ca}" ${m.status === 'open' ? 'disabled' : ''}>`, 'When this time passes, voting stops by itself. You can also close it by hand.')) +
+      (locked ? b2Field('b2-m-note', 'Note shown with the results (optional)', `<textarea class="form-textarea" id="b2-m-note" maxlength="2000">${escHtml(m.outcome_note || '')}</textarea>`, 'For example, how the result will be recorded in the minutes.') : '');
+  }
+  openModal('modal-bd2');
+}
+function bd2GoalKind() {
+  const k = document.getElementById('b2-g-kind').value;
+  document.getElementById('b2-g-annual').style.display = k === 'annual' ? '' : 'none';
+  document.getElementById('b2-g-pillar-row').style.display = k === 'annual' ? '' : 'none';
+}
+async function bd2Save() {
+  const { kind, id } = _b2, v = i => document.getElementById(i).value.trim();
+  let table, row;
+  try {
+    if (kind === 'event') {
+      if (!v('b2-ev-title')) return bdErr('b2-error', 'A title is required.'); if (!v('b2-ev-start')) return bdErr('b2-error', 'A start date is required.');
+      if (v('b2-ev-end') && v('b2-ev-end') < v('b2-ev-start')) return bdErr('b2-error', 'The end date cannot be before the start date.');
+      table = 'lm_board_events'; row = { title: v('b2-ev-title'), event_type: v('b2-ev-type'), start_date: v('b2-ev-start'), end_date: v('b2-ev-end') || null, start_time: v('b2-ev-time') || null, location: v('b2-ev-loc') || null, description: v('b2-ev-desc') || null, published: document.getElementById('b2-ev-pub').checked };
+    } else if (kind === 'goal') {
+      const k = v('b2-g-kind'); if (!v('b2-g-goal')) return bdErr('b2-error', 'The goal text is required.');
+      const yr = parseInt(v('b2-g-year'), 10); if (!(yr >= 2000 && yr <= 2100)) return bdErr('b2-error', 'Please enter a plan year.');
+      table = 'lm_strategic_goals'; row = { plan_year: yr, kind: k, goal: v('b2-g-goal'), pillar: k === 'annual' ? (v('b2-g-pillar') || null) : null, steps: k === 'annual' ? (v('b2-g-steps') || null) : null, rating: k === 'annual' ? (v('b2-g-rating') || null) : null, latest_update: k === 'annual' ? (v('b2-g-upd') || null) : null, sort_order: parseInt(v('b2-g-order'), 10) || 0, updated_at: new Date().toISOString() };
+    } else if (kind === 'motion') {
+      const m = _bd2.motions.find(x => x.id === id) || {};
+      table = 'lm_board_motions';
+      if (m.status && m.status !== 'draft') row = { outcome_note: document.getElementById('b2-m-note') ? (v('b2-m-note') || null) : (m.outcome_note || null) };
+      else {
+        if (!v('b2-m-title') || !v('b2-m-body')) return bdErr('b2-error', 'A title and the motion text are required.');
+        const c = document.getElementById('b2-m-closes') ? document.getElementById('b2-m-closes').value : '';
+        row = { title: v('b2-m-title'), body: v('b2-m-body'), vote_type: v('b2-m-type'), closes_at: c ? new Date(c).toISOString() : null };
+      }
+    }
+    await bdWrite(id ? 'PATCH' : 'POST', table, row, id || undefined);
+    closeModal('modal-bd2'); toast('Saved.'); await loadBoard2();
+  } catch (e) { bdErr('b2-error', e.message || 'Could not save.'); }
+}
+async function bd2Toggle(id) {
+  const e = _bd2.events.find(x => x.id === id); if (!e) return;
+  try { await bdWrite('PATCH', 'lm_board_events', { published: !e.published }, id); toast(e.published ? 'Event unpublished.' : 'Event published to the board.'); await loadBoard2(); } catch (x) { toast(x.message || 'Could not update.', 'error'); }
+}
+async function bd2Delete(table, id, what) {
+  if (!confirm('Delete ' + what + '? This cannot be undone.')) return;
+  try { await bdWrite('DELETE', table, null, id); toast('Deleted.'); await loadBoard2(); } catch (x) { toast(x.message || 'Could not delete.', 'error'); }
+}
+async function bd2MotionStatus(id, to) {
+  const m = _bd2.motions.find(x => x.id === id); if (!m) return;
+  const msg = to === 'open' ? `Open voting on "${m.title}"?\n\nBoard members will see it and can vote. The wording will be locked and can no longer be changed or deleted.` : `Close voting on "${m.title}"?\n\nTotals will be shown to the board and all votes will be locked. This cannot be undone.`;
+  if (!confirm(msg)) return;
+  try { await bdWrite('PATCH', 'lm_board_motions', { status: to }, id); toast(to === 'open' ? 'Voting is open.' : 'Voting is closed.'); await loadBoard2(); } catch (x) { toast(x.message || 'Could not update.', 'error'); }
+}
+async function bd2RollCall(id) {
+  const m = _bd2.motions.find(x => x.id === id); if (!m) return;
+  try { _b2Roll = await bd2Rpc('lm_motion_rollcall', { p_motion: id }) || []; } catch (e) { toast(e.message || 'The roll call is not available.', 'error'); return; }
+  _b2 = { kind: 'roll', id }; bdErr('b2-error', '');
+  document.getElementById('b2-title').textContent = 'Roll Call: ' + m.title;
+  document.getElementById('b2-fields').innerHTML = `<p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.7rem;">Who voted how, for the minutes. ${_b2Roll.length} vote${_b2Roll.length === 1 ? '' : 's'} recorded.</p><div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Vote</th><th>Cast</th></tr></thead><tbody>${_b2Roll.map(r => `<tr><td>${escHtml(r.voter_name || r.voter_email || '')}</td><td>${escHtml(r.choice)}</td><td style="font-size:0.78rem;color:var(--muted);">${escHtml(new Date(r.cast_at).toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' }))}</td></tr>`).join('')}</tbody></table></div>`;
+  document.getElementById('b2-save').style.display = 'none'; document.getElementById('b2-extra').style.display = '';
+  openModal('modal-bd2');
+}
+function bd2RollExport() {
+  if (typeof XLSX === 'undefined') { toast('The Excel tool did not load. Check your connection and try again.', 'error'); return; }
+  const m = _bd2.motions.find(x => x.id === _b2.id) || {}, wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Motion: m.title, Type: m.vote_type }, ..._b2Roll.map(r => ({ Name: r.voter_name, Email: r.voter_email, Vote: r.choice, Cast: r.cast_at }))]), 'Roll call');
+  XLSX.writeFile(wb, 'MM_Roll_Call_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+
+// ── TRAINING EVALUATIONS (admin)
+let _ev = [];
+const evYear = () => document.getElementById('ev-year').value;
+async function loadEvals() {
+  const un = document.getElementById('ev-unavailable'); un.style.display = 'none';
+  const res = await fetchAllRows('lm_training_evaluations', session.access_token);
+  if (!res.ok) { _ev = []; un.textContent = (res.status === 404 || res.status === 400) ? 'Training evaluations are not set up yet. Run phase3_setup.sql in Supabase, then reload this page.' : 'Training evaluations could not be loaded. Please refresh and try again.'; un.style.display = 'block'; } else _ev = res.rows;
+  const cur = String(new Date().getFullYear()), years = [...new Set([cur, ..._ev.map(r => String(r.eval_date).slice(0, 4))])].sort().reverse();
+  const ySel = document.getElementById('ev-year'), py = ySel.value;
+  ySel.innerHTML = years.map(y => `<option>${y}</option>`).join(''); ySel.value = py || cur;
+  const mSel = document.getElementById('ev-movement'), pm = mSel.value;
+  mSel.innerHTML = '<option value="">All movements</option>' + movements.map(m => `<option value="${m.id}">${escHtml(m.county_name || m.city || '')}</option>`).join(''); mSel.value = pm;
+  evRender();
+}
+function evFiltered() {
+  const y = document.getElementById('ev-year').value, q = document.getElementById('ev-quarter').value, m = document.getElementById('ev-movement').value;
+  return _ev.filter(r => { const d = String(r.eval_date).slice(0, 10); return d.startsWith(y) && (!q || Math.floor((+d.slice(5, 7) - 1) / 3) + 1 === +q) && (!m || String(r.movement_id) === m); })
+    .sort((a, b) => String(b.eval_date).localeCompare(String(a.eval_date)));
+}
+function evStats(rows) {
+  const sum = k => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0), collected = sum('collected');
+  const rated = rows.filter(r => r.r_overall !== null && r.r_overall !== undefined && Number(r.collected) > 0);
+  const w = rated.reduce((s, r) => s + Number(r.collected), 0);
+  const avg = w ? rated.reduce((s, r) => s + Number(r.r_overall) * Number(r.collected), 0) / w : null;
+  const rec = rows.filter(r => r.recommend !== null && r.recommend !== undefined), recForms = rec.reduce((s, r) => s + Number(r.collected), 0);
+  return { n: rows.length, attended: sum('attended'), collected, rate: sum('attended') ? Math.round(collected / sum('attended') * 100) : null, avg: avg === null ? null : Math.round(avg * 100) / 100, recommend: recForms ? Math.round(rec.reduce((s, r) => s + Number(r.recommend), 0) / recForms * 100) : null };
+}
+function evRender() {
+  const rows = evFiltered(), st = evStats(rows), pct = v => v === null ? '—' : v + '%';
+  const card = (n, l, sub) => `<div class="stat-card"><div class="stat-num">${n}</div><div class="stat-label">${l}</div>${sub ? `<div class="im-sub">${sub}</div>` : ''}</div>`;
+  document.getElementById('ev-cards').innerHTML = card(st.n, 'Evaluations') + card(fmtN(st.attended), 'People who attended') + card(fmtN(st.collected), 'Forms returned', 'Response rate ' + pct(st.rate)) + card(st.avg === null ? '—' : st.avg.toFixed(2), 'Average overall rating', 'Out of 5, weighted by forms returned') + card(pct(st.recommend), 'Would recommend', 'Of forms from movements that reported it');
+  const y = document.getElementById('ev-year').value, q = document.getElementById('ev-quarter').value;
+  const sent = new Set(_ev.filter(r => { const d = String(r.eval_date).slice(0, 10); return d.startsWith(y) && (!q || Math.floor((+d.slice(5, 7) - 1) / 3) + 1 === +q); }).map(r => String(r.movement_id)));
+  const miss = movements.filter(m => m.active && !sent.has(String(m.id))).map(m => m.county_name || m.city || '');
+  document.getElementById('ev-missing').textContent = miss.length ? miss.join(', ') : 'Every active movement has sent one.';
+  document.getElementById('ev-table').innerHTML = rows.length ? rows.map(r => {
+    const cm = [r.takeaways && 'Takeaways: ' + r.takeaways, r.suggestions && 'Suggestions: ' + r.suggestions, r.followup && 'Next: ' + r.followup].filter(Boolean).join('\n');
+    return `<tr><td>${fmtDate(r.eval_date)}</td><td>${escHtml(movementLabel(r.movement_id))}</td><td>${escHtml(r.training_title)}${r.facilitator ? '<div style="font-size:0.74rem;color:var(--muted);">' + escHtml(r.facilitator) + '</div>' : ''}</td><td>${r.attended}</td><td>${r.collected}</td><td>${r.r_overall ?? '—'}</td><td>${r.recommend ?? '—'}</td><td style="font-size:0.78rem;white-space:pre-line;max-width:320px;">${escHtml(clip(cm, 400))}</td></tr>`; }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">No evaluations in this selection.</td></tr>';
+}
+function evExport() {
+  if (typeof XLSX === 'undefined') { toast('The Excel tool did not load. Check your connection and try again.', 'error'); return; }
+  const rows = evFiltered(), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows.map(r => ({ Date: String(r.eval_date).slice(0, 10), Movement: movementLabel(r.movement_id), Training: r.training_title, Facilitator: r.facilitator || '', Attended: r.attended, 'Forms returned': r.collected, 'Would recommend': r.recommend ?? '', 'Content clear': r.r_content ?? '', Relevant: r.r_relevance ?? '', Facilitator_rating: r.r_facilitator ?? '', 'Will apply': r.r_apply ?? '', Overall: r.r_overall ?? '', Takeaways: r.takeaways || '', Suggestions: r.suggestions || '', 'Next steps': r.followup || '' })) : [{ Note: 'No evaluations in this selection.' }]), 'Evaluations');
+  XLSX.writeFile(wb, `MM_Training_Evaluations_${document.getElementById('ev-year').value}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+// ── IMPACT DASHBOARD ───────────────────────────────────────────────────────────────
+let _im = null;
+const IM_TYPES = ['Prayer Gathering', 'Table Talk', 'Training', '4 The City Service Day', 'One Picnic', 'One Community Conversation', 'Community-Wide Worship Service', 'Other'];
+function imInitPeriod() {
+  const sel = document.getElementById('im-period'); if (sel.options.length) return;
+  const y = new Date().getFullYear();
+  sel.innerHTML = `<option value="${y}">${y}</option><option value="${y - 1}">${y - 1}</option><option value="${y - 2}">${y - 2}</option><option value="all">All time</option><option value="custom">Custom range</option>`;
+}
+function imPeriodChanged() { document.getElementById('im-custom').style.display = document.getElementById('im-period').value === 'custom' ? 'inline-flex' : 'none'; loadImpact(); }
+function imRange() {
+  const v = document.getElementById('im-period').value;
+  if (v === 'all') return { from: null, to: null, label: 'All time' };
+  if (v === 'custom') { const f = document.getElementById('im-from').value || null, t = document.getElementById('im-to').value || null; return { from: f, to: t, label: (f ? fmtDate(f) : 'the beginning') + ' to ' + (t ? fmtDate(t) : 'today') }; }
+  return { from: v + '-01-01', to: v + '-12-31', label: v };
+}
+function imComputeImpact(L, S, st, rng, E) {
+  E = E || [];
+  const sum = (a, k) => a.reduce((s, r) => s + (Number(r[k]) || 0), 0);
+  const lc = {}, sc = {}; IM_TYPES.forEach(t => lc[t] = 0); SA_TYPES.forEach(t => sc[t] = 0);
+  L.forEach(r => { lc[r.event_type] = (lc[r.event_type] || 0) + 1; }); S.forEach(r => { sc[r.activity_type] = (sc[r.activity_type] || 0) + 1; });
+  const reachedLocal = sum(L, 'attendance'), reachedStaff = sum(S, 'audience');
+  const counties = new Set(); const norm = c => String(c || '').replace(/\s+County$/i, '').trim();
+  L.forEach(r => { const c = norm(r.county) || norm((movements.find(m => String(m.id) === String(r.movement_id)) || {}).county_name); const hit = RD_COUNTIES.find(x => x.toLowerCase() === c.toLowerCase()); if (hit) counties.add(hit); });
+  const downloads = sum(S.filter(r => r.activity_type === 'Podcast Episode'), 'downloads');
+  const work = [
+    ['Prayer Gatherings', lc['Prayer Gathering'], null], ['Table Talks', lc['Table Talk'], null],
+    ['Trainings (local) and CHRADL trainings (staff)', lc['Training'], sc['CHRADL Training']],
+    ['4 The City Service Days', lc['4 The City Service Day'], null], ['One Picnics', lc['One Picnic'], null],
+    ['One Community Conversations', lc['One Community Conversation'], null],
+    ['Community-Wide Worship Services', lc['Community-Wide Worship Service'], sc['Community-Wide Worship Service']],
+    ['Speaking Engagements', null, sc['Speaking Engagement']], ['Preaching Engagements', null, sc['Preaching Engagement']],
+    ['Podcast Episodes', null, sc['Podcast Episode']], ['Consulting Engagements', null, sc['Consulting Engagement']],
+    ['Other', lc['Other'], sc['Other']]
+  ].map(r => ({ label: r[0], local: r[1], staff: r[2], total: (r[1] || 0) + (r[2] || 0) }));
+  const w = k => (work.find(x => x.label.startsWith(k)) || {}).total || 0;
+  const cards = [
+    { label: 'People reached', value: reachedLocal + reachedStaff, sub: `${fmtN(reachedLocal)} at local events, ${fmtN(reachedStaff)} through staff` },
+    { label: 'Prayer Gatherings', value: w('Prayer') }, { label: 'Table Talks', value: w('Table') },
+    { label: 'Trainings', value: w('Trainings'), sub: `${lc['Training']} local, ${sc['CHRADL Training']} staff-led` },
+    { label: '4 The City Service Days', value: w('4 The City') }, { label: 'One Picnics', value: w('One Picnics') },
+    { label: 'One Community Conversations', value: w('One Community') }, { label: 'Community-Wide Worship Services', value: w('Community-Wide') },
+    { label: 'Speaking Engagements', value: w('Speaking') }, { label: 'Preaching Engagements', value: w('Preaching') },
+    { label: 'Podcast Episodes', value: w('Podcast') }, { label: 'Podcast Downloads', value: downloads },
+    { label: 'Consulting Engagements', value: w('Consulting') },
+    { label: 'Active Movements', value: movements.filter(m => m.active).length },
+    { label: 'Counties Reached', value: counties.size, sub: 'of 82 Mississippi counties' }, { label: 'Stories Shared', value: st.length },
+    { label: 'Training Evaluations', value: E.length, sub: E.length ? 'Average rating ' + (evStats(E).avg ?? '—') + ' of 5' : '' }
+  ];
+  const byMov = {};
+  L.forEach(r => { const m = byMov[r.movement_id] || (byMov[r.movement_id] = { id: r.movement_id, n: 0, att: 0, last: '' }); m.n++; m.att += Number(r.attendance) || 0; const d = String(r.event_date || '').slice(0, 10); if (d > m.last) m.last = d; });
+  const movRows = Object.values(byMov).map(m => ({ ...m, name: movementLabel(m.id) || 'Unknown' })).sort((a, b) => b.att - a.att || a.name.localeCompare(b.name));
+  const withDetails = L.filter(r => r.demographics && typeof r.demographics === 'object' && Object.keys(r.demographics).length);
+  const demo = Object.keys(REPORT_DEMO).map(g => {
+    const items = REPORT_DEMO[g].items.map(it => ({ key: it[0], label: it[1], n: withDetails.reduce((s, r) => s + ((r.demographics[g] && Number(r.demographics[g][it[0]])) || 0), 0) }));
+    return { group: g, label: REPORT_DEMO[g].label, items, counted: items.reduce((s, i) => s + i.n, 0) };
+  });
+  return { rng, L, S, st, E, cards, work, movRows, demo, withDetails: withDetails.length, reports: L.length, countiesList: [...counties].sort() };
+}
+async function loadImpact() {
+  imInitPeriod();
+  const token = session.access_token, err = document.getElementById('im-error'); err.style.display = 'none';
+  const [rr, ss, st, ee] = await Promise.all([fetchAllRows('lm_event_reports', token), fetchAllRows('lm_staff_activities', token), fetchAllRows('lm_stories', token), fetchAllRows('lm_training_evaluations', token)]);
+  const notes = [];
+  if (!rr.ok) notes.push('Movement reports could not be loaded, so those totals are missing.');
+  if (!ss.ok) notes.push((ss.status === 404 || ss.status === 400) ? 'Staff activity is not set up yet (run phase2_setup.sql), so staff totals are zero.' : 'Staff activity could not be loaded, so staff totals are missing.');
+  if (notes.length) { err.textContent = notes.join(' '); err.style.display = 'block'; }
+  const rng = imRange(), inR = d => { const x = String(d || '').slice(0, 10); return x && (!rng.from || x >= rng.from) && (!rng.to || x <= rng.to); };
+  _im = imComputeImpact(rr.rows.filter(r => inR(r.event_date)), ss.rows.filter(r => inR(r.activity_date)), st.rows.filter(r => inR(r.created_at)), rng, ee.rows.filter(r => inR(r.eval_date)));
+  imRender();
+}
+function imRender() {
+  const d = _im; if (!d) return;
+  document.getElementById('im-sub').textContent = `Period: ${d.rng.label}. Totals from local movement reports and staff activity.`;
+  document.getElementById('im-cards').innerHTML = `<div class="im-print-title" style="grid-column:1/-1;">Mission Mississippi Impact Summary, ${escHtml(d.rng.label)}</div>` +
+    d.cards.map((c, i) => `<div class="stat-card${i === 0 ? ' stat-accent' : ''}"><div class="stat-num">${fmtN(c.value)}</div><div class="stat-label">${escHtml(c.label)}</div>${c.sub ? `<div class="im-sub">${escHtml(c.sub)}</div>` : ''}</div>`).join('');
+  document.getElementById('im-work').innerHTML = d.work.map(w => `<tr><td>${escHtml(w.label)}</td><td>${w.local === null ? '—' : fmtN(w.local)}</td><td>${w.staff === null ? '—' : fmtN(w.staff)}</td><td style="font-weight:700;">${fmtN(w.total)}</td></tr>`).join('');
+  const none = movements.filter(m => m.active && !d.movRows.some(x => String(x.id) === String(m.id))).length;
+  document.getElementById('im-movements').innerHTML = d.movRows.length ? d.movRows.map(m => `<tr><td style="font-weight:600;">${escHtml(m.name)}</td><td>${m.n}</td><td>${fmtN(m.att)}</td><td>${m.last ? fmtDate(m.last) : '—'}</td></tr>`).join('') + (none ? `<tr><td colspan="4" style="color:var(--muted);font-size:0.8rem;">${none} active movement${none === 1 ? '' : 's'} with no report in this period.</td></tr>` : '') : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.2rem;">No movement reports in this period.</td></tr>';
+  const note = document.getElementById('im-demo-note');
+  if (!d.withDetails) { note.textContent = 'No attendee details have been entered for this period yet. Coordinators add them under Location and attendee details when they report an event.'; document.getElementById('im-demo').innerHTML = ''; return; }
+  note.textContent = `Estimates from ${d.withDetails} of ${d.reports} report${d.reports === 1 ? '' : 's'} that included attendee details. Percentages are of the people counted in each group.`;
+  document.getElementById('im-demo').innerHTML = d.demo.filter(g => g.counted).map(g => `<div class="im-demo-group"><div class="im-demo-title">${escHtml(g.label)} (${fmtN(g.counted)} counted)</div>` +
+    g.items.filter(i => i.n).map(i => { const p = Math.round(i.n / g.counted * 1000) / 10; return `<div class="im-row"><span>${escHtml(i.label)}</span><div class="im-bar"><span style="width:${p}%"></span></div><span style="text-align:right;">${fmtN(i.n)} · ${p}%</span></div>`; }).join('') + '</div>').join('');
+}
+function imExport() {
+  if (!_im) { toast('The dashboard is still loading.', 'error'); return; }
+  if (typeof XLSX === 'undefined') { toast('The Excel tool did not load. Check your connection and try again.', 'error'); return; }
+  const d = _im, wb = XLSX.utils.book_new(), add = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{ Note: 'No rows in this period.' }]), name);
+  add('Summary', [{ Metric: 'Period', Value: d.rng.label }, ...d.cards.map(c => ({ Metric: c.label, Value: c.value }))]);
+  add('Our work', d.work.map(w => ({ Activity: w.label, 'Local movements': w.local ?? '', 'Staff-led': w.staff ?? '', Total: w.total })));
+  add('By movement', d.movRows.map(m => ({ Movement: m.name, Reports: m.n, 'People reached': m.att, 'Last event': m.last })));
+  add('Attendee details', d.demo.flatMap(g => g.items.filter(i => i.n).map(i => ({ Group: g.label, Category: i.label, 'People counted (estimate)': i.n, 'Percent of group': g.counted ? Math.round(i.n / g.counted * 1000) / 10 : '' }))));
+  add('Event reports', d.L.map(r => ({ Movement: movementLabel(r.movement_id), 'Event type': r.event_type, Date: String(r.event_date).slice(0, 10), Attendance: r.attendance ?? '', Description: r.description || '', ...rdFlat(r) })));
+  add('Training evaluations', d.E.map(r => ({ Date: String(r.eval_date).slice(0, 10), Movement: movementLabel(r.movement_id), Training: r.training_title, Attended: r.attended, 'Forms returned': r.collected, 'Overall rating': r.r_overall ?? '', 'Would recommend': r.recommend ?? '' })));
+  add('Staff activity', d.S.map(r => ({ Date: String(r.activity_date).slice(0, 10), Staff: r.staff_name, Type: r.activity_type, Title: r.title || '', 'Host or organization': r.host_org || '', Location: r.location || '', Audience: r.audience ?? '', Downloads: r.downloads ?? '', Notes: r.notes || '' })));
+  XLSX.writeFile(wb, `MM_Impact_${String(d.rng.label).replace(/[^A-Za-z0-9]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+</script>
+
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
+<script>
+(function () {
+  function panel() { return document.getElementById('acct-panel'); }
+  function closeAcct() { const p = panel(), t = document.getElementById('acct-toggle'); if (p) p.classList.remove('open'); if (t) t.setAttribute('aria-expanded', 'false'); }
+  window.closeAcctMenu = closeAcct;
+  window.toggleAcct = function (e) {
+    if (e) e.stopPropagation();
+    const p = panel(), t = document.getElementById('acct-toggle'); if (!p) return;
+    const open = !p.classList.contains('open'); p.classList.toggle('open', open); t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  document.addEventListener('click', closeAcct);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAcct(); });
+})();
+</script>
 </body>
 </html>

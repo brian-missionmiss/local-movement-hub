@@ -162,6 +162,15 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 .badge-coral   { background: rgba(232,103,74,0.12); color: #b8432a; }
 .badge-green   { background: rgba(76,175,125,0.12); color: #2d7a50; }
 .badge-navy    { background: rgba(26,39,68,0.1);    color: var(--navy); }
+.badge-amber   { background: rgba(240,180,41,0.18); color: #8a6100; }
+.badge-red     { background: rgba(214,69,65,0.12); color: #a52a27; }
+.vote-bar { display:flex; height:12px; border-radius:6px; overflow:hidden; background:#f1efe9; margin:0.5rem 0 0.4rem; }
+.vote-bar > span { display:block; height:100%; }
+.vote-opt { display:flex; gap:0.5rem; align-items:center; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem; cursor:pointer; font-size:0.9rem; }
+.vote-opt:has(input:checked) { border-color: var(--blue); background: rgba(41,168,224,0.07); }
+.plan-goal { padding:0.7rem 0; border-top:1px solid var(--border); }
+.plan-goal:first-child { border-top:0; }
+.cal-month { font-family:'Merriweather',serif; font-size:1.05rem; font-weight:700; color:var(--navy); margin:1.4rem 0 0.6rem; }
 .badge-muted   { background: rgba(107,107,107,0.1); color: var(--muted); }
 
 /* ── PHASE BADGE ── */
@@ -239,9 +248,29 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 @media (max-width: 900px) {
   .mobile-tabs { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.6rem 1rem; background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 90; -webkit-overflow-scrolling: touch; }
   .mobile-tabs a { flex: 0 0 auto; font-size: 0.8rem; font-weight: 700; color: var(--muted); text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid var(--border); }
+  .mobile-tabs .tab-sep { flex: 0 0 1px; background: var(--border); margin: 0.2rem 0.2rem; }
   .mobile-tabs a.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
   .nav-user { display: none; }
 }
+</style>
+<style>
+/* Nav fit: the bar grows a second row instead of overflowing when many buttons are showing. */
+.nav { height: auto; min-height: 60px; flex-wrap: wrap; row-gap: 0.4rem; padding-top: 0.45rem; padding-bottom: 0.45rem; }
+.nav-brand { flex: 0 0 auto; }
+.nav-title { white-space: nowrap; }
+.nav-right { flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; row-gap: 0.4rem; }
+.nav-btn { white-space: nowrap; }
+@media (max-width: 1250px) { .nav-links { display: none !important; } }
+</style>
+<style>
+/* Account menu: Help, Change password and Sign out live in one dropdown so the bar stays on one row. */
+.acct { position: relative; }
+.acct-panel { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; max-width: 86vw; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.22); padding: 0.35rem; z-index: 300; }
+.acct-panel.open { display: block; }
+.acct-panel .nav-user { display: block !important; padding: 0.45rem 0.7rem 0.55rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; word-break: break-all; }
+.acct-panel .nav-user:empty { display: none !important; }
+.acct-item { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 5px; padding: 0.6rem 0.7rem; font-family: 'Open Sans', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--navy); text-decoration: none; cursor: pointer; }
+.acct-item:hover, .acct-item:focus-visible { background: var(--cream); outline: none; }
 </style>
 </head>
 <body>
@@ -252,11 +281,16 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     <div class="nav-title">Mission Mississippi Hub <span>Board Portal</span></div>
   </a>
   <div class="nav-right">
-    <span class="nav-user" id="nav-user"></span>
-    <a class="nav-btn nav-btn-outline" href="help.html?guide=board" target="_blank" rel="noopener">Help</a>
     <button class="nav-btn nav-btn-outline" id="admin-view-btn" style="display:none" onclick="switchFromBoard()">Switch View</button>
-    <button class="nav-btn nav-btn-outline" id="pw-btn" style="display:none" onclick="openChangePw()">Change password</button>
-    <button class="nav-btn nav-btn-outline" id="logout-btn" style="display:none" onclick="doLogout()">Sign out</button>
+    <div class="acct">
+      <button class="nav-btn nav-btn-outline" id="acct-toggle" aria-haspopup="true" aria-expanded="false" onclick="toggleAcct(event)">Account &#9662;</button>
+      <div class="acct-panel" id="acct-panel" role="menu" onclick="event.stopPropagation()">
+        <div class="nav-user" id="nav-user"></div>
+        <a class="acct-item" role="menuitem" href="help.html?guide=board" target="_blank" rel="noopener" onclick="closeAcctMenu()">Help</a>
+        <button class="acct-item" role="menuitem" id="pw-btn" style="display:none" onclick="closeAcctMenu();openChangePw()">Change password</button>
+        <button class="acct-item" role="menuitem" id="logout-btn" style="display:none" onclick="closeAcctMenu();doLogout()">Sign out</button>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -306,10 +340,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   <div class="mobile-tabs" id="mobile-tabs"></div>
   <div class="dash-wrap">
     <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">Board</div>
-        <nav class="sidebar-nav" id="sidebar-nav"></nav>
-      </div>
+      <div id="sidebar-nav"></div>
       <div class="sidebar-section" style="margin-top:1rem;">
         <div class="sidebar-label">Mission Mississippi</div>
         <nav class="sidebar-nav">
@@ -329,6 +360,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <h1 class="page-title" id="home-title">Welcome</h1>
           <p class="page-sub">Everything you need for the next board meeting, in one place.</p>
         </div>
+        <div id="home-votes" style="display:none;margin-bottom:1.2rem;"></div>
         <div id="home-next" style="margin-bottom:1.5rem;"></div>
         <div class="grid-2">
           <div>
@@ -340,6 +372,45 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <div class="card" id="home-actions"><div class="empty-state-text" style="color:var(--muted);">Loading...</div></div>
           </div>
         </div>
+      </div>
+
+      <!-- MOTIONS AND VOTES -->
+      <div id="section-votes" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Motions &amp; Votes</h1>
+          <p class="page-sub">Motions put to the board. While voting is open you can change your vote. When voting closes, the totals are shown and votes are locked.</p>
+        </div>
+        <div id="votes-list"></div>
+      </div>
+
+      <!-- STRATEGIC PLAN -->
+      <div id="section-plan" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Strategic Plan</h1>
+          <p class="page-sub">Our vision, the goals that serve it, and how each one is going.</p>
+        </div>
+        <div style="margin-bottom:1rem;"><select class="form-select" id="plan-year" onchange="renderPlan()" style="width:auto;"></select></div>
+        <div id="plan-body"></div>
+      </div>
+
+      <!-- BOARD CALENDAR -->
+      <div id="section-calendar" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Board Calendar</h1>
+          <p class="page-sub">Board meetings, retreats and the events we serve together, in date order.</p>
+        </div>
+        <div id="cal-filters" style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;"></div>
+        <div style="font-size:0.82rem;margin-bottom:0.5rem;"><label style="cursor:pointer;"><input type="checkbox" id="cal-past" onchange="renderCalendar()"> Show past dates</label></div>
+        <div id="cal-list"></div>
+      </div>
+
+      <!-- BOARD EVENTS -->
+      <div id="section-events" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Board Events</h1>
+          <p class="page-sub">The board retreat, Legislative Prayer Breakfast, Living Reconciled Celebration and other events, with their materials and reports.</p>
+        </div>
+        <div id="events-list"></div>
       </div>
 
       <!-- MEETINGS -->
@@ -653,23 +724,31 @@ async function startPortal() {
 
 // ── NAVIGATION
 const SECTIONS = [
-  { key:'home',      label:'Home' },
-  { key:'meetings',  label:'Meetings & Packets' },
-  { key:'minutes',   label:'Minutes' },
-  { key:'documents', label:'Documents' },
-  { key:'actions',   label:'Action Items' },
-  { key:'roster',    label:'Board Roster' },
-  { key:'statewide', label:'Statewide Snapshot' },
+  { key:'home',      label:'Home',               group:'' },
+  { key:'meetings',  label:'Meetings & Packets', group:'Meetings' },
+  { key:'minutes',   label:'Minutes',            group:'Meetings' },
+  { key:'actions',   label:'Action Items',       group:'Meetings' },
+  { key:'votes',     label:'Motions & Votes',    group:'Decisions' },
+  { key:'plan',      label:'Strategic Plan',     group:'Planning' },
+  { key:'statewide', label:'Statewide Snapshot', group:'Planning' },
+  { key:'calendar',  label:'Board Calendar',     group:'Events and Calendar' },
+  { key:'events',    label:'Board Events',       group:'Events and Calendar' },
+  { key:'documents', label:'Documents',          group:'Library' },
+  { key:'roster',    label:'Board Roster',       group:'Library' },
 ];
 function buildNav() {
-  document.getElementById('sidebar-nav').innerHTML = SECTIONS.map(s =>
-    `<a class="sidebar-link" href="#" data-s="${s.key}" onclick="showSection('${s.key}');return false;">${escHtml(s.label)}</a>`).join('');
-  document.getElementById('mobile-tabs').innerHTML = SECTIONS.map(s =>
-    `<a href="#" data-s="${s.key}" onclick="showSection('${s.key}');return false;">${escHtml(s.label)}</a>`).join('');
+  const groups = [];
+  SECTIONS.forEach(s => { let g = groups.find(x => x.name === s.group); if (!g) { g = { name: s.group, items: [] }; groups.push(g); } g.items.push(s); });
+  document.getElementById('sidebar-nav').innerHTML = groups.map((g, i) =>
+    `<div class="sidebar-section"${i ? ' style="margin-top:1rem;"' : ''}>${g.name ? `<div class="sidebar-label">${escHtml(g.name)}</div>` : ''}<nav class="sidebar-nav">` +
+    g.items.map(s => `<a class="sidebar-link" href="#" data-s="${s.key}" onclick="showSection('${s.key}');return false;">${escHtml(s.label)}</a>`).join('') + `</nav></div>`).join('');
+  document.getElementById('mobile-tabs').innerHTML = groups.map((g, i) =>
+    (i ? '<span class="tab-sep"></span>' : '') + g.items.map(s => `<a href="#" data-s="${s.key}" onclick="showSection('${s.key}');return false;">${escHtml(s.label)}</a>`).join('')).join('');
 }
 const LOADERS = {
   home: loadHome, meetings: loadMeetings, minutes: loadMinutes, documents: loadDocuments,
-  actions: loadActions, roster: loadRoster, statewide: loadStatewide
+  actions: loadActions, roster: loadRoster, statewide: loadStatewide,
+  votes: loadVotes, plan: loadPlan, calendar: loadCalendar, events: loadBoardEvents
 };
 async function showSection(name) {
   SECTIONS.forEach(s => { document.getElementById('section-' + s.key).style.display = s.key === name ? 'block' : 'none'; });
@@ -731,6 +810,7 @@ const EMPTY = t => `<div class="empty-state-text" style="color:var(--muted);padd
 
 // ── HOME
 async function loadHome() {
+  loadHomeVotes();
   const [meetings, docs, actions] = await Promise.all([
     dbq('lm_board_meetings', { select:'*', order:'meeting_date.asc' }),
     dbq('lm_board_documents', { select:'*', order:'published_at.desc.nullslast,created_at.desc', limit:'60' }),
@@ -759,6 +839,19 @@ async function loadHome() {
   document.getElementById('home-actions').innerHTML = actions.length ? actions.slice(0, 6).map(a => `<div class="doc-row">
     <div style="flex:1;"><div class="doc-title">${escHtml(a.description)}</div>
     <div class="doc-desc">${a.owner_name ? escHtml(a.owner_name) : 'Unassigned'}${a.due_date ? ' &middot; due ' + escHtml(fmtDate(a.due_date)) : ''}</div></div></div>`).join('') : EMPTY('No open action items.');
+}
+
+async function loadHomeVotes() {
+  const box = document.getElementById('home-votes'); box.style.display = 'none';
+  try {
+    const open = (await dbq('lm_board_motions', { select:'id,closes_at', status:'eq.open' })).filter(m => !m.closes_at || new Date(m.closes_at) > new Date());
+    if (!open.length || !(await rpc('lm_board_can_vote', {}))) return;
+    const mine = await Promise.all(open.map(m => rpc('lm_my_vote', { p_motion: m.id })));
+    const waiting = mine.filter(v => !v).length;
+    if (!waiting) return;
+    box.innerHTML = `<div style="background:#eef4ff;border:1px solid #bcd0f5;border-left:4px solid var(--blue);border-radius:6px;padding:0.85rem 1.1rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;"><div style="font-size:0.9rem;color:var(--navy);">You have ${waiting} motion${waiting === 1 ? '' : 's'} waiting for your vote.</div><button class="btn btn-sm btn-primary" onclick="showSection('votes')">Go to Motions &amp; Votes</button></div>`;
+    box.style.display = 'block';
+  } catch (e) { /* the voting tables may not be set up yet; stay quiet on Home */ }
 }
 
 // ── MEETINGS
@@ -832,6 +925,183 @@ async function loadActions() {
       <td><span class="badge ${done ? 'badge-green' : 'badge-blue'}">${done ? 'Done' : 'Open'}</span></td>
     </tr>`;
   }).join('');
+}
+
+// ── MOTIONS AND VOTES
+async function rpc(fn, args) {
+  const r = await api(`/rest/v1/rpc/${fn}`, { method: 'POST', body: JSON.stringify(args || {}) });
+  if (!r.ok) { let m = ''; try { m = (await r.json()).message || ''; } catch (e) {} const e = new Error(m || ('Request failed: ' + fn)); e.status = r.status; throw e; }
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const VOTE_LABEL = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
+async function loadVotes() {
+  const motions = await dbq('lm_board_motions', { select:'*', status:'neq.draft', order:'created_at.desc' });
+  const canVote = await rpc('lm_board_can_vote', {}).catch(() => false);
+  const extra = await Promise.all(motions.map(async m => ({ m, res: (await rpc('lm_motion_results', { p_motion: m.id }).catch(() => null) || [])[0] || {}, mine: await rpc('lm_my_vote', { p_motion: m.id }).catch(() => null) })));
+  const el = document.getElementById('votes-list');
+  if (!extra.length) { el.innerHTML = `<div class="card">${EMPTY('No motions have been put to the board yet.')}</div>`; return; }
+  const open = extra.filter(x => x.res.is_open), closed = extra.filter(x => !x.res.is_open);
+  el.innerHTML = (open.length ? '<h2 class="section-h" style="margin-top:0;">Open for voting</h2>' + open.map(x => voteCard(x, canVote)).join('') : '') +
+    (closed.length ? '<h2 class="section-h">Closed</h2>' + closed.map(x => voteCard(x, canVote)).join('') : '');
+}
+function voteCard(x, canVote) {
+  const { m, res, mine } = x, open = !!res.is_open;
+  const typeBadge = m.vote_type === 'official' ? '<span class="badge badge-navy">Official vote</span>' : '<span class="badge badge-blue">Advisory</span>';
+  let body = '';
+  if (open) {
+    body += `<div style="font-size:0.82rem;color:var(--muted);margin:0.6rem 0;">${res.voted} of ${res.eligible} voting board members have voted${m.closes_at ? ' &middot; voting closes ' + escHtml(new Date(m.closes_at).toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' })) : ''}</div>`;
+    if (canVote) {
+      body += `<div style="margin:0.5rem 0;">${['yes','no','abstain'].map(c => `<label class="vote-opt"><input type="radio" name="vote-${m.id}" value="${c}" ${mine === c ? 'checked' : ''}> ${VOTE_LABEL[c]}</label>`).join('')}</div>
+        <button class="btn btn-primary btn-sm" onclick="castVote('${m.id}')">${mine ? 'Change my vote' : 'Cast my vote'}</button>
+        ${mine ? `<span style="font-size:0.82rem;color:var(--muted);margin-left:0.6rem;">Your vote is recorded: ${VOTE_LABEL[mine]}.</span>` : ''}
+        ${m.vote_type === 'official' ? '<div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;">This is an official vote. Your vote is kept with your name for the board record. Nobody else can see how you voted until voting closes.</div>' : '<div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;">This vote is advisory. It helps the board see where it stands.</div>'}`;
+    } else body += '<div style="font-size:0.84rem;color:var(--muted);">You are signed in as staff. Only board members can vote.</div>';
+  } else {
+    const y = res.yes_count || 0, n = res.no_count || 0, a = res.abstain_count || 0, t = y + n + a || 1;
+    body += `<div class="vote-bar"><span style="width:${y / t * 100}%;background:#4caf7d;"></span><span style="width:${n / t * 100}%;background:#d64541;"></span><span style="width:${a / t * 100}%;background:#9aa0a6;"></span></div>
+      <div style="font-size:0.88rem;"><strong>Yes ${y}</strong> &middot; <strong>No ${n}</strong> &middot; <strong>Abstain ${a}</strong> &middot; <span style="color:var(--muted);">${res.voted} of ${res.eligible} voting members voted</span></div>
+      ${mine ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:0.3rem;">Your vote: ${VOTE_LABEL[mine]}</div>` : ''}
+      ${m.outcome_note ? `<p style="font-size:0.86rem;line-height:1.65;margin-top:0.6rem;"><strong>Note from the Chair's office:</strong> ${escHtml(m.outcome_note)}</p>` : ''}
+      <div style="font-size:0.76rem;color:var(--muted);margin-top:0.5rem;">These are counts only. How they apply under the bylaws is decided by the board.</div>`;
+  }
+  return `<div class="card"><div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;align-items:flex-start;"><div class="doc-title" style="font-size:1.02rem;">${escHtml(m.title)}</div>${typeBadge}</div>
+    <p style="font-size:0.88rem;line-height:1.7;white-space:pre-line;margin-top:0.5rem;">${escHtml(m.body)}</p>${body}</div>`;
+}
+async function castVote(id) {
+  const c = document.querySelector(`input[name="vote-${id}"]:checked`);
+  if (!c) { toast('Please choose Yes, No or Abstain.', 'error'); return; }
+  if (!confirm(`Record your vote as "${VOTE_LABEL[c.value]}"? You can change it until voting closes.`)) return;
+  try { await rpc('lm_cast_vote', { p_motion: id, p_choice: c.value }); toast('Your vote is recorded.'); }
+  catch (e) { toast(e.message || 'Your vote could not be recorded.', 'error'); }
+  loadVotes();
+}
+
+// ── STRATEGIC PLAN
+let _plan = [];
+const RATING_LABEL = { green: 'On track', amber: 'Needs attention', red: 'Off track' };
+async function loadPlan() {
+  _plan = await dbq('lm_strategic_goals', { select:'*', order:'plan_year.desc,sort_order.asc' });
+  const years = [...new Set(_plan.map(g => g.plan_year))];
+  const sel = document.getElementById('plan-year'), prev = sel.value;
+  sel.innerHTML = years.map(y => `<option>${y}</option>`).join(''); if (prev && years.map(String).includes(prev)) sel.value = prev;
+  renderPlan();
+}
+function renderPlan() {
+  const el = document.getElementById('plan-body'), y = Number(document.getElementById('plan-year').value);
+  const rows = _plan.filter(g => g.plan_year === y);
+  if (!rows.length) { el.innerHTML = `<div class="card">${EMPTY('The strategic plan has not been added yet.')}</div>`; return; }
+  const vision = rows.find(g => g.kind === 'vision'), ann = rows.filter(g => g.kind === 'annual');
+  const cnt = r => ann.filter(g => g.rating === r).length, none = ann.filter(g => !g.rating).length;
+  const badge = g => g.rating ? `<span class="badge badge-${g.rating === 'green' ? 'green' : g.rating === 'amber' ? 'amber' : 'red'}">${RATING_LABEL[g.rating]}</span>` : '<span class="badge badge-muted">Not rated yet</span>';
+  let html = '';
+  if (vision) html += `<div class="card" style="border-left:4px solid var(--blue);"><div class="doc-tag" style="color:var(--blue);">Our vision</div><p style="font-size:0.98rem;line-height:1.75;margin-top:0.3rem;">${escHtml(vision.goal)}</p></div>`;
+  html += `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;"><span class="badge badge-green">${cnt('green')} on track</span><span class="badge badge-amber">${cnt('amber')} need attention</span><span class="badge badge-red">${cnt('red')} off track</span><span class="badge badge-muted">${none} not rated yet</span></div>`;
+  const pillars = rows.filter(g => g.kind === 'background');
+  const shown = new Set();
+  pillars.forEach(b => {
+    const kids = ann.filter(g => g.pillar === b.goal); kids.forEach(k => shown.add(k.id));
+    html += planPillar(b.goal, kids, badge);
+  });
+  const orphans = ann.filter(g => !shown.has(g.id)); if (orphans.length) html += planPillar('Other goals', orphans, badge);
+  el.innerHTML = html;
+}
+function planPillar(title, kids, badge) {
+  return `<div class="card"><h2 class="section-h" style="margin-top:0;font-size:1.02rem;">${escHtml(title)}</h2>` +
+    (kids.length ? kids.map(g => `<div class="plan-goal"><div style="display:flex;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;align-items:flex-start;"><div style="font-weight:600;font-size:0.92rem;flex:1;min-width:220px;">${escHtml(g.goal)}</div>${badge(g)}</div>
+      ${g.steps ? `<div style="font-size:0.84rem;line-height:1.65;white-space:pre-line;color:var(--text);margin-top:0.4rem;"><strong>Steps:</strong> ${escHtml(g.steps)}</div>` : ''}
+      ${g.latest_update ? `<div style="font-size:0.84rem;line-height:1.65;white-space:pre-line;margin-top:0.4rem;"><strong>Latest update</strong> <span style="color:var(--muted);">(${escHtml(fmtDate(g.updated_at))})</span>: ${escHtml(g.latest_update)}</div>` : ''}</div>`).join('') : EMPTY('No annual goals under this one yet.')) + '</div>';
+}
+
+// ── EVENTS AND CALENDAR
+const EVENT_TYPE = { retreat: 'Retreat', lpb: 'Legislative Prayer Breakfast', lrc: 'Living Reconciled Celebration', committee: 'Committee', other: 'Event', meeting: 'Board Meeting' };
+const _calItems = {};
+function eventCal(e) {
+  const sd = String(e.start_date).slice(0, 10), ed = String(e.end_date || e.start_date).slice(0, 10), times = parseMeetingTimes(e.start_time);
+  let start, end, allDay = false;
+  if (times.length) {
+    start = localStamp(sd, times[0].h, times[0].mi);
+    const sm = times[0].h * 60 + times[0].mi; let em = times[1] ? times[1].h * 60 + times[1].mi : sm + 120, dayAdd = 0;
+    if (ed === sd && em <= sm) em += 1440;
+    if (em >= 1440) { dayAdd = Math.floor(em / 1440); em %= 1440; }
+    const d2 = new Date(ed + 'T12:00:00'); d2.setDate(d2.getDate() + dayAdd);
+    end = d2.getFullYear() + p2(d2.getMonth() + 1) + p2(d2.getDate()) + 'T' + p2(Math.floor(em / 60)) + p2(em % 60) + '00';
+  } else {
+    allDay = true; start = sd.replace(/-/g, '');
+    const x = new Date(ed + 'T12:00:00'); x.setDate(x.getDate() + 1); end = x.getFullYear() + p2(x.getMonth() + 1) + p2(x.getDate());
+  }
+  return { id: 'event-' + e.id, title: e.title, location: e.location || '', desc: e.description || '', start, end, allDay };
+}
+function calLinks(key, c, fname) {
+  _calItems[key] = { c, fname };
+  return `<div style="font-size:0.76rem;color:var(--muted);margin-top:0.35rem;">Add to calendar: <a href="#" style="color:var(--blue);font-weight:600;text-decoration:none;" onclick="addCalItem('${key}','google');return false;">Google</a> &middot; <a href="#" style="color:var(--blue);font-weight:600;text-decoration:none;" onclick="addCalItem('${key}','ics');return false;">Apple, Outlook (.ics)</a></div>`;
+}
+function addCalItem(key, kind) {
+  const it = _calItems[key]; if (!it) return; const c = it.c;
+  if (kind === 'google') {
+    const q = new URLSearchParams({ action: 'TEMPLATE', text: c.title, dates: c.start + '/' + c.end });
+    if (c.location) q.set('location', c.location); if (c.desc) q.set('details', c.desc);
+    window.open('https://calendar.google.com/calendar/render?' + q.toString(), '_blank', 'noopener'); return;
+  }
+  const blob = new Blob([buildMeetingIcs(c)], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = it.fname;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function dateRange(e) {
+  const a = String(e.start_date).slice(0, 10), b = String(e.end_date || '').slice(0, 10);
+  return b && b !== a ? fmtDate(a) + ' to ' + fmtDate(b) : fmtLongDate(a);
+}
+let _calAll = [], _calType = 'all';
+async function loadCalendar() {
+  const [meetings, events] = await Promise.all([
+    dbq('lm_board_meetings', { select:'*', order:'meeting_date.asc' }),
+    dbq('lm_board_events', { select:'*', order:'start_date.asc' }).catch(e => { if (e.status === 404 || e.status === 400) return []; throw e; })
+  ]);
+  _calAll = [
+    ...meetings.map(m => ({ kind: 'meeting', type: 'meeting', date: String(m.meeting_date).slice(0, 10), end: null, title: m.title || 'Board Meeting', location: m.location, time: m.start_time, raw: m })),
+    ...events.map(e => ({ kind: 'event', type: e.event_type, date: String(e.start_date).slice(0, 10), end: e.end_date ? String(e.end_date).slice(0, 10) : null, title: e.title, location: e.location, time: e.start_time, raw: e }))
+  ].sort((a, b) => a.date.localeCompare(b.date));
+  const types = [['all', 'All'], ...Object.keys(EVENT_TYPE).filter(t => _calAll.some(i => i.type === t)).map(t => [t, EVENT_TYPE[t]])];
+  document.getElementById('cal-filters').innerHTML = types.map(([k, l]) => `<button class="filter-btn ${_calType === k ? 'active' : ''}" onclick="setCalType('${k}')">${escHtml(l)}</button>`).join('');
+  renderCalendar();
+}
+function setCalType(k) { _calType = k; loadCalendar(); }
+function renderCalendar() {
+  const showPast = document.getElementById('cal-past').checked, today = todayStr();
+  const list = _calAll.filter(i => (_calType === 'all' || i.type === _calType) && (showPast || (i.end || i.date) >= today));
+  const el = document.getElementById('cal-list');
+  if (!list.length) { el.innerHTML = `<div class="card">${EMPTY('Nothing is on the calendar yet.')}</div>`; return; }
+  let month = '', html = '';
+  list.forEach(i => {
+    const m = new Date(i.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (m !== month) { month = m; html += `<div class="cal-month">${escHtml(m)}</div>`; }
+    const upcoming = (i.end || i.date) >= today;
+    const cal = i.kind === 'meeting' ? meetingCal(i.raw) : eventCal(i.raw);
+    html += `<div class="meeting-card ${upcoming ? 'next' : ''}"><div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;align-items:flex-start;">
+      <div><div class="meeting-date">${escHtml(i.title)}</div><div class="meeting-meta">${escHtml(i.kind === 'meeting' ? fmtLongDate(i.date) : dateRange(i.raw))}${i.time ? ' &middot; ' + escHtml(i.time) : ''}${i.location ? ' &middot; ' + escHtml(i.location) : ''}</div></div>
+      <span class="badge badge-${i.kind === 'meeting' ? 'navy' : 'blue'}">${escHtml(EVENT_TYPE[i.type] || 'Event')}</span></div>
+      ${upcoming ? calLinks(i.kind + '-' + i.raw.id, cal, i.kind + '-' + i.date + '.ics') : ''}</div>`;
+  });
+  el.innerHTML = html;
+}
+async function loadBoardEvents() {
+  const [events, docs] = await Promise.all([
+    dbq('lm_board_events', { select:'*', order:'start_date.asc' }),
+    dbq('lm_board_documents', { select:'*', event_id:'not.is.null', order:'created_at.asc' }).catch(e => { if (e.status === 400) return []; throw e; })
+  ]);
+  indexDocs(docs);
+  const today = todayStr(), el = document.getElementById('events-list');
+  if (!events.length) { el.innerHTML = `<div class="card">${EMPTY('No board events have been added yet.')}</div>`; return; }
+  const card = e => {
+    const upcoming = String(e.end_date || e.start_date).slice(0, 10) >= today, ed = docs.filter(d => d.event_id === e.id);
+    return `<div class="meeting-card ${upcoming ? 'next' : ''}"><div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;align-items:flex-start;">
+      <div><div class="meeting-date">${escHtml(e.title)}</div><div class="meeting-meta">${escHtml(dateRange(e))}${e.start_time ? ' &middot; ' + escHtml(e.start_time) : ''}${e.location ? ' &middot; ' + escHtml(e.location) : ''}</div></div>
+      <span class="badge badge-blue">${escHtml(EVENT_TYPE[e.event_type] || 'Event')}</span></div>
+      ${e.description ? `<p style="font-size:0.86rem;line-height:1.65;white-space:pre-line;margin-top:0.5rem;">${escHtml(e.description)}</p>` : ''}
+      ${upcoming ? calLinks('event-' + e.id, eventCal(e), 'event-' + String(e.start_date).slice(0, 10) + '.ics') : ''}
+      <div style="margin-top:0.6rem;">${ed.length ? ed.map(d => docRow(d, true)).join('') : EMPTY('No materials or reports have been added yet.')}</div></div>`;
+  };
+  const up = events.filter(e => String(e.end_date || e.start_date).slice(0, 10) >= today), past = events.filter(e => String(e.end_date || e.start_date).slice(0, 10) < today).reverse();
+  el.innerHTML = (up.length ? '<h2 class="section-h" style="margin-top:0;">Coming up</h2>' + up.map(card).join('') : '') + (past.length ? '<h2 class="section-h">Past events</h2>' + past.map(card).join('') : '');
 }
 
 // ── ROSTER
@@ -979,5 +1249,19 @@ async function saveChangePw() {
 }
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
+<script>
+(function () {
+  function panel() { return document.getElementById('acct-panel'); }
+  function closeAcct() { const p = panel(), t = document.getElementById('acct-toggle'); if (p) p.classList.remove('open'); if (t) t.setAttribute('aria-expanded', 'false'); }
+  window.closeAcctMenu = closeAcct;
+  window.toggleAcct = function (e) {
+    if (e) e.stopPropagation();
+    const p = panel(), t = document.getElementById('acct-toggle'); if (!p) return;
+    const open = !p.classList.contains('open'); p.classList.toggle('open', open); t.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  document.addEventListener('click', closeAcct);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAcct(); });
+})();
+</script>
 </body>
 </html>
