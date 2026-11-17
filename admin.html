@@ -356,6 +356,18 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<!-- EDIT ENTRY (reports, stories, prayer requests, movements) -->
+<div class="modal-overlay" id="modal-ed">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header"><div class="modal-title" id="ed-title">Edit</div><button class="modal-close" type="button" onclick="closeModal('modal-ed')">&times;</button></div>
+    <div class="modal-body"><div id="ed-fields"></div><div class="form-error" id="ed-error"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" type="button" onclick="closeModal('modal-ed')">Cancel</button>
+      <button class="btn btn-primary" type="button" id="ed-save" onclick="edSaveGeneric()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- EVENT SIGN-UPS -->
 <div class="modal-overlay" id="modal-signups">
   <div class="modal" style="max-width:820px;">
@@ -444,7 +456,8 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div class="sidebar-section" style="margin-top:0;">
         <div class="sidebar-label">Overview</div>
         <nav class="sidebar-nav">
-          <a class="sidebar-link" href="#" onclick="showSection('impact')">&#128200; Impact Dashboard</a>
+          <a class="sidebar-link" href="#" onclick="showSection('impact')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg> Impact Dashboard</a>
+          <a class="sidebar-link" href="#" onclick="showSection('statewide')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/></svg> Statewide Snapshot</a>
         </nav>
       </div>
       <div class="sidebar-section" style="margin-top:1rem;">
@@ -487,8 +500,8 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
             Submit Report
           </a>
-          <a class="sidebar-link" href="#" onclick="showSection('staff')">&#127908; Staff Activity</a>
-          <a class="sidebar-link" href="#" onclick="showSection('evals')">&#127891; Training Evaluations</a>
+          <a class="sidebar-link" href="#" onclick="showSection('staff')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"/></svg> Staff Activity</a>
+          <a class="sidebar-link" href="#" onclick="showSection('evals')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg> Training Evaluations</a>
           <a class="sidebar-link" href="#" onclick="showSection('stories')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
             Stories
@@ -511,7 +524,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div class="sidebar-section" style="margin-top:1rem;" id="sidebar-board-group">
         <div class="sidebar-label">Board</div>
         <nav class="sidebar-nav">
-          <a class="sidebar-link" href="#" onclick="showSection('board')">&#128188; Board Content</a>
+          <a class="sidebar-link" href="#" onclick="showSection('board')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg> Board Content</a>
         </nav>
       </div>
       <div class="sidebar-section" style="margin-top:1rem;">
@@ -521,8 +534,8 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
             Users
           </a>
-          <a class="sidebar-link" id="sidebar-export-link" href="#" style="display:none" onclick="exportEverything();return false;">&#128190; Export All Data</a>
-          <a class="sidebar-link" href="#" onclick="openSearch();return false;">&#128269; Search</a>
+          <a class="sidebar-link" id="sidebar-export-link" href="#" style="display:none" onclick="exportEverything();return false;"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg> Export All Data</a>
+          <a class="sidebar-link" href="#" onclick="openSearch();return false;"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg> Search</a>
         </nav>
       </div>
     </aside>
@@ -774,6 +787,22 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div class="im-cards" id="ev-cards"></div>
         <div class="card" style="margin-bottom:1.2rem;"><div class="card-title" style="margin-bottom:0.5rem;">Active movements with no evaluation in this period</div><div id="ev-missing" style="font-size:0.86rem;line-height:1.7;"></div></div>
         <div class="table-wrap"><table><thead><tr><th>Date</th><th>Movement</th><th>Training</th><th>Attended</th><th>Forms</th><th>Overall</th><th>Recommend</th><th>Comments</th></tr></thead><tbody id="ev-table"></tbody></table></div>
+      </div>
+
+      <!-- STATEWIDE SNAPSHOT -->
+      <div id="section-statewide" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Statewide Snapshot</h1>
+          <p class="page-sub">Where local movements stand today, based on what coordinators have reported.</p>
+        </div>
+        <div class="form-error" id="sw-error" style="display:none;margin-bottom:1rem;"></div>
+        <div class="im-cards" id="sw-stats" style="margin-bottom:1.5rem;"></div>
+        <h2 class="im-h" style="margin-top:0;">Local Movements</h2>
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr><th>Movement</th><th>Phase</th><th>Events Reported</th><th>People Reached</th><th>Last Event</th></tr></thead>
+          <tbody id="sw-table"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody>
+        </table></div>
+        <p style="font-size:0.78rem;color:var(--muted);margin-top:0.9rem;">Event counts reflect reports submitted by coordinators and may lag actual activity. This is the same view the board sees. For totals by year and program, open the Impact Dashboard.</p>
       </div>
 
       <!-- STORIES -->
@@ -1654,7 +1683,7 @@ async function loadMovementsData() {
 
 function showSection(name) {
   if (name === 'board' && !mySuper) { toast('The Board portal content is managed by super admins.', 'error'); return; }
-  ['impact','staff','evals','overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
+  ['impact','statewide','staff','evals','overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
   document.querySelectorAll('.sidebar-link, .mobile-tabs a').forEach(l=>l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l=>l.classList.add('active'));
@@ -1667,7 +1696,7 @@ function showSection(name) {
     overview:loadOverview, movements:loadMovementsTable,
     coordinators:loadCoordinators, 'submit-report':loadSubmitReport, reports:loadAllReports,
     stories:loadStories, profiles:loadCommunityProfiles, training:loadAdminTraining, prayer:loadAdminPrayer, timeline:loadTimeline, 'milestone-overview':loadMilestoneOverview, announcements:loadAnnouncements,
-    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin, impact:loadImpact, staff:loadStaff, evals:loadEvals
+    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin, impact:loadImpact, staff:loadStaff, evals:loadEvals, statewide:loadStatewideAdmin
   };
   if (loaders[name]) loaders[name]();
 }
@@ -1691,7 +1720,7 @@ async function loadOverview() {
       <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
       <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
       <td>${rpts.length}</td>
-      <td><button class="btn btn-sm btn-outline" onclick="editPhase('${m.id}','${m.phase}','${escHtml(m.city)}')">Edit Phase</button> <button class="btn btn-sm btn-outline" onclick="adminGenerateReport('${m.id}')">Report</button></td>
+      <td><button class="btn btn-sm btn-outline" onclick="editEntry('movement','${m.id}')">Edit</button> <button class="btn btn-sm btn-outline" onclick="editPhase('${m.id}','${m.phase}','${escHtml(m.city)}')">Next Phase</button> <button class="btn btn-sm btn-outline" onclick="adminGenerateReport('${m.id}')">Report</button></td>
     </tr>`;
   }));
   tbody.innerHTML = rows.join('');
@@ -2019,7 +2048,7 @@ async function loadAllReports() {
   const rpts = await dbGet('lm_event_reports', params, session.access_token);
   const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const tbody = document.getElementById('all-reports-table');
-  window._allReportsCache = rpts; window._allReportsMov = movMap;
+  window._allReportsCache = rpts; _edRows.report = rpts; window._allReportsMov = movMap;
   if (!rpts.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem;">No reports found.</td></tr>'; return; }
   tbody.innerHTML = rpts.map(r=>`<tr>
     <td style="font-weight:600;">${escHtml(movMap[r.movement_id]||'—')}</td>
@@ -2028,13 +2057,14 @@ async function loadAllReports() {
     <td>${r.attendance??'—'}</td>
     <td style="font-size:0.8rem;">${escHtml(rdLocation(r) || '—')}</td>
     <td style="color:var(--muted);font-size:0.8rem;">${escHtml((r.description||'').slice(0,80))}</td>
-    <td><button class="btn btn-sm btn-outline" onclick="showReportDetail('${r.id}')">Details</button></td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="showReportDetail('${r.id}')">Details</button> <button class="btn btn-sm btn-outline" onclick="editEntry('report','${r.id}')">Edit</button></td>
   </tr>`).join('');
 }
 
 // ── STORIES
 async function loadStories() {
   const stories = await dbGet('lm_stories', { select:'*', order:'created_at.desc' }, session.access_token);
+  _edRows.story = stories;
   const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const el = document.getElementById('stories-list');
   if (!stories.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128195;</div><div class="empty-state-text">No stories submitted yet.</div></div>'; return; }
@@ -2050,6 +2080,7 @@ async function loadStories() {
         <div style="display:flex;flex-direction:column;gap:0.45rem;flex-shrink:0;">
           ${!s.approved?`<button class="btn btn-sm btn-blue" onclick="approveStory('${s.id}')">Approve</button>`:
             '<span class="badge badge-green">Approved</span>'}
+          <button class="btn btn-sm btn-outline" onclick="editEntry('story','${s.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteStory('${s.id}')">Delete</button>
         </div>
       </div>
@@ -2061,6 +2092,7 @@ async function deleteStory(id) { if(!confirm('Delete this story?')) return; awai
 // ── ANNOUNCEMENTS
 async function loadAnnouncements() {
   const items = await dbGet('lm_announcements', { select:'*', order:'pinned.desc,created_at.desc' }, session.access_token);
+  _edRows.announce = items;
   const el = document.getElementById('announce-list');
   if (!items.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128226;</div><div class="empty-state-text">No announcements yet.</div></div>'; return; }
   el.innerHTML = items.map(a=>`
@@ -2071,7 +2103,7 @@ async function loadAnnouncements() {
           <div class="card-meta">${fmtDate(a.created_at)}</div>
           <p style="font-size:0.86rem;color:var(--text);line-height:1.7;margin-top:0.4rem;">${escHtml(a.body)}</p>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteAnnounce('${a.id}')">Delete</button>
+        <div style="display:flex;gap:0.5rem;"><button class="btn btn-sm btn-outline" onclick="editEntry('announce','${a.id}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteAnnounce('${a.id}')">Delete</button></div>
       </div>
     </div>`).join('');
 }
@@ -2080,8 +2112,8 @@ async function saveAnnouncement() {
   const body=document.getElementById('an-body').value.trim();
   const errEl=document.getElementById('an-error'); errEl.style.display='none';
   if (!title||!body) { errEl.textContent='Title and body required.'; errEl.style.display='block'; return; }
-  await dbPost('lm_announcements',{ title,body,pinned:document.getElementById('an-pinned').checked,created_by:currentUserId },session.access_token);
-  closeModal('modal-announce'); toast('Announcement published.'); loadAnnouncements();
+  try { await edSave('announce','lm_announcements',{ title,body,pinned:document.getElementById('an-pinned').checked },{ created_by:currentUserId }); } catch (e) { errEl.textContent=e.message||'Could not save.'; errEl.style.display='block'; return; }
+  closeModal('modal-announce'); toast(_edLast ? 'Announcement updated.' : 'Announcement published.'); loadAnnouncements();
 }
 async function deleteAnnounce(id) { if(!confirm('Delete this announcement?')) return; await dbDelete('lm_announcements',id,session.access_token); toast('Deleted.'); loadAnnouncements(); }
 
@@ -2101,7 +2133,7 @@ async function loadEvents() {
   _rsvpReady = rs.ok;
   _rsvpTotals = {};
   rs.rows.forEach(r => { const k = String(r.event_id); _rsvpTotals[k] = _rsvpTotals[k] || { people: 0, signups: 0 }; _rsvpTotals[k].people += r.guests || 0; _rsvpTotals[k].signups += 1; });
-  _events = items;
+  _events = items; _edRows.event = items;
   const el = document.getElementById('events-list');
   if (!items.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128197;</div><div class="empty-state-text">No events yet.</div></div>'; return; }
   el.innerHTML = items.map(e=>{
@@ -2116,6 +2148,7 @@ async function loadEvents() {
         ${e.description?`<p style="font-size:0.82rem;color:var(--muted);margin-top:0.35rem;">${escHtml(e.description)}</p>`:''}
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-outline" onclick="editEntry('event','${e.id}')">Edit</button>
         <button class="btn btn-sm btn-outline" onclick="openEventSignups('${e.id}')">Sign-ups</button>
         <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Delete</button>
       </div>
@@ -2138,15 +2171,17 @@ async function saveEvent() {
     created_by:currentUserId };
   // Only send the sign-up columns when they are used, so ordinary events still save before the database update is run.
   if (rsvp) { row.rsvp_enabled = true; row.rsvp_limit = limit; }
-  await dbPost('lm_events',row,session.access_token);
-  document.getElementById('ev-rsvp').checked = false; document.getElementById('ev-limit').value = '';
-  closeModal('modal-event'); toast('Event added.'); loadEvents();
+  else if (_ed.event && _rsvpReady) { row.rsvp_enabled = false; row.rsvp_limit = null; }
+  delete row.created_by;
+  try { await edSave('event','lm_events',row,{ created_by:currentUserId }); } catch (e) { errEl.textContent=e.message||'Could not save.'; errEl.style.display='block'; return; }
+  closeModal('modal-event'); toast(_edLast ? 'Event updated.' : 'Event added.'); loadEvents();
 }
 async function deleteEvent(id) { if(!confirm('Delete this event?')) return; await dbDelete('lm_events',id,session.access_token); toast('Deleted.'); loadEvents(); }
 
 // ── DOCUMENTS
 async function loadDocuments() {
   const items = await dbGet('lm_documents', { select:'*', order:'category.asc,title.asc' }, session.access_token);
+  _edRows.doc = items;
   const tbody = document.getElementById('docs-table');
   if (!items.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No documents yet.</td></tr>'; return; }
   tbody.innerHTML = items.map(d=>`<tr>
@@ -2154,7 +2189,7 @@ async function loadDocuments() {
     <td><span class="badge badge-navy">${escHtml(d.category)}</span></td>
     <td style="color:var(--muted);">${escHtml(d.file_size||'—')}</td>
     <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(d.created_at)}</td>
-    <td><button class="btn btn-sm btn-danger" onclick="deleteDoc('${d.id}')">Delete</button></td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="editEntry('doc','${d.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteDoc('${d.id}')">Delete</button></td>
   </tr>`).join('');
 }
 async function saveDocument() {
@@ -2162,23 +2197,22 @@ async function saveDocument() {
   const url=document.getElementById('doc-url').value.trim();
   const errEl=document.getElementById('doc-error'); errEl.style.display='none';
   if (!title||!url) { errEl.textContent='Title and URL required.'; errEl.style.display='block'; return; }
-  await dbPost('lm_documents',{ title, category:document.getElementById('doc-cat').value,
-    file_url:url, file_size:document.getElementById('doc-size').value.trim()||null,
-    created_by:currentUserId },session.access_token);
-  closeModal('modal-doc'); toast('Document added.'); loadDocuments();
+  try { await edSave('doc','lm_documents',{ title, category:document.getElementById('doc-cat').value, file_url:url, file_size:document.getElementById('doc-size').value.trim()||null },{ created_by:currentUserId }); } catch (e) { errEl.textContent=e.message||'Could not save.'; errEl.style.display='block'; return; }
+  closeModal('modal-doc'); toast(_edLast ? 'Document updated.' : 'Document added.'); loadDocuments();
 }
 async function deleteDoc(id) { if(!confirm('Delete this document?')) return; await dbDelete('lm_documents',id,session.access_token); toast('Deleted.'); loadDocuments(); }
 
 // ── ASSETS
 async function loadAssets() {
   const items = await dbGet('lm_assets', { select:'*', order:'category.asc,title.asc' }, session.access_token);
+  _edRows.asset = items;
   const tbody = document.getElementById('assets-table');
   if (!items.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem;">No assets yet.</td></tr>'; return; }
   tbody.innerHTML = items.map(a=>`<tr>
     <td><a href="${a.file_url}" target="_blank" style="color:var(--blue);font-weight:600;">${escHtml(a.title)}</a></td>
     <td><span class="badge badge-coral">${escHtml(a.category)}</span></td>
     <td style="color:var(--muted);font-size:0.8rem;">${fmtDate(a.created_at)}</td>
-    <td><button class="btn btn-sm btn-danger" onclick="deleteAsset('${a.id}')">Delete</button></td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="editEntry('asset','${a.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteAsset('${a.id}')">Delete</button></td>
   </tr>`).join('');
 }
 async function saveAsset() {
@@ -2186,9 +2220,8 @@ async function saveAsset() {
   const url=document.getElementById('ast-url').value.trim();
   const errEl=document.getElementById('ast-error'); errEl.style.display='none';
   if (!title||!url) { errEl.textContent='Title and URL required.'; errEl.style.display='block'; return; }
-  await dbPost('lm_assets',{ title, category:document.getElementById('ast-cat').value,
-    file_url:url, created_by:currentUserId },session.access_token);
-  closeModal('modal-asset'); toast('Asset added.'); loadAssets();
+  try { await edSave('asset','lm_assets',{ title, category:document.getElementById('ast-cat').value, file_url:url },{ created_by:currentUserId }); } catch (e) { errEl.textContent=e.message||'Could not save.'; errEl.style.display='block'; return; }
+  closeModal('modal-asset'); toast(_edLast ? 'Asset updated.' : 'Asset added.'); loadAssets();
 }
 async function deleteAsset(id) { if(!confirm('Delete this asset?')) return; await dbDelete('lm_assets',id,session.access_token); toast('Deleted.'); loadAssets(); }
 
@@ -2700,6 +2733,7 @@ const MILESTONES_ADMIN = [
 // ── PRAYER WALL (admin)
 async function loadAdminPrayer() {
   const items = await dbGet('lm_prayer_wall', { select:'*', order:'created_at.desc' }, session.access_token);
+  _edRows.prayer = items;
   const movMap = Object.fromEntries(movements.map(m=>[m.id, m.county_name||m.city]));
   const el = document.getElementById('admin-prayer-list');
   if (!items.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-text">No prayer requests posted yet.</div></div>'; return; }
@@ -2714,6 +2748,7 @@ async function loadAdminPrayer() {
         </div>
         <div style="display:flex;gap:0.4rem;">
           ${!p.answered?`<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.6rem;border:1px solid var(--success);color:var(--success);background:transparent;" onclick="adminMarkPrayerAnswered('${p.id}')">Mark Answered</button>`:''}
+          <button class="btn btn-sm btn-outline" onclick="editEntry('prayer','${p.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="adminDeletePrayer('${p.id}')">Delete</button>
         </div>
       </div>
@@ -4105,6 +4140,28 @@ function bd2RollExport() {
   XLSX.writeFile(wb, 'MM_Roll_Call_' + new Date().toISOString().slice(0, 10) + '.xlsx');
 }
 
+// ── STATEWIDE SNAPSHOT (same view the board sees)
+async function loadStatewideAdmin() {
+  const err = document.getElementById('sw-error'); err.style.display = 'none';
+  await loadMovementsData();
+  const rr = await fetchAllRows('lm_event_reports', session.access_token);
+  if (!rr.ok) { err.textContent = 'Event reports could not be loaded, so the counts below may be low. Please refresh.'; err.style.display = 'block'; }
+  const reps = rr.rows, by = {};
+  reps.forEach(r => { const m = by[r.movement_id] || (by[r.movement_id] = { n: 0, att: 0, last: '' }); m.n++; m.att += Number(r.attendance) || 0; const d = String(r.event_date || '').slice(0, 10); if (d > m.last) m.last = d; });
+  const movs = [...movements].sort((a, b) => String(a.city || '').localeCompare(String(b.city || '')));
+  const phases = {}; movs.forEach(m => { const p = m.phase || 'Unspecified'; phases[p] = (phases[p] || 0) + 1; });
+  const phaseText = Object.keys(phases).map(k => phases[k] + ' ' + k).join(', ');
+  const total = reps.reduce((s, r) => s + (Number(r.attendance) || 0), 0);
+  document.getElementById('sw-stats').innerHTML =
+    `<div class="stat-card stat-accent"><div class="stat-num">${movs.length}</div><div class="stat-label">Local Movements</div>${phaseText ? `<div class="im-sub">${escHtml(phaseText)}</div>` : ''}</div>` +
+    `<div class="stat-card"><div class="stat-num">${fmtN(reps.length)}</div><div class="stat-label">Events Reported</div></div>` +
+    `<div class="stat-card"><div class="stat-num">${fmtN(total)}</div><div class="stat-label">Total Attendance Reported</div></div>`;
+  document.getElementById('sw-table').innerHTML = movs.length ? movs.map(m => {
+    const x = by[m.id] || { n: 0, att: 0, last: '' };
+    return `<tr><td style="font-weight:600;">${escHtml(m.county_name || m.city)}</td><td>${m.phase ? `<span class="badge phase-${escHtml(String(m.phase).toLowerCase())}">${escHtml(m.phase)}</span>` : ''}</td><td>${x.n}</td><td>${fmtN(x.att)}</td><td style="color:var(--muted);">${x.last ? fmtDate(x.last) : 'None yet'}</td></tr>`;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No movements yet.</td></tr>';
+}
+
 // ── TRAINING EVALUATIONS (admin)
 let _ev = [];
 const evYear = () => document.getElementById('ev-year').value;
@@ -4250,6 +4307,132 @@ function imExport() {
 }
 </script>
 
+
+<script>
+// ── EDIT ANY ENTRY
+// The Add windows for announcements, events, documents and assets double as Edit windows. Reports, stories,
+// prayer requests and movements share one Edit window (modal-ed).
+var _ed = {}, _edRows = {}, _edLast = false, _edCur = null;
+var ED_MODALS = { announce: 'modal-announce', event: 'modal-event', doc: 'modal-doc', asset: 'modal-asset' };
+var ED_SAVE_LABEL = { announce: 'Publish', event: 'Add Event', doc: 'Add Document', asset: 'Add Asset' };
+async function edSave(kind, table, row, createOnly) {
+  _edLast = !!_ed[kind];
+  if (_ed[kind]) return dbPatch(table, _ed[kind], row, session.access_token);
+  return dbPost(table, Object.assign({}, row, createOnly || {}), session.access_token);
+}
+function edSetSelect(id, val) {
+  var sel = document.getElementById(id); if (!sel || val == null) return;
+  if (![].some.call(sel.options, function (o) { return o.value === val || o.text === val; })) sel.insertAdjacentHTML('beforeend', '<option>' + escHtml(val) + '</option>');
+  sel.value = val;
+}
+function editEntry(kind, id) {
+  var row = (_edRows[kind] || []).find(function (r) { return String(r.id) === String(id); });
+  if (kind === 'movement') row = movements.find(function (r) { return String(r.id) === String(id); });
+  if (!row) { toast('That entry could not be found. Please refresh the page.', 'error'); return; }
+  if (ED_MODALS[kind]) {
+    var m = document.getElementById(ED_MODALS[kind]);
+    _ed[kind] = row.id;
+    if (kind === 'announce') { v('an-title', row.title); v('an-body', row.body); document.getElementById('an-pinned').checked = !!row.pinned; }
+    if (kind === 'event') {
+      v('ev-title', row.title); edSetSelect('ev-type', row.event_type); v('ev-date', String(row.event_date || '').slice(0, 10)); v('ev-location', row.location); v('ev-desc', row.description); v('ev-url', row.registration_url);
+      document.getElementById('ev-rsvp').checked = row.rsvp_enabled === true; v('ev-limit', row.rsvp_limit);
+    }
+    if (kind === 'doc') { v('doc-title', row.title); edSetSelect('doc-cat', row.category); v('doc-url', row.file_url); v('doc-size', row.file_size); }
+    if (kind === 'asset') { v('ast-title', row.title); edSetSelect('ast-cat', row.category); v('ast-url', row.file_url); }
+    m.querySelector('.modal-title').textContent = 'Edit ' + { announce: 'Announcement', event: 'Event', doc: 'Document', asset: 'Asset' }[kind];
+    m.querySelector('.modal-footer .btn-primary').textContent = 'Save changes';
+    openModal(ED_MODALS[kind]); return;
+  }
+  openGenericEdit(kind, row);
+}
+function v(id, val) { var el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
+Object.keys(ED_MODALS).forEach(function (kind) {
+  var m = document.getElementById(ED_MODALS[kind]), orig = m.querySelector('.modal-title').textContent;
+  new MutationObserver(function () {
+    if (m.classList.contains('open')) return;
+    if (!_ed[kind]) return;
+    _ed[kind] = null;
+    m.querySelector('.modal-title').textContent = orig; m.querySelector('.modal-footer .btn-primary').textContent = ED_SAVE_LABEL[kind];
+    m.querySelectorAll('input[type=text],input[type=url],input[type=date],input[type=number],textarea').forEach(function (i) { i.value = ''; });
+    m.querySelectorAll('input[type=checkbox]').forEach(function (i) { i.checked = false; });
+    m.querySelectorAll('select').forEach(function (i) { i.selectedIndex = 0; });
+    var er = m.querySelector('.form-error'); if (er) er.style.display = 'none';
+  }).observe(m, { attributes: true, attributeFilter: ['class'] });
+});
+
+function edField(id, label, input, hint) { return '<div class="form-group"><label class="form-label" for="' + id + '">' + label + '</label>' + input + (hint ? '<div class="form-hint">' + hint + '</div>' : '') + '</div>'; }
+function openGenericEdit(kind, row) {
+  _edCur = { kind: kind, id: row.id }; document.getElementById('ed-error').style.display = 'none';
+  var el = document.getElementById('ed-fields'), t = document.getElementById('ed-title'), h = '';
+  if (kind === 'report') {
+    t.textContent = 'Edit Event Report';
+    var mv = movements.map(function (m) { return '<option value="' + m.id + '"' + (String(m.id) === String(row.movement_id) ? ' selected' : '') + '>' + escHtml(m.county_name || m.city) + '</option>'; }).join('');
+    h = edField('ed-movement', 'Movement', '<select class="form-select" id="ed-movement">' + mv + '</select>') +
+      '<div class="form-row">' + edField('ed-type', 'Event type', '<select class="form-select" id="ed-type">' + document.getElementById('ar-type').innerHTML.replace('<option value="">Select type...</option>', '') + '</select>') + edField('ed-date', 'Date', '<input class="form-input" type="date" id="ed-date">') + '</div>' +
+      edField('ed-attendance', 'Attendance', '<input class="form-input" type="number" min="0" id="ed-attendance">') +
+      edField('ed-desc', 'Description', '<textarea class="form-textarea" id="ed-desc"></textarea>') + '<div id="ed-details">' + rdHtml('ared') + '</div>';
+    el.innerHTML = h;
+    edSetSelect('ed-type', row.event_type); v('ed-date', String(row.event_date || '').slice(0, 10)); v('ed-attendance', row.attendance); v('ed-desc', row.description);
+    v('ared-county', row.county); v('ared-city', row.city); v('ared-venue', row.venue);
+    var d = row.demographics || {};
+    Object.keys(REPORT_DEMO).forEach(function (g) { REPORT_DEMO[g].items.forEach(function (it) { v('ared-d-' + g + '-' + it[0], d[g] && d[g][it[0]] ? d[g][it[0]] : ''); }); });
+    rdTotals('ared');
+    if (row.county || row.city || row.venue || row.demographics) el.querySelector('details').open = true;
+  } else if (kind === 'story') {
+    t.textContent = 'Edit Story';
+    el.innerHTML = edField('ed-s-title', 'Title', '<input class="form-input" id="ed-s-title" maxlength="200">') + edField('ed-s-story', 'Story', '<textarea class="form-textarea" id="ed-s-story" style="min-height:160px;"></textarea>') +
+      edField('ed-s-sub', 'Submitter (optional)', '<input class="form-input" id="ed-s-sub" maxlength="120">') +
+      edField('ed-s-media', 'Photo and video links (one per line)', '<textarea class="form-textarea" id="ed-s-media" style="min-height:70px;"></textarea>') +
+      '<label style="display:flex;gap:0.5rem;align-items:flex-start;font-size:0.84rem;margin-bottom:0.5rem;"><input type="checkbox" id="ed-s-perm" style="margin-top:0.2rem;"> The people shown have agreed to be shared (permission confirmed)</label>' +
+      '<label style="display:flex;gap:0.5rem;align-items:center;font-size:0.84rem;"><input type="checkbox" id="ed-s-appr"> Approved for use</label>';
+    v('ed-s-title', row.title); v('ed-s-story', row.story); v('ed-s-sub', row.submitter); v('ed-s-media', (row.media_links || []).join('\n'));
+    document.getElementById('ed-s-perm').checked = !!row.media_permission; document.getElementById('ed-s-appr').checked = !!row.approved;
+  } else if (kind === 'prayer') {
+    t.textContent = 'Edit Prayer Request';
+    el.innerHTML = edField('ed-p-title', 'Title', '<input class="form-input" id="ed-p-title" maxlength="200">') + edField('ed-p-body', 'Request', '<textarea class="form-textarea" id="ed-p-body" style="min-height:140px;"></textarea>') +
+      edField('ed-p-name', 'Posted by (optional)', '<input class="form-input" id="ed-p-name" maxlength="120">') +
+      '<label style="display:flex;gap:0.5rem;align-items:center;font-size:0.84rem;"><input type="checkbox" id="ed-p-ans"> Marked as answered</label>';
+    v('ed-p-title', row.title); v('ed-p-body', row.body); v('ed-p-name', row.poster_name); document.getElementById('ed-p-ans').checked = !!row.answered;
+  } else if (kind === 'movement') {
+    t.textContent = 'Edit Movement: ' + (row.county_name || row.city);
+    el.innerHTML = edField('ed-m-city', 'Primary city', '<input class="form-input" id="ed-m-city" maxlength="80">') + edField('ed-m-region', 'Region (optional)', '<input class="form-input" id="ed-m-region" maxlength="80">') +
+      edField('ed-m-phase', 'Phase', '<select class="form-select" id="ed-m-phase"><option>Formation</option><option>Planning</option><option>Execution</option></select>') +
+      '<label style="display:flex;gap:0.5rem;align-items:center;font-size:0.84rem;"><input type="checkbox" id="ed-m-active"> Active movement</label>' +
+      '<div class="form-hint" style="margin-top:0.7rem;">The county cannot be changed here, because the map pin, Census profile and coordinator are tied to it.</div>';
+    v('ed-m-city', row.primary_city || row.city); v('ed-m-region', row.region); edSetSelect('ed-m-phase', row.phase); document.getElementById('ed-m-active').checked = row.active !== false;
+  }
+  openModal('modal-ed');
+}
+async function edSaveGeneric() {
+  var c = _edCur; if (!c) return; var err = document.getElementById('ed-error'); err.style.display = 'none';
+  var fail = function (m) { err.textContent = m; err.style.display = 'block'; }, g = function (i) { return document.getElementById(i).value.trim(); };
+  var table, row;
+  if (c.kind === 'report') {
+    var att = g('ed-attendance') === '' ? null : parseInt(g('ed-attendance'), 10);
+    if (!g('ed-date')) return fail('Please enter the date.'); if (att !== null && (isNaN(att) || att < 0)) return fail('Attendance must be a whole number, zero or more.');
+    var d = rdRead('ared', att); if (d.error) return fail(d.error);
+    table = 'lm_event_reports'; row = { movement_id: g('ed-movement'), event_type: g('ed-type'), event_date: g('ed-date'), attendance: att, description: g('ed-desc') || null, county: d.county, city: d.city, venue: d.venue, demographics: d.demographics };
+  } else if (c.kind === 'story') {
+    if (!g('ed-s-title') || !g('ed-s-story')) return fail('Title and story are required.');
+    var links = g('ed-s-media').split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+    if (links.some(function (l) { return !/^https?:\/\/[^\s]+$/i.test(l) || l.length > 500; })) return fail('Each link must start with http:// or https:// and have no spaces.');
+    if (links.length > 10) return fail('No more than 10 links.');
+    table = 'lm_stories'; row = { title: g('ed-s-title'), story: g('ed-s-story'), submitter: g('ed-s-sub') || null, media_links: links.length ? links : null, media_permission: links.length ? document.getElementById('ed-s-perm').checked : false, approved: document.getElementById('ed-s-appr').checked };
+  } else if (c.kind === 'prayer') {
+    if (!g('ed-p-title') || !g('ed-p-body')) return fail('Title and request are required.');
+    table = 'lm_prayer_wall'; row = { title: g('ed-p-title'), body: g('ed-p-body'), poster_name: g('ed-p-name') || null, answered: document.getElementById('ed-p-ans').checked };
+  } else if (c.kind === 'movement') {
+    var city = g('ed-m-city').replace(/\s+/g, ' ');
+    if (city.length < 2 || !/^[A-Za-z .'\-]+$/.test(city)) return fail('Use letters only for the city name (for example, Vicksburg).');
+    table = 'lm_movements'; row = { city: city, primary_city: city, region: g('ed-m-region') || null, phase: g('ed-m-phase'), active: document.getElementById('ed-m-active').checked };
+  }
+  var btn = document.getElementById('ed-save'); btn.disabled = true;
+  try { await dbPatch(table, c.id, row, session.access_token); } catch (e) { btn.disabled = false; return fail(e.message || 'Could not save.'); }
+  btn.disabled = false; closeModal('modal-ed'); toast('Changes saved.');
+  if (c.kind === 'report') loadAllReports(); else if (c.kind === 'story') loadStories(); else if (c.kind === 'prayer') loadAdminPrayer();
+  else if (c.kind === 'movement') { await loadMovementsData(); loadMovementsTable(); if (typeof loadOverview === 'function') loadOverview(); }
+}
+</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 <script>
 (function () {
