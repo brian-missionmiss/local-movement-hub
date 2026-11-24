@@ -832,7 +832,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 
       <!-- STORIES -->
       <div id="section-stories" style="display:none">
-        <div class="page-header"><h1 class="page-title">Stories</h1><p class="page-sub">Testimonies submitted by local movements. Approve to make them available for HQ use.</p></div>
+        <div class="page-header"><h1 class="page-title">Stories</h1><p class="page-sub">Testimonies submitted by local movements. Approve to make them available for HQ use and the public map. Approve for social is a separate step that readies a story for Facebook and Instagram.</p></div>
         <div id="stories-list"><div class="empty-state"><div class="empty-state-text">Loading...</div></div></div>
       </div>
 
@@ -2146,11 +2146,19 @@ async function loadStories() {
         <div style="display:flex;flex-direction:column;gap:0.45rem;flex-shrink:0;">
           ${!s.approved?`<button class="btn btn-sm btn-blue" onclick="approveStory('${s.id}')">Approve</button>`:
             '<span class="badge badge-green">Approved</span>'}
+          ${s.approved ? (s.social_approved
+            ? `<span class="badge badge-green">Approved for social</span><button class="btn btn-sm btn-outline" onclick="setStorySocial('${s.id}',false)">Withdraw from social</button>`
+            : `<button class="btn btn-sm btn-blue" onclick="setStorySocial('${s.id}',true)">Approve for social</button>`) : ''}
           <button class="btn btn-sm btn-outline" onclick="editEntry('story','${s.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteStory('${s.id}')">Delete</button>
         </div>
       </div>
     </div>`).join('');
+}
+async function setStorySocial(id, on) {
+  if (on && !confirm('Approve this story for Facebook and Instagram? This is separate from approving it for the Hub. Check that everyone in it is protected and that any photos have permission.')) return;
+  try { await dbPatch('lm_stories', id, { social_approved: on }, session.access_token); toast(on ? 'Approved for social.' : 'Withdrawn from social.'); loadStories(); }
+  catch (e) { toast('Could not update: ' + (e.message || e), 'error'); }
 }
 async function approveStory(id) { await dbPatch('lm_stories',id,{approved:true},session.access_token); toast('Story approved.'); loadStories(); }
 async function deleteStory(id) { if(!confirm('Delete this story?')) return; await dbDelete('lm_stories',id,session.access_token); toast('Story deleted.'); loadStories(); }
