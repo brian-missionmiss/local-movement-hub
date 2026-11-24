@@ -1121,6 +1121,28 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-social">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header"><div class="modal-title">Post to Facebook and Instagram</div><button class="modal-close" onclick="closeModal('modal-social')">&times;</button></div>
+    <div class="modal-body">
+      <div id="so-notice" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.8rem;border-radius:6px;background:#fdf3e3;font-size:0.85rem;line-height:1.55;"></div>
+      <div class="form-group"><label>Caption</label><textarea id="so-caption" rows="9" oninput="soCount()"></textarea><div id="so-count" style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;"></div></div>
+      <p style="font-size:0.82rem;color:var(--muted);line-height:1.5;margin:-0.25rem 0 0.75rem;">Review the caption for names and details before posting. The post is public as soon as you confirm. If something needs to change afterward, edit or delete it in Facebook or Instagram.</p>
+      <div class="form-group"><label>Photo (optional)</label><input type="file" id="so-file" accept="image/jpeg,image/png,image/webp" onchange="soPickPhoto()"><div style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">If you do not choose a photo, the Mission Mississippi logo is used. Only pick a photo that everyone in it has given permission to share.</div></div>
+      <div style="margin-bottom:0.75rem;"><img id="so-preview" alt="Image preview" style="max-width:100%;max-height:260px;border-radius:6px;border:1px solid var(--border,#ddd);"></div>
+      <div class="form-group"><label>Post to</label>
+        <label style="display:inline-flex;gap:0.4rem;align-items:center;margin-right:1rem;font-weight:400;"><input type="checkbox" id="so-fb" checked> Facebook Page</label>
+        <label style="display:inline-flex;gap:0.4rem;align-items:center;font-weight:400;"><input type="checkbox" id="so-ig" checked> Instagram</label>
+      </div>
+      <div id="so-result" style="font-size:0.88rem;line-height:1.6;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-social')">Close</button>
+      <button class="btn btn-primary" id="so-go" onclick="soPublish()">Post now</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-publeaders">
   <div class="modal">
     <div class="modal-header"><div class="modal-title" id="pl-title">Public leaders</div><button class="modal-close" onclick="closeModal('modal-publeaders')">&times;</button></div>
@@ -2131,6 +2153,9 @@ async function loadAllReports() {
 async function loadStories() {
   const stories = await dbGet('lm_stories', { select:'*', order:'created_at.desc' }, session.access_token);
   _edRows.story = stories;
+  let posted = [];
+  try { posted = await dbGet('lm_social_posts', { status:'eq.posted', select:'story_id,platform,created_at' }, session.access_token); } catch (e) { posted = []; }
+  const postedBy = {}; posted.forEach(r => { (postedBy[r.story_id] = postedBy[r.story_id] || []).push(r); });
   const movMap = Object.fromEntries(movements.map(m=>[m.id,(m.county_name||m.city)]));
   const el = document.getElementById('stories-list');
   if (!stories.length) { el.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128195;</div><div class="empty-state-text">No stories submitted yet.</div></div>'; return; }
@@ -2147,7 +2172,7 @@ async function loadStories() {
           ${!s.approved?`<button class="btn btn-sm btn-blue" onclick="approveStory('${s.id}')">Approve</button>`:
             '<span class="badge badge-green">Approved</span>'}
           ${s.approved ? (s.social_approved
-            ? `<span class="badge badge-green">Approved for social</span><button class="btn btn-sm btn-outline" onclick="setStorySocial('${s.id}',false)">Withdraw from social</button>`
+            ? `<span class="badge badge-green">Approved for social</span>${(postedBy[s.id]||[]).map(r => `<span class="badge badge-muted">Posted to ${r.platform === 'facebook' ? 'Facebook' : 'Instagram'} ${fmtDate(r.created_at)}</span>`).join('')}<button class="btn btn-sm btn-primary" onclick="openSocialPost('${s.id}')">Post to social</button><button class="btn btn-sm btn-outline" onclick="setStorySocial('${s.id}',false)">Withdraw from social</button>`
             : `<button class="btn btn-sm btn-blue" onclick="setStorySocial('${s.id}',true)">Approve for social</button>`) : ''}
           <button class="btn btn-sm btn-outline" onclick="editEntry('story','${s.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteStory('${s.id}')">Delete</button>
@@ -2155,6 +2180,91 @@ async function loadStories() {
       </div>
     </div>`).join('');
 }
+// ── SOCIAL PUBLISHING (Facebook Page + Instagram), admin only; the token lives on the server
+let _so = { story: null, logo: 'https://hub.missionmississippi.org/assets/mm-logo-social.jpg', photoUrl: null, busy: false, cfg: null };
+function soDraftCaption(st) {
+  const clean = t => String(t || '').replace(/\s+/g, ' ').replace(/\s*[–—]\s*/g, ', ').trim();
+  let body = clean(st.story);
+  if (body.length > 450) { body = body.slice(0, 450); body = body.slice(0, Math.max(body.lastIndexOf(' '), 300)).replace(/[,;:\s]+$/, '') + '...'; }
+  return clean(st.title) + '\n\n' + body + '\n\nLearn more about Mission Mississippi at missionmississippi.org';
+}
+function soCount() {
+  const n = document.getElementById('so-caption').value.length;
+  const el = document.getElementById('so-count'); el.textContent = n + ' of 2,200 characters'; el.style.color = n > 2200 ? '#b3261e' : '';
+}
+function soSetPreview(url) { const i = document.getElementById('so-preview'); i.src = url; }
+async function openSocialPost(id) {
+  const st = (_edRows.story || []).find(x => x.id === id); if (!st) return;
+  _so = { story: st, logo: _so.logo, photoUrl: null, busy: false, cfg: null };
+  document.getElementById('so-caption').value = soDraftCaption(st); soCount();
+  document.getElementById('so-file').value = ''; document.getElementById('so-result').innerHTML = '';
+  document.getElementById('so-fb').checked = true; document.getElementById('so-ig').checked = true;
+  document.getElementById('so-go').disabled = false;
+  soSetPreview(_so.logo);
+  const note = document.getElementById('so-notice'); note.style.display = 'none';
+  openModal('modal-social');
+  try {
+    const r = await fetch('/api/social-publish', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token }, body: JSON.stringify({ action:'status' }) });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status);
+    _so.cfg = j.configured; if (j.logo) { _so.logo = j.logo; if (!_so.photoUrl) soSetPreview(j.logo); }
+    const off = []; if (!j.configured.facebook) off.push('Facebook'); if (!j.configured.instagram) off.push('Instagram');
+    if (off.length) { note.style.display = ''; note.textContent = off.join(' and ') + (off.length > 1 ? ' are' : ' is') + ' not connected yet. Posting to ' + (off.length > 1 ? 'them' : 'it') + ' stays off until the Meta credentials are added in Vercel.'; }
+    document.getElementById('so-fb').disabled = !j.configured.facebook; document.getElementById('so-ig').disabled = !j.configured.instagram;
+    if (!j.configured.facebook) document.getElementById('so-fb').checked = false; if (!j.configured.instagram) document.getElementById('so-ig').checked = false;
+    if (off.length === 2) document.getElementById('so-go').disabled = true;
+  } catch (e) {
+    note.style.display = ''; note.textContent = 'Could not reach the posting service: ' + (e.message || e) + '. Posting is unavailable right now.';
+    document.getElementById('so-go').disabled = true;
+  }
+}
+function soToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1440, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u);
+      c.toBlob(b => b ? resolve({ blob: b, w: c.width, h: c.height }) : reject(new Error('Could not convert the image.')), 'image/jpeg', 0.88);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); reject(new Error('That file could not be read as an image.')); };
+    img.src = u;
+  });
+}
+async function soPickPhoto() {
+  const f = document.getElementById('so-file').files[0]; const out = document.getElementById('so-result');
+  _so.photoUrl = null; out.innerHTML = '';
+  if (!f) { soSetPreview(_so.logo); return; }
+  try {
+    const { blob, w, h } = await soToJpeg(f);
+    const ratio = w / h;
+    if (ratio < 0.8 || ratio > 1.91) { out.innerHTML = '<span style="color:#b3261e;">Instagram only accepts photos between 4:5 (tall) and 1.91:1 (wide). Please crop this one and try again.</span>'; document.getElementById('so-file').value = ''; soSetPreview(_so.logo); return; }
+    const name = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)) + '.jpg';
+    const r = await fetch(SB_URL + '/storage/v1/object/social-images/' + name, { method:'POST', headers:{ apikey: SB_KEY, Authorization:'Bearer ' + session.access_token, 'Content-Type':'image/jpeg' }, body: blob });
+    if (!r.ok) throw new Error('Upload failed (' + r.status + ').');
+    _so.photoUrl = SB_URL + '/storage/v1/object/public/social-images/' + name;
+    soSetPreview(URL.createObjectURL(blob));
+  } catch (e) { out.innerHTML = '<span style="color:#b3261e;">' + escHtml(e.message || String(e)) + '</span>'; document.getElementById('so-file').value = ''; soSetPreview(_so.logo); }
+}
+async function soPublish() {
+  if (_so.busy || !_so.story) return;
+  const platforms = []; if (document.getElementById('so-fb').checked) platforms.push('facebook'); if (document.getElementById('so-ig').checked) platforms.push('instagram');
+  const caption = document.getElementById('so-caption').value.trim(); const out = document.getElementById('so-result');
+  if (!platforms.length) { out.innerHTML = '<span style="color:#b3261e;">Choose at least one place to post.</span>'; return; }
+  if (!caption) { out.innerHTML = '<span style="color:#b3261e;">Write a caption first.</span>'; return; }
+  const where = platforms.map(p => p === 'facebook' ? 'the Facebook Page' : 'Instagram').join(' and ');
+  if (!confirm('Post this story to ' + where + ' now? It will be public right away.')) return;
+  _so.busy = true; const btn = document.getElementById('so-go'); btn.disabled = true; btn.textContent = 'Posting...';
+  try {
+    const r = await fetch('/api/social-publish', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + session.access_token }, body: JSON.stringify({ action:'publish', story_id: _so.story.id, caption, platforms, image_url: _so.photoUrl || _so.logo }) });
+    const j = await r.json();
+    if (!r.ok) { out.innerHTML = '<span style="color:#b3261e;">' + escHtml(j.error || ('Error ' + r.status)) + '</span>'; return; }
+    out.innerHTML = Object.entries(j.results).map(([p, v]) => '<div>' + (p === 'facebook' ? 'Facebook' : 'Instagram') + ': ' + (v.ok ? '<strong style="color:#1b7a3d;">Posted.</strong>' : '<strong style="color:#b3261e;">Not posted.</strong> ' + escHtml(v.error || '')) + '</div>').join('');
+    loadStories();
+  } catch (e) { out.innerHTML = '<span style="color:#b3261e;">' + escHtml(e.message || String(e)) + '</span>'; }
+  finally { _so.busy = false; btn.textContent = 'Post now'; btn.disabled = false; }
+}
+
 async function setStorySocial(id, on) {
   if (on && !confirm('Approve this story for Facebook and Instagram? This is separate from approving it for the Hub. Check that everyone in it is protected and that any photos have permission.')) return;
   try { await dbPatch('lm_stories', id, { social_approved: on }, session.access_token); toast(on ? 'Approved for social.' : 'Withdrawn from social.'); loadStories(); }
