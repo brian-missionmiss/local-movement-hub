@@ -1121,6 +1121,17 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-publeaders">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="pl-title">Public leaders</div><button class="modal-close" onclick="closeModal('modal-publeaders')">&times;</button></div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;line-height:1.6;margin-bottom:0.75rem;color:var(--muted);">Only the name and title of a Chair or Co-Chair appear on the public map, and only when switched on here or by the movement's coordinator. No phone or email is ever shown.</p>
+      <div id="pl-list"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-publeaders')">Close</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-mv-next">
   <div class="modal">
     <div class="modal-header"><div class="modal-title" id="mvn-title">Movement added</div><button class="modal-close" onclick="closeModal('modal-mv-next')">&times;</button></div>
@@ -1768,6 +1779,35 @@ async function editPhase(id, current, city) {
 }
 
 // ── MOVEMENTS TABLE
+// ── PUBLIC LEADERS (Chair / Co-Chair listing on the public map)
+let _plMov = null;
+async function openPubLeaders(movId) {
+  _plMov = movId;
+  const m = movements.find(x => x.id === movId);
+  document.getElementById('pl-title').textContent = 'Public leaders: ' + (m ? (m.county_name || m.city) : '');
+  openModal('modal-publeaders');
+  await renderPubLeaders();
+}
+async function renderPubLeaders() {
+  const box = document.getElementById('pl-list');
+  box.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
+  try {
+    const rows = await dbGet('lm_roster', { movement_id:`eq.${_plMov}`, active:'eq.true', role_title:'in.(Chair,Co-Chair)', select:'id,full_name,role_title,public_listing', order:'role_title.asc,full_name.asc' }, session.access_token);
+    if (!rows.length) { box.innerHTML = '<p style="color:var(--muted);">No Chair or Co-Chair is on this movement\'s roster yet. The coordinator adds them under Steering Committee.</p>'; return; }
+    box.innerHTML = rows.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.55rem 0;border-bottom:1px solid var(--border,#e5e0d6);">
+      <div><strong>${escHtml(r.full_name)}</strong><div style="font-size:0.8rem;color:var(--muted);">${escHtml(r.role_title)}</div></div>
+      <button class="btn btn-sm ${r.public_listing ? 'btn-primary' : 'btn-outline'}" onclick="togglePubLeader('${r.id}',${r.public_listing ? 'true' : 'false'})">${r.public_listing ? 'On public map: Yes' : 'On public map: No'}</button>
+    </div>`).join('');
+  } catch (e) { box.innerHTML = '<p style="color:var(--danger,#b3261e);">Could not load: ' + escHtml(e.message || String(e)) + '</p>'; }
+}
+async function togglePubLeader(id, current) {
+  try {
+    await dbPatch('lm_roster', id, { public_listing: !current }, session.access_token);
+    toast(!current ? 'Now shown on the public map.' : 'Removed from the public map.');
+    await renderPubLeaders();
+  } catch (e) { toast('Could not update: ' + (e.message || e), 'error'); }
+}
+
 async function loadMovementsTable() {
   const tbody = document.getElementById('movements-table');
   tbody.innerHTML = movements.map(m => `<tr>
@@ -1775,7 +1815,7 @@ async function loadMovementsTable() {
     <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
     <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
     <td>${m.active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
-    <td><button class="btn btn-sm btn-danger" onclick="toggleMovement('${m.id}',${m.active})">${m.active?'Deactivate':'Activate'}</button></td>
+    <td><button class="btn btn-sm btn-outline" onclick="openPubLeaders('${m.id}')">Public leaders</button> <button class="btn btn-sm btn-danger" onclick="toggleMovement('${m.id}',${m.active})">${m.active?'Deactivate':'Activate'}</button></td>
   </tr>`).join('');
 }
 
