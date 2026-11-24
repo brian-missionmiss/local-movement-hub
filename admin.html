@@ -524,7 +524,10 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
       <div class="sidebar-section" style="margin-top:1rem;" id="sidebar-board-group">
         <div class="sidebar-label">Board</div>
         <nav class="sidebar-nav">
-          <a class="sidebar-link" href="#" onclick="showSection('board')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg> Board Content</a>
+          <a class="sidebar-link" href="#" onclick="showSection('board')">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg>
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg> Board Content
+          </a>
         </nav>
       </div>
       <div class="sidebar-section" style="margin-top:1rem;">
@@ -534,6 +537,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
             Users
           </a>
+          <a class="sidebar-link" href="#" onclick="showSection('roster')"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"/></svg> Staff Roster</a>
           <a class="sidebar-link" id="sidebar-export-link" href="#" style="display:none" onclick="exportEverything();return false;"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg> Export All Data</a>
           <a class="sidebar-link" href="#" onclick="openSearch();return false;"><svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg> Search</a>
         </nav>
@@ -747,6 +751,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <div class="form-group"><label class="form-label" for="sa-host">Host or organization</label><input class="form-input" type="text" id="sa-host" maxlength="200"></div>
             <div class="form-group"><label class="form-label" for="sa-location">Location</label><input class="form-input" type="text" id="sa-location" maxlength="200"></div>
           </div>
+          <div class="form-group"><label style="display:flex;gap:0.5rem;align-items:flex-start;font-size:0.88rem;line-height:1.4;cursor:pointer;"><input type="checkbox" id="sa-also" style="margin-top:0.2rem;"><span><strong>A local movement also reported this event.</strong> Check this so the same people are not counted twice. The activity stays on this list, but it is left out of the Impact Dashboard totals, because the local report already counts it.</span></label></div>
           <div class="form-group"><label class="form-label" for="sa-notes">Notes</label><textarea class="form-textarea" id="sa-notes" maxlength="2000" style="min-height:70px;"></textarea></div>
           <div class="form-error" id="sa-error"></div>
           <div style="display:flex;gap:0.5rem;"><button class="btn btn-primary" id="sa-save" onclick="saSave()">Save activity</button><button class="btn btn-outline" id="sa-cancel" style="display:none;" onclick="saReset()">Cancel edit</button></div>
@@ -754,7 +759,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <details class="rd-details" style="max-width:760px;margin-bottom:1.5rem;">
           <summary>Add many at once (paste from a spreadsheet)</summary>
           <div class="rd-body">
-            <p class="rd-help">Paste rows with these columns in this order: date, staff member, type, title, host or organization, location, audience, downloads, notes. Copy them straight from Excel, or use commas. A header row is fine. Dates can be 2026-03-14 or 3/14/2026. Types are matched by name, such as Speaking, Preaching, CHRADL, Podcast, Consulting or Worship.</p>
+            <p class="rd-help">Paste rows with these columns in this order: date, staff member, type, title, host or organization, location, audience, downloads, notes, and optionally a last column with Yes if a local movement also reported it. Copy them straight from Excel, or use commas. A header row is fine. Dates can be 2026-03-14 or 3/14/2026. Types are matched by name, such as Speaking, Preaching, CHRADL, Podcast, Consulting or Worship.</p>
             <textarea class="form-textarea" id="sa-bulk" style="min-height:120px;font-family:monospace;font-size:0.78rem;"></textarea>
             <div id="sa-bulk-result" class="rd-help" style="margin-top:0.6rem;"></div>
             <div style="display:flex;gap:0.5rem;margin-top:0.6rem;"><button class="btn btn-sm btn-outline" onclick="saBulkCheck()">Check rows</button><button class="btn btn-sm btn-primary" id="sa-bulk-go" onclick="saBulkImport()" disabled>Import checked rows</button></div>
@@ -768,6 +773,26 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Title</th><th>Host</th><th>Audience</th><th>Downloads</th><th></th></tr></thead><tbody id="sa-table"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody></table></div>
       </div>
 
+
+      <!-- STAFF ROSTER -->
+      <div id="section-roster" style="display:none">
+        <div class="page-header">
+          <h1 class="page-title">Staff Roster</h1>
+          <p class="page-sub">The people who appear in the Staff Activity list. Add, edit or retire names here. Retiring someone keeps their past activities and removes them from the suggestions.</p>
+        </div>
+        <div class="form-error" id="ro-unavailable" style="display:none;"></div>
+        <div class="card" style="max-width:760px;margin-bottom:1.5rem;">
+          <div class="card-title" id="ro-form-title" style="margin-bottom:0.8rem;">Add a staff member</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="ro-name">Full name</label><input class="form-input" type="text" id="ro-name" maxlength="120" autocomplete="off"></div>
+            <div class="form-group"><label class="form-label" for="ro-title">Title</label><input class="form-input" type="text" id="ro-title" maxlength="120" autocomplete="off"></div>
+          </div>
+          <div class="form-group"><label class="form-label" for="ro-email">Email (optional)</label><input class="form-input" type="email" id="ro-email" maxlength="200" autocomplete="off" style="max-width:360px;"></div>
+          <div class="form-error" id="ro-error"></div>
+          <div style="display:flex;gap:0.5rem;"><button class="btn btn-primary" id="ro-save" onclick="roSave()">Add to roster</button><button class="btn btn-outline" id="ro-cancel" style="display:none;" onclick="roReset()">Cancel edit</button></div>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Title</th><th>Email</th><th>Status</th><th>Activities</th><th></th></tr></thead><tbody id="ro-table"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">Loading...</td></tr></tbody></table></div>
+      </div>
 
       <!-- TRAINING EVALUATIONS -->
       <div id="section-evals" style="display:none">
@@ -1683,7 +1708,7 @@ async function loadMovementsData() {
 
 function showSection(name) {
   if (name === 'board' && !mySuper) { toast('The Board portal content is managed by super admins.', 'error'); return; }
-  ['impact','statewide','staff','evals','overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
+  ['impact','statewide','staff','roster','evals','overview','movements','coordinators','submit-report','reports','stories','profiles','training','prayer','timeline','milestone-overview','announcements','events','documents','assets','board']
     .forEach(s => { document.getElementById('section-'+s).style.display = s===name?'block':'none'; });
   document.querySelectorAll('.sidebar-link, .mobile-tabs a').forEach(l=>l.classList.remove('active'));
   document.querySelectorAll(`[onclick*="showSection('${name}')"]`).forEach(l=>l.classList.add('active'));
@@ -1696,7 +1721,7 @@ function showSection(name) {
     overview:loadOverview, movements:loadMovementsTable,
     coordinators:loadCoordinators, 'submit-report':loadSubmitReport, reports:loadAllReports,
     stories:loadStories, profiles:loadCommunityProfiles, training:loadAdminTraining, prayer:loadAdminPrayer, timeline:loadTimeline, 'milestone-overview':loadMilestoneOverview, announcements:loadAnnouncements,
-    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin, impact:loadImpact, staff:loadStaff, evals:loadEvals, statewide:loadStatewideAdmin
+    events:loadEvents, documents:loadDocuments, assets:loadAssets, board:loadBoardAdmin, impact:loadImpact, staff:loadStaff, roster:loadRoster, evals:loadEvals, statewide:loadStatewideAdmin
   };
   if (loaders[name]) loaders[name]();
 }
@@ -3842,7 +3867,7 @@ function showReportDetail(id) {
 <script>
 // ── STAFF ACTIVITY ───────────────────────────────────────────────────────────────
 const SA_TYPES = ['Speaking Engagement', 'Preaching Engagement', 'CHRADL Training', 'Podcast Episode', 'Consulting Engagement', 'Community-Wide Worship Service', 'Other'];
-const SA_STAFF = ['Brian Crawford', 'Neddie Winters', 'Felicia Bowens', 'Austin Hoyle', 'Ashley Stewart'];
+let _roster = [], _roEditId = null, _saAlsoReady = true;
 let _sa = [], _saEditId = null, _saBulkGood = [];
 const fmtN = n => Number(n || 0).toLocaleString('en-US');
 function saFillTypes(sel, first) { sel.innerHTML = (first ? `<option value="">${first}</option>` : '') + SA_TYPES.map(t => `<option>${escHtml(t)}</option>`).join(''); }
@@ -3853,6 +3878,7 @@ function saTypeChanged() {
 }
 function saReset() {
   _saEditId = null;
+  document.getElementById('sa-also').checked = false;
   ['sa-staff', 'sa-audience', 'sa-downloads', 'sa-title', 'sa-host', 'sa-location', 'sa-notes'].forEach(i => document.getElementById(i).value = '');
   document.getElementById('sa-date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('sa-type').selectedIndex = 0; saTypeChanged();
@@ -3875,7 +3901,8 @@ async function loadStaff() {
   const cur = String(new Date().getFullYear()); if (!years.includes(cur)) years.unshift(cur);
   const ySel = document.getElementById('sa-f-year'), prev = ySel.value;
   ySel.innerHTML = '<option value="">All years</option>' + years.map(y => `<option>${y}</option>`).join(''); ySel.value = prev || cur;
-  const names = [...new Set([...SA_STAFF, ..._sa.map(r => r.staff_name)])].sort();
+  const rr = await fetchAllRows('lm_staff_roster', session.access_token); _roster = rr.ok ? rr.rows : [];
+  const names = [...new Set([..._roster.filter(r => r.active).map(r => r.full_name), ..._sa.map(r => r.staff_name)])].sort();
   document.getElementById('sa-staff-list').innerHTML = names.map(n => `<option value="${escHtml(n)}"></option>`).join('');
   const fSel = document.getElementById('sa-f-staff'), pf = fSel.value;
   fSel.innerHTML = '<option value="">All staff</option>' + [...new Set(_sa.map(r => r.staff_name))].sort().map(n => `<option>${escHtml(n)}</option>`).join(''); fSel.value = pf;
@@ -3889,7 +3916,7 @@ function saRender() {
   if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.5rem;">No activities found.</td></tr>'; return; }
   tb.innerHTML = rows.map(r => `<tr>
     <td>${fmtDate(r.activity_date)}</td><td>${escHtml(r.staff_name)}</td><td>${escHtml(r.activity_type)}</td>
-    <td>${escHtml(r.title || '')}</td><td style="font-size:0.8rem;color:var(--muted);">${escHtml(r.host_org || '')}</td>
+    <td>${escHtml(r.title || '')}${r.also_reported ? ' <span style="font-size:0.7rem;color:var(--muted);white-space:nowrap;">(also reported locally)</span>' : ''}</td><td style="font-size:0.8rem;color:var(--muted);">${escHtml(r.host_org || '')}</td>
     <td>${r.audience ?? '—'}</td><td>${r.downloads ?? '—'}</td>
     <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="saEdit('${r.id}')">Edit</button> <button class="btn btn-sm btn-outline" onclick="saDelete('${r.id}')">Delete</button></td></tr>`).join('');
 }
@@ -3901,7 +3928,7 @@ async function saSave() {
     activity_type: document.getElementById('sa-type').value, title: document.getElementById('sa-title').value.trim() || null,
     host_org: document.getElementById('sa-host').value.trim() || null, location: document.getElementById('sa-location').value.trim() || null,
     audience: saNum('sa-audience'), downloads: document.getElementById('sa-type').value === 'Podcast Episode' ? saNum('sa-downloads') : null,
-    notes: document.getElementById('sa-notes').value.trim() || null
+    notes: document.getElementById('sa-notes').value.trim() || null, also_reported: document.getElementById('sa-also').checked
   };
   const bad = !row.activity_date ? 'Please enter a date.' : !row.staff_name ? 'Please enter the staff member.' : (row.audience !== null && (isNaN(row.audience) || row.audience < 0)) || (row.downloads !== null && (isNaN(row.downloads) || row.downloads < 0)) ? 'Audience and downloads must be whole numbers, zero or more.' : '';
   if (bad) { err.textContent = bad; err.style.display = 'block'; return; }
@@ -3918,7 +3945,7 @@ function saEdit(id) {
   ts.value = r.activity_type; saTypeChanged();
   document.getElementById('sa-audience').value = r.audience ?? ''; document.getElementById('sa-downloads').value = r.downloads ?? '';
   document.getElementById('sa-title').value = r.title || ''; document.getElementById('sa-host').value = r.host_org || '';
-  document.getElementById('sa-location').value = r.location || ''; document.getElementById('sa-notes').value = r.notes || '';
+  document.getElementById('sa-location').value = r.location || ''; document.getElementById('sa-notes').value = r.notes || ''; document.getElementById('sa-also').checked = !!r.also_reported;
   document.getElementById('sa-form-title').textContent = 'Edit activity'; document.getElementById('sa-save').textContent = 'Save changes';
   document.getElementById('sa-cancel').style.display = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -3926,6 +3953,60 @@ async function saDelete(id) {
   const r = _sa.find(x => String(x.id) === String(id)); if (!r) return;
   if (!confirm(`Delete this activity?\n\n${fmtDate(r.activity_date)}: ${r.staff_name}, ${r.activity_type}${r.title ? ' (' + r.title + ')' : ''}`)) return;
   try { await dbDelete('lm_staff_activities', id, session.access_token); toast('Activity deleted.'); await loadStaff(); } catch (e) { toast(e.message || 'Could not delete.', 'error'); }
+}
+
+// ── STAFF ROSTER ─────────────────────────────────────────────────────────────────
+function roReset() {
+  _roEditId = null; ['ro-name', 'ro-title', 'ro-email'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('ro-form-title').textContent = 'Add a staff member'; document.getElementById('ro-save').textContent = 'Add to roster';
+  document.getElementById('ro-cancel').style.display = 'none'; document.getElementById('ro-error').style.display = 'none';
+}
+async function loadRoster() {
+  const un = document.getElementById('ro-unavailable'); un.style.display = 'none';
+  const [rr, aa] = await Promise.all([fetchAllRows('lm_staff_roster', session.access_token), fetchAllRows('lm_staff_activities', session.access_token)]);
+  if (!rr.ok) {
+    _roster = []; un.textContent = (rr.status === 404 || rr.status === 400) ? 'The staff roster table has not been set up yet. Run phase5_setup.sql in Supabase, then reload this page.' : 'The staff roster could not be loaded. Please refresh and try again.'; un.style.display = 'block';
+  } else _roster = rr.rows;
+  const cnt = {}; (aa.ok ? aa.rows : []).forEach(r => { cnt[r.staff_name] = (cnt[r.staff_name] || 0) + 1; });
+  const tb = document.getElementById('ro-table');
+  const rows = [..._roster].sort((a, b) => (b.active - a.active) || (a.sort_order - b.sort_order) || a.full_name.localeCompare(b.full_name));
+  tb.innerHTML = rows.length ? rows.map(r => `<tr><td>${escHtml(r.full_name)}</td><td>${escHtml(r.title || '')}</td><td style="font-size:0.8rem;">${escHtml(r.email || '')}</td>
+    <td>${r.active ? 'Active' : '<span style="color:var(--muted);">Retired</span>'}</td><td>${cnt[r.full_name] || 0}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="roEdit('${r.id}')">Edit</button> <button class="btn btn-sm btn-outline" onclick="roToggle('${r.id}')">${r.active ? 'Retire' : 'Reactivate'}</button> <button class="btn btn-sm btn-outline" onclick="roDelete('${r.id}')">Delete</button></td></tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem;">No staff on the roster yet.</td></tr>';
+}
+async function roSave() {
+  const err = document.getElementById('ro-error'); err.style.display = 'none';
+  const name = document.getElementById('ro-name').value.trim().replace(/\s+/g, ' '), email = document.getElementById('ro-email').value.trim();
+  const bad = !name ? 'Please enter the full name.' : email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? 'That email does not look right.' : _roster.some(r => String(r.id) !== String(_roEditId) && r.full_name.toLowerCase() === name.toLowerCase()) ? 'That name is already on the roster.' : '';
+  if (bad) { err.textContent = bad; err.style.display = 'block'; return; }
+  const row = { full_name: name, title: document.getElementById('ro-title').value.trim() || null, email: email || null };
+  try {
+    if (_roEditId) {
+      const old = _roster.find(r => String(r.id) === String(_roEditId));
+      await dbPatch('lm_staff_roster', _roEditId, row, session.access_token);
+      if (old && old.full_name !== name && confirm(`Also change "${old.full_name}" to "${name}" on past Staff Activity entries?\n\nOK changes them so the history stays together. Cancel leaves past entries as they are.`)) {
+        const res = await fetch(`${SB_URL}/rest/v1/lm_staff_activities?staff_name=eq.${encodeURIComponent(old.full_name)}`, { method: 'PATCH', headers: sbHeaders(session.access_token), body: JSON.stringify({ staff_name: name }) });
+        if (!res.ok) toast('The roster changed, but past activities could not be renamed.', 'error');
+      }
+    } else await dbPost('lm_staff_roster', { ...row, sort_order: _roster.length + 1 }, session.access_token);
+    toast(_roEditId ? 'Staff member updated.' : 'Staff member added.'); roReset(); await loadRoster();
+  } catch (e) { err.textContent = e.message || 'Could not save.'; err.style.display = 'block'; }
+}
+function roEdit(id) {
+  const r = _roster.find(x => String(x.id) === String(id)); if (!r) return; _roEditId = r.id;
+  document.getElementById('ro-name').value = r.full_name; document.getElementById('ro-title').value = r.title || ''; document.getElementById('ro-email').value = r.email || '';
+  document.getElementById('ro-form-title').textContent = 'Edit staff member'; document.getElementById('ro-save').textContent = 'Save changes';
+  document.getElementById('ro-cancel').style.display = ''; window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+async function roToggle(id) {
+  const r = _roster.find(x => String(x.id) === String(id)); if (!r) return;
+  try { await dbPatch('lm_staff_roster', id, { active: !r.active }, session.access_token); toast(r.active ? 'Retired. Past activities are kept.' : 'Reactivated.'); await loadRoster(); } catch (e) { toast(e.message || 'Could not update.', 'error'); }
+}
+async function roDelete(id) {
+  const r = _roster.find(x => String(x.id) === String(id)); if (!r) return;
+  if (!confirm(`Delete ${r.full_name} from the roster?\n\nPast Staff Activity entries keep the name. To keep them out of the suggestions without deleting, use Retire instead.`)) return;
+  try { await dbDelete('lm_staff_roster', id, session.access_token); toast('Removed from the roster.'); await loadRoster(); } catch (e) { toast(e.message || 'Could not delete.', 'error'); }
 }
 // Bulk paste
 function saParseRows(text) {
@@ -3972,7 +4053,7 @@ function saBulkCheck() {
     if (!(c[1] || '').trim()) return bad.push(`Row ${n}: the staff member is missing.`);
     if (!type) return bad.push(`Row ${n}: the type "${c[2] || ''}" is not recognized.`);
     if (Number.isNaN(aud) || Number.isNaN(dl)) return bad.push(`Row ${n}: audience and downloads must be whole numbers.`);
-    _saBulkGood.push({ activity_date: d, staff_name: c[1].trim(), activity_type: type, title: (c[3] || '').trim() || null, host_org: (c[4] || '').trim() || null, location: (c[5] || '').trim() || null, audience: aud, downloads: dl, notes: (c[8] || '').trim() || null });
+    _saBulkGood.push({ activity_date: d, staff_name: c[1].trim(), activity_type: type, title: (c[3] || '').trim() || null, host_org: (c[4] || '').trim() || null, location: (c[5] || '').trim() || null, audience: aud, downloads: dl, notes: (c[8] || '').trim() || null, also_reported: /^(y|yes|true|1|x)$/i.test((c[9] || '').trim()) });
   });
   out.innerHTML = `<strong>${_saBulkGood.length}</strong> row${_saBulkGood.length === 1 ? '' : 's'} ready.` + (bad.length ? ` <span style="color:var(--coral,#c0392b);">${bad.length} need fixing:</span><br>${bad.slice(0, 8).map(escHtml).join('<br>')}${bad.length > 8 ? '<br>and ' + (bad.length - 8) + ' more.' : ''}` : '');
   document.getElementById('sa-bulk-go').disabled = !(_saBulkGood.length && !bad.length);
@@ -4225,6 +4306,7 @@ function imRange() {
 }
 function imComputeImpact(L, S, st, rng, E) {
   E = E || [];
+  const dupN = S.filter(r => r.also_reported).length; S = S.filter(r => !r.also_reported);
   const sum = (a, k) => a.reduce((s, r) => s + (Number(r[k]) || 0), 0);
   const lc = {}, sc = {}; IM_TYPES.forEach(t => lc[t] = 0); SA_TYPES.forEach(t => sc[t] = 0);
   L.forEach(r => { lc[r.event_type] = (lc[r.event_type] || 0) + 1; }); S.forEach(r => { sc[r.activity_type] = (sc[r.activity_type] || 0) + 1; });
@@ -4244,7 +4326,7 @@ function imComputeImpact(L, S, st, rng, E) {
   ].map(r => ({ label: r[0], local: r[1], staff: r[2], total: (r[1] || 0) + (r[2] || 0) }));
   const w = k => (work.find(x => x.label.startsWith(k)) || {}).total || 0;
   const cards = [
-    { label: 'People reached', value: reachedLocal + reachedStaff, sub: `${fmtN(reachedLocal)} at local events, ${fmtN(reachedStaff)} through staff` },
+    { label: 'People reached', value: reachedLocal + reachedStaff, sub: `${fmtN(reachedLocal)} at local events, ${fmtN(reachedStaff)} through staff` + (dupN ? `. ${dupN} staff ${dupN === 1 ? 'activity' : 'activities'} also reported locally, left out so nothing is counted twice` : '') },
     { label: 'Prayer Gatherings', value: w('Prayer') }, { label: 'Table Talks', value: w('Table') },
     { label: 'Trainings', value: w('Trainings'), sub: `${lc['Training']} local, ${sc['CHRADL Training']} staff-led` },
     { label: '4 The City Service Days', value: w('4 The City') }, { label: 'One Picnics', value: w('One Picnics') },
@@ -4302,7 +4384,7 @@ function imExport() {
   add('Attendee details', d.demo.flatMap(g => g.items.filter(i => i.n).map(i => ({ Group: g.label, Category: i.label, 'People counted (estimate)': i.n, 'Percent of group': g.counted ? Math.round(i.n / g.counted * 1000) / 10 : '' }))));
   add('Event reports', d.L.map(r => ({ Movement: movementLabel(r.movement_id), 'Event type': r.event_type, Date: String(r.event_date).slice(0, 10), Attendance: r.attendance ?? '', Description: r.description || '', ...rdFlat(r) })));
   add('Training evaluations', d.E.map(r => ({ Date: String(r.eval_date).slice(0, 10), Movement: movementLabel(r.movement_id), Training: r.training_title, Attended: r.attended, 'Forms returned': r.collected, 'Overall rating': r.r_overall ?? '', 'Would recommend': r.recommend ?? '' })));
-  add('Staff activity', d.S.map(r => ({ Date: String(r.activity_date).slice(0, 10), Staff: r.staff_name, Type: r.activity_type, Title: r.title || '', 'Host or organization': r.host_org || '', Location: r.location || '', Audience: r.audience ?? '', Downloads: r.downloads ?? '', Notes: r.notes || '' })));
+  add('Staff activity', d.S.map(r => ({ Date: String(r.activity_date).slice(0, 10), Staff: r.staff_name, Type: r.activity_type, 'Also reported locally': r.also_reported ? 'Yes' : '', Title: r.title || '', 'Host or organization': r.host_org || '', Location: r.location || '', Audience: r.audience ?? '', Downloads: r.downloads ?? '', Notes: r.notes || '' })));
   XLSX.writeFile(wb, `MM_Impact_${String(d.rng.label).replace(/[^A-Za-z0-9]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 </script>
