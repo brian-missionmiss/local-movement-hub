@@ -931,16 +931,74 @@ async function loadPublicMap() {
   await renderMSMap('public-map', movements, lastReports, showProfileModal);
 }
 
+// ── Movement panel: leaders, next events, latest stories (one public, read-only database call)
+async function loadMovementPanel(id) {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/lm_public_movement_panel`, {
+      method: 'POST', headers: { ...sbHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ p_movement: id })
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && typeof j === 'object' ? { leaders: j.leaders || [], events: j.events || [], stories: j.stories || [] } : null;
+  } catch (e) { return null; }
+}
+const PANEL_H = 'font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.6rem;';
+function panelLeadersHtml(list) {
+  if (!list || !list.length) return '';
+  return `<div style="margin-bottom:1.25rem;">
+    <div style="${PANEL_H}color:var(--navy);">Movement Leadership</div>
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">${list.map(l => `
+      <span style="background:var(--cream);border-radius:4px;padding:0.4rem 0.7rem;font-size:0.86rem;color:var(--text);"><strong style="color:var(--navy);">${escHtml(l.name)}</strong> <span style="color:var(--muted);font-size:0.76rem;">&middot; ${escHtml(l.role)}</span></span>`).join('')}
+    </div></div>`;
+}
+function panelEventsHtml(list, hasAbove) {
+  const body = (list && list.length) ? list.map(e => {
+    const reg = safeHttpUrl(e.registration_url);
+    return `<div style="padding:0.65rem 0.8rem;background:var(--cream);border-radius:4px;margin-bottom:0.5rem;">
+      <div style="font-size:0.7rem;font-weight:700;color:var(--blue);letter-spacing:0.04em;">${escHtml(fmtDate(e.event_date))}${e.event_type ? ' &middot; ' + escHtml(e.event_type) : ''}</div>
+      <div style="font-family:'Merriweather',serif;font-weight:700;font-size:0.92rem;color:var(--navy);margin:0.15rem 0;">${escHtml(e.title)}</div>
+      ${e.location ? `<div style="font-size:0.8rem;color:var(--muted);">${escHtml(e.location)}</div>` : ''}
+      ${reg ? `<a href="${escHtml(reg)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:0.35rem;font-size:0.8rem;font-weight:600;color:var(--blue);text-decoration:none;">Learn more or register &rarr;</a>` : ''}
+    </div>`;
+  }).join('') : '<p style="font-size:0.84rem;color:var(--muted);font-style:italic;">No upcoming events posted yet.</p>';
+  return `<div style="margin-bottom:1.25rem;padding-top:1rem;${hasAbove ? 'border-top:1px solid var(--border);' : ''}">
+    <div style="${PANEL_H}color:var(--blue);">Upcoming Events</div>${body}</div>`;
+}
+function storyExcerpt(t) {
+  const x = String(t || '').replace(/\s+/g, ' ').trim();
+  if (x.length <= 300) return x;
+  const cut = x.slice(0, 300), sp = cut.lastIndexOf(' ');
+  return (sp > 200 ? cut.slice(0, sp) : cut).replace(/[\s,;:.\-]+$/, '') + '…';
+}
+function panelStoriesHtml(list) {
+  const body = (list && list.length) ? list.map(st => {
+    const media = Array.isArray(st.media_links) ? st.media_links.map(safeHttpUrl).find(Boolean) : '';
+    return `<div style="padding:0.65rem 0.8rem;border:1px solid var(--border);border-radius:4px;margin-bottom:0.5rem;">
+      <div style="font-family:'Merriweather',serif;font-weight:700;font-size:0.92rem;color:var(--navy);">${escHtml(st.title)}</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin:0.1rem 0 0.35rem;">${escHtml(fmtDate(st.created_at))}</div>
+      <p style="font-size:0.84rem;color:var(--text);line-height:1.65;">${escHtml(storyExcerpt(st.excerpt))}</p>
+      ${media ? `<a href="${escHtml(media)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:0.3rem;font-size:0.8rem;font-weight:600;color:var(--blue);text-decoration:none;">Watch or listen &rarr;</a>` : ''}
+    </div>`;
+  }).join('') : '<p style="font-size:0.84rem;color:var(--muted);font-style:italic;">No stories shared yet.</p>';
+  return `<div style="margin-bottom:1.25rem;padding-top:1rem;border-top:1px solid var(--border);">
+    <div style="${PANEL_H}color:var(--coral, var(--navy));">Recent Stories</div>${body}</div>`;
+}
+
 async function showProfileModal(mov) {
   document.getElementById('profile-city').textContent = (mov.county_name||mov.city) + ' — ' + mov.phase;
   document.getElementById('profile-body').innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);">Loading profile...</div>';
   openModal('modal-profile');
-  const profiles = await dbGet('lm_community_profiles', { movement_id: `eq.${mov.id}`, select: '*' });
+  const [profiles, panel] = await Promise.all([
+    dbGet('lm_community_profiles', { movement_id: `eq.${mov.id}`, select: '*' }),
+    loadMovementPanel(mov.id)
+  ]);
   const p = profiles[0] || {};
   const hasCensus = !!p.population;
   const countyName = mov.county_name || mov.city;
   const cityName = mov.primary_city || mov.city;
+  const above = hasCensus || !!panel;
   document.getElementById('profile-body').innerHTML = `
+    ${panel ? panelLeadersHtml(panel.leaders) : ''}
     ${hasCensus ? `
     <div style="margin-bottom:1.25rem;">
       <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);margin-bottom:0.75rem;">Demographics (ACS ${p.census_year||''})</div>
@@ -963,8 +1021,9 @@ async function showProfileModal(mov) {
         <span style="background:var(--cream);padding:0.28rem 0.6rem;border-radius:3px;">${fmtPct(p.pct_white)} White</span>
       </div>
     </div>` : ''}
+    ${panel ? panelEventsHtml(panel.events, hasCensus) + panelStoriesHtml(panel.stories) : ''}
     ${p.church_landscape ? `
-    <div style="margin-bottom:1rem;padding-top:${hasCensus?'1rem':'0'};${hasCensus?'border-top:1px solid var(--border);':''}">
+    <div style="margin-bottom:1rem;padding-top:${above?'1rem':'0'};${above?'border-top:1px solid var(--border);':''}">
       <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Church Landscape</div>
       <p style="font-size:0.86rem;color:var(--text);line-height:1.7;">${escHtml(p.church_landscape)}</p>
     </div>` : ''}
@@ -973,7 +1032,7 @@ async function showProfileModal(mov) {
       <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Local Context</div>
       <p style="font-size:0.86rem;color:var(--text);line-height:1.7;">${escHtml(p.local_context)}</p>
     </div>` : ''}
-    ${!hasCensus && !p.church_landscape && !p.local_context ? '<p style="color:var(--muted);font-size:0.88rem;font-style:italic;text-align:center;padding:1rem 0;">Community profile coming soon.</p>' : ''}
+    ${!panel && !hasCensus && !p.church_landscape && !p.local_context ? '<p style="color:var(--muted);font-size:0.88rem;font-style:italic;text-align:center;padding:1rem 0;">Community profile coming soon.</p>' : ''}
   `;
 }
 

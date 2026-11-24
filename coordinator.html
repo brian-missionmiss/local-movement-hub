@@ -468,6 +468,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
             Roster
           </a>
+          <a class="sidebar-link" href="#" onclick="showSection('events')">&#128197; Events</a>
           <a class="sidebar-link" href="#" onclick="showSection('milestones')">
             <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
             Milestones
@@ -590,6 +591,20 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- EVENTS SECTION -->
+      <div id="section-events" style="display:none">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="page-title">Upcoming Events</h1>
+            <p class="page-sub">Events your movement is hosting. The next two appear on the public Hub map when someone opens your movement. Statewide events are added by staff.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openLocalEvent()">+ Add Event</button>
+        </div>
+        <div id="levt-list"><div style="color:var(--muted);padding:1rem;">Loading...</div></div>
+        <h3 style="font-family:'Merriweather',serif;font-weight:700;font-size:1rem;color:var(--navy);margin:1.5rem 0 0.75rem;">Past events</h3>
+        <div id="levt-past"></div>
       </div>
 
       <!-- REPORTS SECTION -->
@@ -858,6 +873,30 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
   </div>
 </div>
 
+<!-- LOCAL EVENT MODAL -->
+<div class="modal-overlay" id="modal-levt">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="levt-modal-title">Add Event</div><button class="modal-close" onclick="closeModal('modal-levt')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="levt-title">Title</label><input class="form-input" id="levt-title" type="text" maxlength="200" placeholder="Event name"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" for="levt-type">Type</label>
+          <select class="form-select" id="levt-type"><option>Prayer Breakfast</option><option>Table Talk</option><option>Training</option><option>4 The City Service Day</option><option>Worship Service</option><option>Community Event</option><option>Other</option></select></div>
+        <div class="form-group"><label class="form-label" for="levt-date">Date</label><input class="form-input" id="levt-date" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="levt-location">Location</label><input class="form-input" id="levt-location" type="text" maxlength="200" placeholder="City, venue"></div>
+      <div class="form-group"><label class="form-label" for="levt-desc">Description (optional)</label><textarea class="form-textarea" id="levt-desc" style="min-height:70px;" placeholder="Brief description..."></textarea></div>
+      <div class="form-group"><label class="form-label" for="levt-url">Link for more information or registration (optional)</label><input class="form-input" id="levt-url" type="url" placeholder="https://..."></div>
+      <div class="form-hint">Events are public. Do not include private phone numbers or home addresses.</div>
+      <div class="form-error" id="levt-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-levt')">Cancel</button>
+      <button class="btn btn-primary" id="levt-save" onclick="saveLocalEvent()">Add Event</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD MEMBER MODAL -->
 <div class="modal-overlay" id="modal-member">
   <div class="modal">
@@ -878,7 +917,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
           <select class="form-select" id="m-role-select">
             <option value="">Select a role...</option>
             <optgroup label="Steering Committee">
-              <option>Chair</option><option>Secretary</option><option>Treasurer</option><option>Team Lead</option><option>Member</option>
+              <option>Chair</option><option>Co-Chair</option><option>Secretary</option><option>Treasurer</option><option>Team Lead</option><option>Member</option>
             </optgroup>
             <optgroup label="Advocates &amp; Associates">
               <option>Advocate</option><option>Associate</option>
@@ -888,6 +927,9 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         <div class="form-group">
           <label class="form-label">Start Date</label>
           <input class="form-input" id="m-start" type="date">
+        </div>
+        <div class="form-group" id="m-public-wrap" style="display:none;">
+          <label class="form-label" style="display:flex;align-items:flex-start;gap:0.5rem;font-weight:400;line-height:1.4;cursor:pointer;"><input type="checkbox" id="m-public" style="margin-top:0.2rem;"><span><strong>Show this name on the public Hub map.</strong> Only the name and the title (Chair or Co-Chair) are shown, never phone or email. Check this only with the person's agreement. You can turn it off at any time.</span></label>
         </div>
       </div>
       <div class="form-group">
@@ -1265,7 +1307,7 @@ async function loadUserData() {
 
 // ── SECTIONS
 function showSection(name) {
-  ['dashboard','roster','reports','stories','traineval','profile','training','milestones','prayer','directory'].forEach(s => {
+  ['dashboard','roster','events','reports','stories','traineval','profile','training','milestones','prayer','directory'].forEach(s => {
     document.getElementById('section-'+s).style.display = s===name?'block':'none';
   });
   document.querySelectorAll('.sidebar-link, .nav-link, .mobile-tabs a').forEach(l => l.classList.remove('active'));
@@ -1276,6 +1318,7 @@ function showSection(name) {
     window.scrollTo(0, 0);
   }
   if (name==='roster')  loadRoster();
+  if (name==='events')  loadLocalEvents();
   if (name==='reports') loadReports();
   if (name==='profile')  loadCoordProfile();
   if (name==='training') loadTraining();
@@ -1352,6 +1395,55 @@ function updateReportReminder(reports) {
   box.style.display = 'flex';
 }
 
+// ── LOCAL EVENTS (shown on the public map for this movement)
+let _levt = [], _levtEdit = null;
+function levtSafeUrl(u) { try { const x = new URL(String(u || '').trim()); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; } catch (e) { return ''; } }
+async function loadLocalEvents() {
+  const rows = await dbGet('lm_events', { movement_id: `eq.${profile.movement_id}`, select: '*', order: 'event_date.asc' }, session.access_token);
+  _levt = rows;
+  const today = new Date(); const t = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  const up = rows.filter(e => String(e.event_date).slice(0, 10) >= t), past = rows.filter(e => String(e.event_date).slice(0, 10) < t).reverse().slice(0, 10);
+  const card = e => `<div class="card" style="margin-bottom:0.65rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;"><div class="card-title">${escHtml(e.title)}</div>
+      <div class="card-meta">${fmtDate(e.event_date)} &middot; ${escHtml(e.event_type || '')}${e.location ? ' &middot; ' + escHtml(e.location) : ''}</div>
+      ${e.description ? `<p style="font-size:0.82rem;color:var(--muted);margin-top:0.35rem;">${escHtml(e.description)}</p>` : ''}</div>
+    <div style="display:flex;gap:0.5rem;"><button class="btn btn-sm btn-outline" onclick="openLocalEvent('${e.id}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteLocalEvent('${e.id}')">Delete</button></div></div>`;
+  document.getElementById('levt-list').innerHTML = up.length ? up.map((e, i) => (i < 2 ? '' : '') + card(e)).join('') + (up.length > 2 ? '<p style="font-size:0.78rem;color:var(--muted);">Only the next two events appear on the public map.</p>' : '') : '<div class="empty-state"><div class="empty-state-text">No upcoming events yet. Add one so people can see what is next in your movement.</div></div>';
+  document.getElementById('levt-past').innerHTML = past.length ? past.map(card).join('') : '<p style="font-size:0.84rem;color:var(--muted);">None yet.</p>';
+}
+function openLocalEvent(id) {
+  _levtEdit = id || null;
+  const e = id ? _levt.find(x => String(x.id) === String(id)) : null;
+  document.getElementById('levt-modal-title').textContent = e ? 'Edit Event' : 'Add Event';
+  document.getElementById('levt-save').textContent = e ? 'Save Changes' : 'Add Event';
+  document.getElementById('levt-title').value = e ? e.title : '';
+  const sel = document.getElementById('levt-type'); sel.value = e && [...sel.options].some(o => o.value === e.event_type) ? e.event_type : 'Prayer Breakfast';
+  document.getElementById('levt-date').value = e ? String(e.event_date).slice(0, 10) : '';
+  document.getElementById('levt-location').value = e ? (e.location || '') : '';
+  document.getElementById('levt-desc').value = e ? (e.description || '') : '';
+  document.getElementById('levt-url').value = e ? (e.registration_url || '') : '';
+  document.getElementById('levt-error').style.display = 'none';
+  openModal('modal-levt');
+}
+async function saveLocalEvent() {
+  const err = document.getElementById('levt-error'); err.style.display = 'none';
+  const title = document.getElementById('levt-title').value.trim(), date = document.getElementById('levt-date').value, url = document.getElementById('levt-url').value.trim();
+  const bad = !title ? 'Please enter a title.' : !date ? 'Please choose a date.' : (url && !levtSafeUrl(url)) ? 'The link must start with https:// or http://.' : '';
+  if (bad) { err.textContent = bad; err.style.display = 'block'; return; }
+  const row = { title, event_type: document.getElementById('levt-type').value, event_date: date,
+    location: document.getElementById('levt-location').value.trim() || null, description: document.getElementById('levt-desc').value.trim() || null,
+    registration_url: url ? levtSafeUrl(url) : null };
+  try {
+    if (_levtEdit) await dbPatch('lm_events', _levtEdit, row, session.access_token);
+    else await dbPost('lm_events', { ...row, movement_id: profile.movement_id, created_by: userId_global }, session.access_token);
+    closeModal('modal-levt'); toast(_levtEdit ? 'Event updated.' : 'Event added.'); loadLocalEvents();
+  } catch (e) { err.textContent = e.message || 'Could not save the event.'; err.style.display = 'block'; }
+}
+async function deleteLocalEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  try { await dbDelete('lm_events', id, session.access_token); toast('Event deleted.'); loadLocalEvents(); } catch (e) { toast(e.message || 'Could not delete.', 'error'); }
+}
+
 // ── ROSTER
 async function loadRoster() {
   const token = session.access_token;
@@ -1364,7 +1456,7 @@ async function loadRoster() {
   const renderCommittee = list => list.length
     ? list.map(m => `<tr>
         <td style="font-weight:600;">${escHtml(m.full_name)}</td>
-        <td>${escHtml(m.role_title||'—')}</td>
+        <td>${escHtml(m.role_title||'—')}${(m.role_title==='Chair'||m.role_title==='Co-Chair') ? `<div><button class="btn btn-sm btn-outline" style="margin-top:0.3rem;" onclick="togglePublicListing('${m.id}')">${m.public_listing ? 'On public map: Yes' : 'On public map: No'}</button></div>` : ''}</td>
         <td style="font-size:0.8rem;color:var(--muted);">${escHtml(m.ethnicity||'—')}</td>
         <td><a href="tel:${m.phone}" style="color:var(--blue);text-decoration:none;">${escHtml(m.phone||'—')}</a></td>
         <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;font-size:0.82rem;">${escHtml(m.email||'—')}</a></td>
@@ -1391,13 +1483,27 @@ async function loadRoster() {
 }
 
 function openAddMember() { openModal('modal-member'); }
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'm-role-select') {
+    const chair = e.target.value === 'Chair' || e.target.value === 'Co-Chair';
+    document.getElementById('m-public-wrap').style.display = chair ? 'block' : 'none';
+    if (!chair) document.getElementById('m-public').checked = false;
+  }
+});
+async function togglePublicListing(id) {
+  const m = (_rosterCache || []).find(x => String(x.id) === String(id)); if (!m) return;
+  const next = !m.public_listing;
+  if (next && !confirm('Show ' + m.full_name + ' (' + m.role_title + ') on the public Hub map?\n\nOnly the name and title are shown, never phone or email. Do this only with the person\'s agreement.')) return;
+  try { await dbPatch('lm_roster', id, { public_listing: next }, session.access_token); toast(next ? 'Now shown on the public map.' : 'Removed from the public map.'); loadRoster(); }
+  catch (e) { toast(e.message || 'Could not update.', 'error'); }
+}
 async function saveMember() {
   const name = document.getElementById('m-name').value.trim();
   const role = document.getElementById('m-role-select').value;
   const errEl = document.getElementById('m-error'); errEl.style.display='none';
   if (!name) { errEl.textContent='Name is required.'; errEl.style.display='block'; return; }
   if (!role) { errEl.textContent='Please select a role.'; errEl.style.display='block'; return; }
-  const committeeRoles = ['Chair','Secretary','Treasurer','Team Lead','Member'];
+  const committeeRoles = ['Chair','Co-Chair','Secretary','Treasurer','Team Lead','Member'];
   const roster_type = committeeRoles.includes(role) ? 'committee' : 'advocate';
   await dbPost('lm_roster', {
     movement_id: profile.movement_id,
@@ -1409,8 +1515,10 @@ async function saveMember() {
     phone: document.getElementById('m-phone').value.trim() || null,
     email: document.getElementById('m-email').value.trim() || null,
     organization: document.getElementById('m-org').value.trim() || null,
+    public_listing: (role === 'Chair' || role === 'Co-Chair') && document.getElementById('m-public').checked,
   }, session.access_token);
   ['m-name','m-role-select','m-start','m-ethnicity','m-phone','m-email','m-org'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('m-public').checked = false; document.getElementById('m-public-wrap').style.display = 'none';
   closeModal('modal-member');
   toast('Member added.');
   loadRoster();

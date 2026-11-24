@@ -1240,6 +1240,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
         </div>
         <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ev-date" type="date"></div>
       </div>
+      <div class="form-group"><label class="form-label" for="ev-local-mov">Local movement</label><select class="form-select" id="ev-local-mov"><option value="">Statewide (no specific movement)</option></select><div class="form-hint">Choose a movement to show this event in that movement's panel on the public map. Leave as Statewide for events that belong to no one movement.</div></div>
       <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="ev-location" type="text" placeholder="City, venue"></div>
       <div class="form-group"><label class="form-label">Description (optional)</label><textarea class="form-textarea" id="ev-desc" style="min-height:70px;" placeholder="Brief description..."></textarea></div>
       <div class="form-group"><label class="form-label">Registration URL (optional)</label><input class="form-input" id="ev-url" type="url" placeholder="https://..."></div>
@@ -2152,7 +2153,14 @@ async function quietGet(path, token) {
   } catch (e) { return { ok: false, status: 0, rows: [] }; }
 }
 let _events = [], _rsvpTotals = {}, _rsvpReady = false;
+function evMovName(id) { var m = (typeof movements !== 'undefined' ? movements : []).find(function (x) { return String(x.id) === String(id); }); return m ? (m.county_name || m.city) : ''; }
+function fillEvMovements() {
+  var sel = document.getElementById('ev-local-mov'), cur = sel.value;
+  sel.innerHTML = '<option value="">Statewide (no specific movement)</option>' + (typeof movements !== 'undefined' ? movements : []).slice().sort(function (a, b) { return String(a.county_name || a.city).localeCompare(String(b.county_name || b.city)); }).map(function (m) { return '<option value="' + m.id + '">' + escHtml(m.county_name || m.city) + '</option>'; }).join('');
+  sel.value = cur;
+}
 async function loadEvents() {
+  fillEvMovements();
   const items = await dbGet('lm_events', { select:'*', order:'event_date.asc' }, session.access_token);
   const rs = await quietGet('lm_event_rsvps?select=event_id,guests', session.access_token);
   _rsvpReady = rs.ok;
@@ -2169,7 +2177,7 @@ async function loadEvents() {
     <div class="card" style="margin-bottom:0.65rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
       <div style="flex:1;">
         <div class="card-title">${escHtml(e.title)}${badge}</div>
-        <div class="card-meta">${fmtDate(e.event_date)} &middot; ${escHtml(e.event_type)}${e.location?' &middot; '+escHtml(e.location):''}</div>
+        <div class="card-meta">${fmtDate(e.event_date)} &middot; ${escHtml(e.event_type)}${e.location?' &middot; '+escHtml(e.location):''}${e.movement_id && evMovName(e.movement_id) ? ' &middot; <strong>' + escHtml(evMovName(e.movement_id)) + '</strong>' : ' &middot; Statewide'}</div>
         ${e.description?`<p style="font-size:0.82rem;color:var(--muted);margin-top:0.35rem;">${escHtml(e.description)}</p>`:''}
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
@@ -2193,12 +2201,14 @@ async function saveEvent() {
     location:document.getElementById('ev-location').value.trim()||null,
     description:document.getElementById('ev-desc').value.trim()||null,
     registration_url:document.getElementById('ev-url').value.trim()||null,
+    movement_id:document.getElementById('ev-local-mov').value||null,
     created_by:currentUserId };
   // Only send the sign-up columns when they are used, so ordinary events still save before the database update is run.
   if (rsvp) { row.rsvp_enabled = true; row.rsvp_limit = limit; }
   else if (_ed.event && _rsvpReady) { row.rsvp_enabled = false; row.rsvp_limit = null; }
   delete row.created_by;
   try { await edSave('event','lm_events',row,{ created_by:currentUserId }); } catch (e) { errEl.textContent=e.message||'Could not save.'; errEl.style.display='block'; return; }
+  document.getElementById('ev-local-mov').value = '';
   closeModal('modal-event'); toast(_edLast ? 'Event updated.' : 'Event added.'); loadEvents();
 }
 async function deleteEvent(id) { if(!confirm('Delete this event?')) return; await dbDelete('lm_events',id,session.access_token); toast('Deleted.'); loadEvents(); }
@@ -4416,7 +4426,7 @@ function editEntry(kind, id) {
     _ed[kind] = row.id;
     if (kind === 'announce') { v('an-title', row.title); v('an-body', row.body); document.getElementById('an-pinned').checked = !!row.pinned; }
     if (kind === 'event') {
-      v('ev-title', row.title); edSetSelect('ev-type', row.event_type); v('ev-date', String(row.event_date || '').slice(0, 10)); v('ev-location', row.location); v('ev-desc', row.description); v('ev-url', row.registration_url);
+      v('ev-title', row.title); edSetSelect('ev-type', row.event_type); v('ev-date', String(row.event_date || '').slice(0, 10)); v('ev-location', row.location); v('ev-desc', row.description); v('ev-url', row.registration_url); fillEvMovements(); v('ev-local-mov', row.movement_id);
       document.getElementById('ev-rsvp').checked = row.rsvp_enabled === true; v('ev-limit', row.rsvp_limit);
     }
     if (kind === 'doc') { v('doc-title', row.title); edSetSelect('doc-cat', row.category); v('doc-url', row.file_url); v('doc-size', row.file_size); }
