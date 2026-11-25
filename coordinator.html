@@ -901,7 +901,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 <div class="modal-overlay" id="modal-member">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Add Roster Member</div>
+      <div class="modal-title" id="m-title">Add Roster Member</div>
       <button class="modal-close" onclick="closeModal('modal-member')">&times;</button>
     </div>
     <div class="modal-body">
@@ -963,7 +963,7 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-member')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveMember()">Add Member</button>
+      <button class="btn btn-primary" id="m-save" onclick="saveMember()">Add Member</button>
     </div>
   </div>
 </div>
@@ -1461,7 +1461,7 @@ async function loadRoster() {
         <td><a href="tel:${m.phone}" style="color:var(--blue);text-decoration:none;">${escHtml(m.phone||'—')}</a></td>
         <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;font-size:0.82rem;">${escHtml(m.email||'—')}</a></td>
         <td style="color:var(--muted);font-size:0.8rem;">${m.start_date ? new Date(m.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}</td>
-        <td><button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
+        <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="openEditMember('${m.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
       </tr>`).join('')
     : `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.25rem;">No committee members yet.</td></tr>`;
 
@@ -1474,7 +1474,7 @@ async function loadRoster() {
         <td><a href="tel:${m.phone}" style="color:var(--blue);text-decoration:none;">${escHtml(m.phone||'—')}</a></td>
         <td><a href="mailto:${m.email}" style="color:var(--blue);text-decoration:none;font-size:0.82rem;">${escHtml(m.email||'—')}</a></td>
         <td style="color:var(--muted);font-size:0.8rem;">${m.start_date ? new Date(m.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}</td>
-        <td><button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
+        <td style="white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="openEditMember('${m.id}')">Edit</button> <button class="btn btn-sm btn-danger" onclick="removeMember('${m.id}')">Remove</button></td>
       </tr>`).join('')
     : `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:1.25rem;">No advocates or associates yet.</td></tr>`;
 
@@ -1482,7 +1482,33 @@ async function loadRoster() {
   document.getElementById('roster-advocates').innerHTML = renderAdvocates(advocates);
 }
 
-function openAddMember() { openModal('modal-member'); }
+let _editMemberId = null;
+function resetMemberForm() {
+  ['m-name','m-role-select','m-start','m-ethnicity','m-phone','m-email','m-org'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('m-public').checked = false; document.getElementById('m-public-wrap').style.display = 'none';
+  document.getElementById('m-error').style.display = 'none';
+}
+function openAddMember() {
+  _editMemberId = null; resetMemberForm();
+  document.getElementById('m-title').textContent = 'Add Roster Member'; document.getElementById('m-save').textContent = 'Add Member';
+  openModal('modal-member');
+}
+function openEditMember(id) {
+  const m = (_rosterCache || []).find(x => String(x.id) === String(id)); if (!m) return;
+  _editMemberId = m.id; resetMemberForm();
+  document.getElementById('m-title').textContent = 'Edit Roster Member'; document.getElementById('m-save').textContent = 'Save Changes';
+  document.getElementById('m-name').value = m.full_name || '';
+  document.getElementById('m-role-select').value = m.role_title || '';
+  document.getElementById('m-start').value = m.start_date || '';
+  document.getElementById('m-ethnicity').value = m.ethnicity || '';
+  document.getElementById('m-phone').value = m.phone || '';
+  document.getElementById('m-email').value = m.email || '';
+  document.getElementById('m-org').value = m.organization || '';
+  const chair = m.role_title === 'Chair' || m.role_title === 'Co-Chair';
+  document.getElementById('m-public-wrap').style.display = chair ? 'block' : 'none';
+  document.getElementById('m-public').checked = chair && !!m.public_listing;
+  openModal('modal-member');
+}
 document.addEventListener('change', e => {
   if (e.target && e.target.id === 'm-role-select') {
     const chair = e.target.value === 'Chair' || e.target.value === 'Co-Chair';
@@ -1505,8 +1531,7 @@ async function saveMember() {
   if (!role) { errEl.textContent='Please select a role.'; errEl.style.display='block'; return; }
   const committeeRoles = ['Chair','Co-Chair','Secretary','Treasurer','Team Lead','Member'];
   const roster_type = committeeRoles.includes(role) ? 'committee' : 'advocate';
-  await dbPost('lm_roster', {
-    movement_id: profile.movement_id,
+  const rec = {
     full_name: name,
     roster_type,
     role_title: role,
@@ -1516,11 +1541,15 @@ async function saveMember() {
     email: document.getElementById('m-email').value.trim() || null,
     organization: document.getElementById('m-org').value.trim() || null,
     public_listing: (role === 'Chair' || role === 'Co-Chair') && document.getElementById('m-public').checked,
-  }, session.access_token);
-  ['m-name','m-role-select','m-start','m-ethnicity','m-phone','m-email','m-org'].forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('m-public').checked = false; document.getElementById('m-public-wrap').style.display = 'none';
+  };
+  const editing = _editMemberId;
+  try {
+    if (editing) await dbPatch('lm_roster', editing, rec, session.access_token);
+    else await dbPost('lm_roster', { movement_id: profile.movement_id, ...rec }, session.access_token);
+  } catch (e) { errEl.textContent = e.message || 'Could not save.'; errEl.style.display = 'block'; return; }
+  resetMemberForm(); _editMemberId = null;
   closeModal('modal-member');
-  toast('Member added.');
+  toast(editing ? 'Member updated.' : 'Member added.');
   loadRoster();
 }
 
