@@ -1154,13 +1154,46 @@ body { font-family: 'Open Sans', sans-serif; color: var(--text); background: var
 </div>
 
 <div class="modal-overlay" id="modal-publeaders">
-  <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="pl-title">Public leaders</div><button class="modal-close" onclick="closeModal('modal-publeaders')">&times;</button></div>
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header"><div class="modal-title" id="pl-title">Roster</div><button class="modal-close" onclick="closeModal('modal-publeaders')">&times;</button></div>
     <div class="modal-body">
-      <p style="font-size:0.85rem;line-height:1.6;margin-bottom:0.75rem;color:var(--muted);">Only the name and title of a Chair or Co-Chair appear on the public map, and only when switched on here or by the movement's coordinator. No phone or email is ever shown.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+        <p style="font-size:0.84rem;line-height:1.55;color:var(--muted);margin:0;flex:1;min-width:240px;">Only the name and title of a Chair or Co-Chair appear on the public map, and only when switched on. No phone or email is ever shown.</p>
+        <button class="btn btn-sm btn-primary" onclick="openRosterMember(null)">+ Add Member</button>
+      </div>
       <div id="pl-list"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-publeaders')">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-rmem">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="rm-title">Add Roster Member</div><button class="modal-close" onclick="closeModal('modal-rmem')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="rm-name" type="text"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Role *</label>
+          <select class="form-select" id="rm-role" onchange="rmRoleChanged()">
+            <option value="">Select a role...</option>
+            <optgroup label="Steering Committee"><option>Chair</option><option>Co-Chair</option><option>Secretary</option><option>Treasurer</option><option>Team Lead</option><option>Member</option></optgroup>
+            <optgroup label="Advocates &amp; Associates"><option>Advocate</option><option>Associate</option></optgroup>
+          </select></div>
+        <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" id="rm-start" type="date"></div>
+      </div>
+      <div class="form-group" id="rm-public-wrap" style="display:none;">
+        <label class="form-label" style="display:flex;align-items:flex-start;gap:0.5rem;font-weight:400;line-height:1.4;cursor:pointer;"><input type="checkbox" id="rm-public" style="margin-top:0.2rem;"><span><strong>Show this name on the public Hub map.</strong> Only the name and title are shown, never phone or email. Check this only with the person's agreement.</span></label>
+      </div>
+      <div class="form-group"><label class="form-label">Ethnicity (optional)</label>
+        <select class="form-select" id="rm-eth"><option value="">Prefer not to say</option><option>Black or African American</option><option>White</option><option>Hispanic or Latino</option><option>Asian</option><option>Native American</option><option>Multiracial</option><option>Other</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="rm-phone" type="tel"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="rm-email" type="email"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Organization / Church</label><input class="form-input" id="rm-org" type="text"></div>
+      <div class="form-error" id="rm-error"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-rmem')">Cancel</button><button class="btn btn-primary" id="rm-save" onclick="saveRosterMember()">Add Member</button></div>
   </div>
 </div>
 
@@ -1811,12 +1844,12 @@ async function editPhase(id, current, city) {
 }
 
 // ── MOVEMENTS TABLE
-// ── PUBLIC LEADERS (Chair / Co-Chair listing on the public map)
-let _plMov = null;
+// ── MOVEMENT ROSTER (admin view of a movement's roster, with public listing for Chair / Co-Chair)
+let _plMov = null, _plRows = [], _rmEdit = null;
 async function openPubLeaders(movId) {
   _plMov = movId;
   const m = movements.find(x => x.id === movId);
-  document.getElementById('pl-title').textContent = 'Public leaders: ' + (m ? (m.county_name || m.city) : '');
+  document.getElementById('pl-title').textContent = 'Roster: ' + (m ? (m.county_name || m.city) : '');
   openModal('modal-publeaders');
   await renderPubLeaders();
 }
@@ -1824,22 +1857,73 @@ async function renderPubLeaders() {
   const box = document.getElementById('pl-list');
   box.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
   try {
-    const rows = await dbGet('lm_roster', { movement_id:`eq.${_plMov}`, active:'eq.true', role_title:'in.(Chair,Co-Chair)', select:'id,full_name,role_title,public_listing', order:'role_title.asc,full_name.asc' }, session.access_token);
-    if (!rows.length) { box.innerHTML = '<p style="color:var(--muted);">No Chair or Co-Chair is on this movement\'s roster yet. The coordinator adds them under Steering Committee.</p>'; return; }
-    box.innerHTML = rows.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.55rem 0;border-bottom:1px solid var(--border,#e5e0d6);">
-      <div><strong>${escHtml(r.full_name)}</strong><div style="font-size:0.8rem;color:var(--muted);">${escHtml(r.role_title)}</div></div>
-      <button class="btn btn-sm ${r.public_listing ? 'btn-primary' : 'btn-outline'}" onclick="togglePubLeader('${r.id}',${r.public_listing ? 'true' : 'false'})">${r.public_listing ? 'On public map: Yes' : 'On public map: No'}</button>
-    </div>`).join('');
+    _plRows = await dbGet('lm_roster', { movement_id:`eq.${_plMov}`, active:'eq.true', select:'*', order:'roster_type.asc,full_name.asc' }, session.access_token);
+    if (!_plRows.length) { box.innerHTML = '<p style="color:var(--muted);">No one is on this movement\'s roster yet. Use + Add Member, or the coordinator can add people.</p>'; return; }
+    const row = r => {
+      const chair = r.role_title === 'Chair' || r.role_title === 'Co-Chair';
+      const contact = [r.phone, r.email].filter(Boolean).map(escHtml).join(' &middot; ');
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.55rem 0;border-bottom:1px solid var(--border,#e5e0d6);flex-wrap:wrap;">
+        <div style="min-width:200px;flex:1;"><strong>${escHtml(r.full_name)}</strong><div style="font-size:0.8rem;color:var(--muted);">${escHtml(r.role_title || '')}${r.organization ? ' &middot; ' + escHtml(r.organization) : ''}</div>${contact ? `<div style="font-size:0.78rem;color:var(--muted);">${contact}</div>` : ''}</div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          ${chair ? `<button class="btn btn-sm ${r.public_listing ? 'btn-primary' : 'btn-outline'}" onclick="togglePubLeader('${r.id}',${r.public_listing ? 'true' : 'false'})">${r.public_listing ? 'On public map: Yes' : 'On public map: No'}</button>` : ''}
+          <button class="btn btn-sm btn-outline" onclick="openRosterMember('${r.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="removeRosterMember('${r.id}')">Remove</button>
+        </div></div>`;
+    };
+    const com = _plRows.filter(r => r.roster_type === 'committee'), adv = _plRows.filter(r => r.roster_type !== 'committee');
+    box.innerHTML = (com.length ? '<div style="font-weight:600;margin:0.4rem 0 0.1rem;">Steering Committee</div>' + com.map(row).join('') : '')
+                  + (adv.length ? '<div style="font-weight:600;margin:0.9rem 0 0.1rem;">Advocates and Associates</div>' + adv.map(row).join('') : '');
   } catch (e) { box.innerHTML = '<p style="color:var(--danger,#b3261e);">Could not load: ' + escHtml(e.message || String(e)) + '</p>'; }
 }
 async function togglePubLeader(id, current) {
+  const r = _plRows.find(x => String(x.id) === String(id));
+  if (!current && r && !confirm('Show ' + r.full_name + ' (' + r.role_title + ') on the public Hub map?\n\nOnly the name and title are shown. Do this only with the person\'s agreement.')) return;
   try {
     await dbPatch('lm_roster', id, { public_listing: !current }, session.access_token);
     toast(!current ? 'Now shown on the public map.' : 'Removed from the public map.');
     await renderPubLeaders();
   } catch (e) { toast('Could not update: ' + (e.message || e), 'error'); }
 }
-
+function rmRoleChanged() {
+  const role = document.getElementById('rm-role').value; const chair = role === 'Chair' || role === 'Co-Chair';
+  document.getElementById('rm-public-wrap').style.display = chair ? 'block' : 'none';
+  if (!chair) document.getElementById('rm-public').checked = false;
+}
+function openRosterMember(id) {
+  const r = id ? _plRows.find(x => String(x.id) === String(id)) : null;
+  if (id && !r) return;
+  _rmEdit = r ? r.id : null;
+  document.getElementById('rm-title').textContent = r ? 'Edit Roster Member' : 'Add Roster Member';
+  document.getElementById('rm-save').textContent = r ? 'Save Changes' : 'Add Member';
+  const set = (k, v) => { document.getElementById(k).value = v || ''; };
+  set('rm-name', r && r.full_name); set('rm-role', r && r.role_title); set('rm-start', r && r.start_date); set('rm-eth', r && r.ethnicity);
+  set('rm-phone', r && r.phone); set('rm-email', r && r.email); set('rm-org', r && r.organization);
+  document.getElementById('rm-public').checked = !!(r && r.public_listing); rmRoleChanged();
+  if (r && !(r.role_title === 'Chair' || r.role_title === 'Co-Chair')) document.getElementById('rm-public').checked = false;
+  document.getElementById('rm-error').style.display = 'none';
+  openModal('modal-rmem');
+}
+async function saveRosterMember() {
+  const g = k => document.getElementById(k).value.trim(); const err = document.getElementById('rm-error'); err.style.display = 'none';
+  const name = g('rm-name'), role = g('rm-role');
+  if (!name) { err.textContent = 'Name is required.'; err.style.display = 'block'; return; }
+  if (!role) { err.textContent = 'Please select a role.'; err.style.display = 'block'; return; }
+  const committee = ['Chair','Co-Chair','Secretary','Treasurer','Team Lead','Member'].includes(role);
+  const rec = { full_name: name, roster_type: committee ? 'committee' : 'advocate', role_title: role, ethnicity: g('rm-eth') || null, start_date: g('rm-start') || null,
+    phone: g('rm-phone') || null, email: g('rm-email') || null, organization: g('rm-org') || null,
+    public_listing: (role === 'Chair' || role === 'Co-Chair') && document.getElementById('rm-public').checked };
+  try {
+    if (_rmEdit) await dbPatch('lm_roster', _rmEdit, rec, session.access_token);
+    else await dbPost('lm_roster', { movement_id: _plMov, ...rec }, session.access_token);
+  } catch (e) { err.textContent = e.message || 'Could not save.'; err.style.display = 'block'; return; }
+  const was = _rmEdit; _rmEdit = null; closeModal('modal-rmem'); toast(was ? 'Member updated.' : 'Member added.'); await renderPubLeaders();
+}
+async function removeRosterMember(id) {
+  const r = _plRows.find(x => String(x.id) === String(id));
+  if (!confirm('Remove ' + (r ? r.full_name : 'this person') + ' from the roster?')) return;
+  try { await dbPatch('lm_roster', id, { active: false, public_listing: false }, session.access_token); toast('Member removed.'); await renderPubLeaders(); }
+  catch (e) { toast('Could not remove: ' + (e.message || e), 'error'); }
+}
 async function loadMovementsTable() {
   const tbody = document.getElementById('movements-table');
   tbody.innerHTML = movements.map(m => `<tr>
@@ -1847,7 +1931,7 @@ async function loadMovementsTable() {
     <td style="color:var(--muted);">${escHtml(m.primary_city||m.region||'—')}</td>
     <td><span class="badge phase-${m.phase.toLowerCase()}">${escHtml(m.phase)}</span></td>
     <td>${m.active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
-    <td><button class="btn btn-sm btn-outline" onclick="openPubLeaders('${m.id}')">Public leaders</button> <button class="btn btn-sm btn-danger" onclick="toggleMovement('${m.id}',${m.active})">${m.active?'Deactivate':'Activate'}</button></td>
+    <td><button class="btn btn-sm btn-outline" onclick="openPubLeaders('${m.id}')">Roster</button> <button class="btn btn-sm btn-danger" onclick="toggleMovement('${m.id}',${m.active})">${m.active?'Deactivate':'Activate'}</button></td>
   </tr>`).join('');
 }
 
